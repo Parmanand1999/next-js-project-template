@@ -1,0 +1,20 @@
+import React, { Suspense } from 'react';
+import { VerifyEmailView } from '@/features/auth';
+
+export const metadata = {
+  title: 'Verify Email | Enterprise Portal',
+};
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="size-8 rounded-full border-2 border-[#3456A7] border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <VerifyEmailView />
+    </Suspense>
+  );
+}

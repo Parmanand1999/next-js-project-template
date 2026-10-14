@@ -49,7 +49,7 @@ export default function ManagerDashboardPage() {
         <CardHeader>
           <CardTitle>Role Capability Summary (MANAGER)</CardTitle>
           <CardDescription>
-            Defined in <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">src/config/roles.ts</code>
+            Departmental scope, approvals, and aggregated performance indicators.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

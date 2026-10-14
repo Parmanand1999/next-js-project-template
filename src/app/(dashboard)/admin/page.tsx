@@ -3,27 +3,27 @@ import Link from 'next/link';
 import { StatsCard } from '@/features/analytics';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Users, ShieldAlert, Activity, Database, ArrowRight } from 'lucide-react';
+import { Users, ShieldAlert, Activity, Database, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 export const metadata = {
-  title: 'Admin Dashboard | Enterprise Next.js',
+  title: 'Admin Dashboard | Enterprise Portal',
 };
 
 export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 mb-3">
-          <ShieldAlert className="size-3.5" />
-          Restricted Area: Admin & Super Admin Only
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 mb-3">
+          <ShieldCheck className="size-3.5" />
+          Enterprise Administration Control
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Admin Control Center</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">Admin Operations Center</h1>
         <p className="text-muted-foreground mt-1">
-          System telemetry, user privilege management, and role-based policies.
+          Real-time system telemetry, privilege management, and role-based policies.
         </p>
       </div>
 
-      {/* Analytics feature cards */}
+      {/* Analytics telemetry cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Users"
@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
           change="+12.5%"
           isPositive={true}
           icon={Users}
-          description="vs last 30 days"
+          description="Registered members"
         />
         <StatsCard
           title="Active Sessions"
@@ -50,12 +50,12 @@ export default function AdminDashboardPage() {
           description="Past 7 days"
         />
         <StatsCard
-          title="Database Health"
+          title="Service Health"
           value="99.98%"
           change="Optimal"
           isPositive={true}
           icon={Database}
-          description="Primary cluster"
+          description="Core API cluster"
         />
       </div>
 
@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Direct access to the user vertical slice with fine-grained RBAC action controls.
+              Manage team members, update assigned security roles, and enforce granular RBAC rules.
             </p>
             <Link href="/admin/users">
               <Button className="gap-2">
@@ -82,24 +82,33 @@ export default function AdminDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Feature Slicing Architecture</CardTitle>
+            <CardTitle>Security & Pipeline Telemetry</CardTitle>
             <CardDescription>
-              Vertical slice modularity in Next.js App Router.
+              Status of real-time security guards and service interceptors.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="text-sm space-y-2 text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-primary" />
-                <strong className="text-foreground">features/auth:</strong> Login, session hooks & types
+            <ul className="text-sm space-y-3 text-muted-foreground">
+              <li className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-500" />
+                  Edge Proxy Route Guards
+                </span>
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Enforcing</span>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-primary" />
-                <strong className="text-foreground">features/users:</strong> User directory & RBAC actions
+              <li className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-500" />
+                  Axios Silent Token Refresh
+                </span>
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Active</span>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-primary" />
-                <strong className="text-foreground">features/analytics:</strong> KPI cards & metrics
+              <li className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-500" />
+                  Zustand Auth Storage Persistence
+                </span>
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Connected</span>
               </li>
             </ul>
           </CardContent>

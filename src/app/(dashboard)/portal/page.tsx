@@ -50,7 +50,7 @@ export default function PortalPage() {
           </CardHeader>
           <CardContent>
             <span className="text-xs text-muted-foreground">
-              Controlled via <code className="font-mono text-foreground font-semibold">src/config/roles.ts</code>
+              Managed by organization security policy
             </span>
           </CardContent>
         </Card>

@@ -53,7 +53,7 @@ export interface DataTableProps<T> {
   actions?: React.ReactNode;
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends object>({
   columns,
   data = [],
   totalCount,
@@ -69,7 +69,8 @@ export function DataTable<T extends Record<string, unknown>>({
   selectedRows = [],
   onSelectionChange,
   getRowId = (row, idx) => {
-    const id = row.id ?? row._id;
+    const r = row as Record<string, unknown>;
+    const id = r.id ?? r._id;
     return typeof id === 'string' || typeof id === 'number' ? id : idx;
   },
   emptyMessage = 'No records found',
@@ -98,7 +99,7 @@ export function DataTable<T extends Record<string, unknown>>({
     if (!activeSearch.trim()) return data;
     const q = activeSearch.toLowerCase();
     return data.filter((item) =>
-      Object.values(item).some((val) =>
+      Object.values(item as Record<string, unknown>).some((val) =>
         String(val ?? '').toLowerCase().includes(q)
       )
     );
@@ -108,8 +109,10 @@ export function DataTable<T extends Record<string, unknown>>({
   const sortedData = useMemo(() => {
     if (!sortConfig.key || !sortConfig.direction) return filteredData;
     return [...filteredData].sort((a, b) => {
-      const aVal = a[sortConfig.key];
-      const bVal = b[sortConfig.key];
+      const rA = a as Record<string, unknown>;
+      const rB = b as Record<string, unknown>;
+      const aVal = rA[sortConfig.key];
+      const bVal = rB[sortConfig.key];
       if (aVal === bVal) return 0;
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;

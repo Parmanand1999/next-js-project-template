@@ -6,6 +6,7 @@ import {
   Server,
   ShieldCheck,
   FileText,
+  UserRound,
   LucideIcon,
 } from 'lucide-react';
 
@@ -53,6 +54,12 @@ export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
         title: 'Member Portal',
         url: '/portal',
         icon: Layers,
+        permission: null,
+      },
+      {
+        title: 'My Profile',
+        url: '/profile',
+        icon: UserRound,
         permission: null,
       },
       {

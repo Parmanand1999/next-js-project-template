@@ -1,4 +1,4 @@
-import { getData, postData } from './apiServices';
+import { getData, postData, putData } from './apiServices';
 import { UserProfile } from '@/types/auth';
 
 export interface LoginPayload {
@@ -11,6 +11,18 @@ export interface LoginResponse {
   accessToken?: string;
   refreshToken?: string;
   message?: string;
+}
+
+export interface ProfileDetails {
+  _id?: string;
+  firstName?: string;
+  lastName?: string;
+  bloodGroup?: string;
+  profilePhoto?: string[];
+  email?: string;
+  dob?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  contactNumber?: string;
 }
 
 // 1. Email & Password Login
@@ -43,6 +55,27 @@ export const resetPasswordApi = (data: {
 export const verifyEmailApi = (token: string) =>
   getData<{ message?: string }>(`/auth/verify-email?token=${token}`);
 
-// 5. Authenticated User Profile
+// 5. Authenticated User Profile & Identity
 export const getMeApi = () =>
   getData<{ data?: UserProfile }>('/auth/me');
+
+// 6. Profile Management APIs
+export const getProfileApi = () =>
+  getData<{ data?: ProfileDetails | ProfileDetails[] }>('/userInfo/get');
+
+export const addProfileApi = (data: ProfileDetails) =>
+  postData<{ data?: ProfileDetails }>('/userInfo/add', data);
+
+export const updateProfileApi = (data: ProfileDetails) =>
+  putData<{ data?: ProfileDetails }>('/userInfo/update', data);
+
+export const uploadFaceIndexApi = (formData: FormData) =>
+  postData<{ filePath?: string; data?: { filePath?: string } }>(
+    '/uploadFile/faceIndexes',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );

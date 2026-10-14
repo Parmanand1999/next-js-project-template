@@ -15,7 +15,8 @@ export function proxy(request: NextRequest) {
   const isProtectedPath =
     pathname.startsWith('/admin') ||
     pathname.startsWith('/manager') ||
-    pathname.startsWith('/portal');
+    pathname.startsWith('/portal') ||
+    pathname.startsWith('/profile');
 
   // 1. If unauthenticated user tries to access protected areas, redirect to /login
   if (isProtectedPath && !sessionToken && !roleCookie) {

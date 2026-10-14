@@ -16,10 +16,10 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 // Route access paths allowed for each role
 export const ROLE_ROUTE_ACCESS: Record<Role, string[]> = {
-  [ROLES.SUPER_ADMIN]: ['/admin', '/manager', '/portal'],
-  [ROLES.ADMIN]: ['/admin', '/manager', '/portal'],
-  [ROLES.MANAGER]: ['/manager', '/portal'],
-  [ROLES.USER]: ['/portal'],
+  [ROLES.SUPER_ADMIN]: ['/admin', '/manager', '/portal', '/profile'],
+  [ROLES.ADMIN]: ['/admin', '/manager', '/portal', '/profile'],
+  [ROLES.MANAGER]: ['/manager', '/portal', '/profile'],
+  [ROLES.USER]: ['/portal', '/profile'],
 };
 
 // Granular permissions matrix for fine-grained capability checks

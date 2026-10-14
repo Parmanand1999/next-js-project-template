@@ -31,7 +31,7 @@ export function NavUser() {
   };
 
   const handleProfile = () => {
-    router.push('/portal');
+    router.push('/profile');
   };
 
   const displayName = userData?.name || 'Administrator';

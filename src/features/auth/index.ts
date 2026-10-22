@@ -1,6 +1,7 @@
 export * from './types';
 export * from './hooks/useSession';
 export * from './components/LoginForm';
+export * from './components/SignupForm';
 export * from './components/ForgotPasswordForm';
 export * from './components/ResetPasswordForm';
 export * from './components/VerifyEmailView';

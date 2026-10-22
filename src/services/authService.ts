@@ -6,6 +6,28 @@ export interface LoginPayload {
   password?: string;
 }
 
+export interface SignupPayload {
+  fullName: string;
+  email: string;
+  password: string;
+  mobile: string;
+  role?: string;
+}
+
+export interface SignupResponse {
+  message?: string;
+  data?: {
+    _id?: string;
+    fullName?: string;
+    email?: string;
+    mobile?: string;
+    role?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+  token?: string;
+}
+
 export interface LoginResponse {
   data?: UserProfile;
   accessToken?: string;
@@ -24,6 +46,16 @@ export interface ProfileDetails {
   gender?: 'Male' | 'Female' | 'Other';
   contactNumber?: string;
 }
+
+// 0. User Registration / Signup
+export const signupApi = (data: SignupPayload) => {
+  const configuredEndpoint = process.env.NEXT_PUBLIC_SIGNUP_URL || '/api/auth/signup';
+  const endpoint =
+    configuredEndpoint.startsWith('/api/') && typeof window !== 'undefined'
+      ? `${window.location.origin}${configuredEndpoint}`
+      : configuredEndpoint;
+  return postData<SignupResponse>(endpoint, data);
+};
 
 // 1. Email & Password Login
 export const loginWithEmail = (data: LoginPayload) =>

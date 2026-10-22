@@ -50,12 +50,20 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
-  // If already authenticated, redirect to appropriate view
+  const user = useAuthStore((state) => state.user);
+
+  // If already authenticated, redirect to appropriate view according to role
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/admin');
+      if (user?.isSuperAdmin || user?.roleName?.toLowerCase() === 'admin') {
+        router.replace('/admin');
+      } else if (user?.roleName?.toLowerCase() === 'manager') {
+        router.replace('/manager');
+      } else {
+        router.replace('/portal');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   const {
     register,
@@ -70,6 +78,16 @@ export function LoginForm() {
       rememberMe: false,
     },
   });
+
+  // Auto-populate email if passed via query params (e.g. from signup)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const emailParam = new URLSearchParams(window.location.search).get('email');
+      if (emailParam) {
+        setValue('email', emailParam);
+      }
+    }
+  }, [setValue]);
 
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
@@ -96,8 +114,14 @@ export function LoginForm() {
           accessToken: resData.accessToken || 'session_access_token',
           refreshToken: resData.refreshToken,
         });
-        toast.success(`Welcome back, ${resData.data?.name || 'Administrator'}!`);
-        router.replace('/admin');
+        toast.success(`Welcome back, ${resData.data?.name || 'User'}!`);
+        if (resData.data?.isSuperAdmin || resData.data?.roleName?.toLowerCase() === 'admin') {
+          router.replace('/admin');
+        } else if (resData.data?.roleName?.toLowerCase() === 'manager') {
+          router.replace('/manager');
+        } else {
+          router.replace('/portal');
+        }
         return;
       }
     } catch (apiError: unknown) {
@@ -428,6 +452,19 @@ export function LoginForm() {
               </svg>
               <span>Microsoft Outlook</span>
             </button>
+
+            {/* Link to Signup */}
+            <div className="text-center pt-3 border-t border-blue-400/20 mt-4">
+              <p className="text-xs text-blue-100/90">
+                Don&apos;t have an account?{' '}
+                <Link
+                  href="/signup"
+                  className="font-bold text-[#FFE8A3] hover:underline transition-all ml-1"
+                >
+                  Create an account
+                </Link>
+              </p>
+            </div>
           </form>
         </div>
 

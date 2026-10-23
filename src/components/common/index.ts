@@ -1,4 +1,3 @@
-export * from './SearchableSelect';
 export * from './Buttons';
 export * from './DropdownSelect';
 export * from './DataTable';

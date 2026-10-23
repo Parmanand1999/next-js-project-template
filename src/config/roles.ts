@@ -24,6 +24,7 @@ export const ROLE_ROUTE_ACCESS: Record<Role, string[]> = {
 
 // Granular permissions matrix for fine-grained capability checks
 export const PERMISSIONS = {
+  ADMIN_VIEW: 'admin:view',
   USERS_VIEW: 'users:view',
   USERS_CREATE: 'users:create',
   USERS_EDIT: 'users:edit',
@@ -32,12 +33,14 @@ export const PERMISSIONS = {
   SETTINGS_MANAGE: 'settings:manage',
   BILLING_MANAGE: 'billing:manage',
   PROFILE_EDIT: 'profile:edit',
+  SYSTEM_VIEW: 'system:view',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   [ROLES.SUPER_ADMIN]: [
+    PERMISSIONS.ADMIN_VIEW,
     PERMISSIONS.USERS_VIEW,
     PERMISSIONS.USERS_CREATE,
     PERMISSIONS.USERS_EDIT,
@@ -46,14 +49,17 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     PERMISSIONS.SETTINGS_MANAGE,
     PERMISSIONS.BILLING_MANAGE,
     PERMISSIONS.PROFILE_EDIT,
+    PERMISSIONS.SYSTEM_VIEW,
   ],
   [ROLES.ADMIN]: [
+    PERMISSIONS.ADMIN_VIEW,
     PERMISSIONS.USERS_VIEW,
     PERMISSIONS.USERS_CREATE,
     PERMISSIONS.USERS_EDIT,
     PERMISSIONS.REPORTS_VIEW,
     PERMISSIONS.SETTINGS_MANAGE,
     PERMISSIONS.PROFILE_EDIT,
+    PERMISSIONS.SYSTEM_VIEW,
   ],
   [ROLES.MANAGER]: [
     PERMISSIONS.USERS_VIEW,

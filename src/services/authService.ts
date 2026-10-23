@@ -48,14 +48,8 @@ export interface ProfileDetails {
 }
 
 // 0. User Registration / Signup
-export const signupApi = (data: SignupPayload) => {
-  const configuredEndpoint = process.env.NEXT_PUBLIC_SIGNUP_URL || '/api/auth/signup';
-  const endpoint =
-    configuredEndpoint.startsWith('/api/') && typeof window !== 'undefined'
-      ? `${window.location.origin}${configuredEndpoint}`
-      : configuredEndpoint;
-  return postData<SignupResponse>(endpoint, data);
-};
+export const signupApi = (data: SignupPayload) =>
+  postData<SignupResponse>('/auth/signup', data);
 
 // 1. Email & Password Login
 export const loginWithEmail = (data: LoginPayload) =>

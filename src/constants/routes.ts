@@ -9,12 +9,13 @@ import {
   UserRound,
   LucideIcon,
 } from 'lucide-react';
+import { PERMISSIONS, Permission } from '@/config/roles';
 
 export interface SidebarNavItem {
   title: string;
   url: string;
   icon?: LucideIcon;
-  permission?: string | null;
+  permission?: Permission | string | null;
 }
 
 export interface SidebarNavGroup {
@@ -36,19 +37,19 @@ export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
         title: 'Admin Control',
         url: '/admin',
         icon: ShieldCheck,
-        permission: 'Admin.View',
+        permission: PERMISSIONS.ADMIN_VIEW,
       },
       {
         title: 'Manage Users',
         url: '/admin/users',
         icon: Users,
-        permission: 'Users.View',
+        permission: PERMISSIONS.USERS_VIEW,
       },
       {
         title: 'Manager Workspace',
         url: '/manager',
         icon: UserCheck,
-        permission: 'Reports.View',
+        permission: PERMISSIONS.REPORTS_VIEW,
       },
       {
         title: 'Member Portal',
@@ -66,7 +67,7 @@ export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
         title: 'System Services',
         url: '/machines',
         icon: Server,
-        permission: 'Machines.View',
+        permission: PERMISSIONS.SYSTEM_VIEW,
       },
       {
         title: 'Documentation',

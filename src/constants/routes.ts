@@ -10,6 +10,7 @@ import {
   ArrowLeftRight,
   Bus,
   FileText,
+  Headphones,
   LucideIcon,
 } from 'lucide-react';
 import { Permission } from '@/config/roles';
@@ -59,6 +60,13 @@ export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
         title: 'QR Tickets & Passes',
         url: '/admin/passengers/tickets',
         icon: QrCode,
+        permission: null,
+      },
+      {
+        title: 'Customer Support Desk',
+        url: '/admin/support',
+        icon: Headphones,
+        badge: '24x7',
         permission: null,
       },
       {

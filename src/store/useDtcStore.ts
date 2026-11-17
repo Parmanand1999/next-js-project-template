@@ -13,6 +13,11 @@ import {
   RefundRequest,
   LiveBus,
   BusCategory,
+  SupportTicket,
+  SupportStatus,
+  SupportCategory,
+  SupportPriority,
+  SupportChannel,
 } from '@/types/dtc';
 
 interface DtcState {
@@ -27,6 +32,7 @@ interface DtcState {
   passes: DtcPass[];
   refundRequests: RefundRequest[];
   liveBuses: LiveBus[];
+  supportTickets: SupportTicket[];
 
   // Actions
   addNoTicketChallan: (challan: Omit<NoTicketChallan, 'id' | 'challanNumber' | 'issuedAt'>) => void;
@@ -48,6 +54,10 @@ interface DtcState {
 
   approveRefund: (id: string, notes?: string) => void;
   rejectRefund: (id: string, notes?: string) => void;
+
+  addSupportTicket: (ticket: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'updatedAt' | 'slaStatus'>) => void;
+  updateTicketStatus: (id: string, status: SupportStatus, notes?: string) => void;
+  assignTicketOfficer: (id: string, officerName: string) => void;
 
   calculateFare: (busType: BusCategory, distanceKm: number) => number;
 }
@@ -695,6 +705,130 @@ const initialLiveBuses: LiveBus[] = [
   },
 ];
 
+// Initial Support Tickets
+const initialSupportTickets: SupportTicket[] = [
+  {
+    id: 'sup-1',
+    ticketNumber: 'TKT-2026-8841',
+    passengerName: 'Pooja Sharma',
+    passengerPhone: '+91 98112 34567',
+    passengerEmail: 'pooja.sharma@gmail.com',
+    category: 'ETIM & Digital QR Failure',
+    priority: 'Urgent',
+    status: 'Open',
+    channel: 'Passenger Mobile App',
+    busNumber: 'DL 1PD 8412',
+    routeNumber: '502',
+    depot: 'Sarojini Nagar Depot',
+    subject: 'UPI debited ₹25 for Route 502, but ETIM machine failed to issue QR ticket',
+    description: 'At INA Colony bus stop, commuter scanned conductor UPI machine. Account debited reference UPI/48192031, but machine displayed "Network Timeout". Commuter had to purchase cash ticket again.',
+    assignedOfficer: 'Ramesh Chander (Helpdesk Tier 1)',
+    createdAt: 'Today, 08:35 AM',
+    updatedAt: 'Today, 08:42 AM',
+    slaStatus: 'Within SLA',
+  },
+  {
+    id: 'sup-2',
+    ticketNumber: 'TKT-2026-8842',
+    passengerName: 'Vikas Malhotra',
+    passengerPhone: '+91 98731 44520',
+    passengerEmail: 'vikas.m@outlook.com',
+    category: 'Lost & Found Property',
+    priority: 'High',
+    status: 'In Progress',
+    channel: 'Helpline (1800-11-8181)',
+    busNumber: 'DL 1PD 4450',
+    routeNumber: '729',
+    depot: 'BBM Depot',
+    subject: 'Black Lenovo ThinkPad laptop bag left on Seat 14',
+    description: 'Commuter deboarded at Dhaula Kuan stop around 09:15 AM and inadvertently left laptop bag containing company ID and documents on overhead luggage rack.',
+    assignedOfficer: 'Anand Kumar (Depot Vigilance Officer)',
+    createdAt: 'Today, 09:25 AM',
+    updatedAt: 'Today, 09:40 AM',
+    resolutionNotes: 'Conductor Suresh Negi contacted. Bag recovered safely and kept in BBM Depot Lost & Found locker.',
+    slaStatus: 'Within SLA',
+  },
+  {
+    id: 'sup-3',
+    ticketNumber: 'TKT-2026-8843',
+    passengerName: 'Sunita Devi',
+    passengerPhone: '+91 99105 88219',
+    category: 'Pink Pass & Concession',
+    priority: 'High',
+    status: 'Escalated to Depot',
+    channel: 'WhatsApp Bot',
+    busNumber: 'DL 1PC 9904',
+    routeNumber: 'TMS (+)',
+    depot: 'Wazirpur Depot',
+    subject: 'Conductor refused to issue Zero-Fare Pink Ticket at Janakpuri',
+    description: 'Conductor claimed ETIM machine paper roll ran out and demanded ₹15 cash from female commuter instead of providing Pink Free Pass.',
+    assignedOfficer: 'Sunil Dutt (Senior Operations Inspector)',
+    createdAt: 'Today, 10:10 AM',
+    updatedAt: 'Today, 10:30 AM',
+    resolutionNotes: 'Escalated to Wazirpur Depot Manager. Show-cause notice issued to conductor Manoj Tiwari.',
+    slaStatus: 'Near Breach',
+  },
+  {
+    id: 'sup-4',
+    ticketNumber: 'TKT-2026-8844',
+    passengerName: 'Amit Saxena',
+    passengerPhone: '+91 98101 22345',
+    passengerEmail: 'amit.saxena@tcs.com',
+    category: 'Route Delay & Missed Stop',
+    priority: 'Medium',
+    status: 'Open',
+    channel: 'Web Portal',
+    busNumber: 'DL 1PD 1205',
+    routeNumber: '419',
+    depot: 'Sukhdev Vihar Depot',
+    subject: 'Bus driver intentionally skipped Chirag Delhi bus shelter',
+    description: 'At 10:45 AM, Bus DL 1PD 1205 drove through the middle lane without halting at designated Chirag Delhi bus stop despite over 15 commuters waiting.',
+    assignedOfficer: 'Praveen Yadav (Customer Care Lead)',
+    createdAt: 'Today, 11:00 AM',
+    updatedAt: 'Today, 11:05 AM',
+    slaStatus: 'Within SLA',
+  },
+  {
+    id: 'sup-5',
+    ticketNumber: 'TKT-2026-8845',
+    passengerName: 'Rohit Verma',
+    passengerPhone: '+91 98990 12874',
+    category: 'Fare Dispute & Overcharging',
+    priority: 'Medium',
+    status: 'Resolved',
+    channel: 'Passenger Mobile App',
+    routeNumber: '615',
+    depot: 'Vasant Vihar Depot',
+    subject: 'Incorrect fare stage calculation: charged ₹20 instead of ₹15',
+    description: 'Distance between Moti Bagh and AIIMS is 6.2 km which falls under Slab 2 (₹15 for AC). Conductor charged ₹20.',
+    assignedOfficer: 'Ramesh Chander (Helpdesk Tier 1)',
+    createdAt: 'Yesterday, 04:20 PM',
+    updatedAt: 'Today, 09:10 AM',
+    resolutionNotes: 'Fare calculation checked against GPS stage distance. ₹5 excess credited back to commuter wallet.',
+    slaStatus: 'Within SLA',
+  },
+  {
+    id: 'sup-6',
+    ticketNumber: 'TKT-2026-8846',
+    passengerName: 'Kavita Rawat',
+    passengerPhone: '+91 97112 55901',
+    category: 'Women Safety & SOS',
+    priority: 'Urgent',
+    status: 'Resolved',
+    channel: 'Depot Helpdesk',
+    busNumber: 'DL 1PD 8412',
+    routeNumber: '502',
+    depot: 'Sarojini Nagar Depot',
+    subject: 'Immediate emergency alert verified & marshals deployed',
+    description: 'Commuter reported harassment near Saket Crossing. Bus marshal intervened immediately and escorted offender to Saket Police station.',
+    assignedOfficer: 'Vigilance Quick Response Team',
+    createdAt: 'Yesterday, 07:15 PM',
+    updatedAt: 'Yesterday, 08:00 PM',
+    resolutionNotes: 'Police FIR lodged at Saket PS. Passenger escorted safely.',
+    slaStatus: 'Within SLA',
+  },
+];
+
 export const useDtcStore = create<DtcState>()(
   persist(
     (set, get) => ({
@@ -709,6 +843,7 @@ export const useDtcStore = create<DtcState>()(
       passes: initialPasses,
       refundRequests: initialRefunds,
       liveBuses: initialLiveBuses,
+      supportTickets: initialSupportTickets,
 
       addNoTicketChallan: (data) => {
         const count = get().noTicketChallans.length + 1045;
@@ -873,6 +1008,50 @@ export const useDtcStore = create<DtcState>()(
                   resolutionNotes: notes || 'Rejected after GPS log verification',
                 }
               : r
+          ),
+        }));
+      },
+
+      addSupportTicket: (ticket) => {
+        const count = get().supportTickets.length + 8847;
+        const newTicket: SupportTicket = {
+          ...ticket,
+          id: `sup-${Date.now()}`,
+          ticketNumber: `TKT-2026-${count}`,
+          createdAt: 'Just Now',
+          updatedAt: 'Just Now',
+          slaStatus: ticket.priority === 'Urgent' ? 'Within SLA' : 'Within SLA',
+        };
+        set((state) => ({
+          supportTickets: [newTicket, ...state.supportTickets],
+        }));
+      },
+
+      updateTicketStatus: (id, status, notes) => {
+        set((state) => ({
+          supportTickets: state.supportTickets.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  status,
+                  updatedAt: 'Just Now',
+                  ...(notes ? { resolutionNotes: notes } : {}),
+                }
+              : t
+          ),
+        }));
+      },
+
+      assignTicketOfficer: (id, officerName) => {
+        set((state) => ({
+          supportTickets: state.supportTickets.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  assignedOfficer: officerName,
+                  updatedAt: 'Just Now',
+                }
+              : t
           ),
         }));
       },

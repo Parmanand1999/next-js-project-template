@@ -186,3 +186,44 @@ export interface LiveBus {
   occupancyPercent: number;
   status: 'On Route' | 'Delayed' | 'At Terminal' | 'Depot Standby';
 }
+
+export type SupportCategory =
+  | 'ETIM & Digital QR Failure'
+  | 'Fare Dispute & Overcharging'
+  | 'Bus Crew Misbehavior'
+  | 'Route Delay & Missed Stop'
+  | 'Lost & Found Property'
+  | 'Women Safety & SOS'
+  | 'Pink Pass & Concession'
+  | 'General Enquiry';
+
+export type SupportPriority = 'Urgent' | 'High' | 'Medium' | 'Low';
+export type SupportStatus = 'Open' | 'In Progress' | 'Escalated to Depot' | 'Resolved' | 'Closed';
+export type SupportChannel =
+  | 'Passenger Mobile App'
+  | 'Helpline (1800-11-8181)'
+  | 'WhatsApp Bot'
+  | 'Web Portal'
+  | 'Depot Helpdesk';
+
+export interface SupportTicket {
+  id: string;
+  ticketNumber: string;
+  passengerName: string;
+  passengerPhone: string;
+  passengerEmail?: string;
+  category: SupportCategory;
+  priority: SupportPriority;
+  status: SupportStatus;
+  channel: SupportChannel;
+  busNumber?: string;
+  routeNumber?: string;
+  depot?: string;
+  subject: string;
+  description: string;
+  assignedOfficer: string;
+  createdAt: string;
+  updatedAt: string;
+  resolutionNotes?: string;
+  slaStatus: 'Within SLA' | 'Near Breach' | 'SLA Breached';
+}

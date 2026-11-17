@@ -23,7 +23,7 @@ export function NavMain({ groups = [] }: NavMainProps) {
 
   const isRouteActive = (url: string) => {
     if (!url) return false;
-    if (url === '/') return pathname === '/';
+    if (url === '/admin') return pathname === '/admin';
     return pathname === url || pathname.startsWith(`${url}/`);
   };
 
@@ -38,7 +38,7 @@ export function NavMain({ groups = [] }: NavMainProps) {
 
         return (
           <SidebarGroup key={group.groupLabel} className="p-0">
-            <SidebarGroupLabel className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <SidebarGroupLabel className="px-3 py-1 text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">
               {group.groupLabel}
             </SidebarGroupLabel>
 
@@ -53,22 +53,36 @@ export function NavMain({ groups = [] }: NavMainProps) {
                       tooltip={item.title}
                       isActive={isActive}
                       render={<Link href={item.url} />}
-                      className={`w-full justify-start gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                      className={`relative w-full justify-between rounded-xl px-3 py-2 text-xs transition-all duration-200 ${
                         isActive
-                          ? 'bg-muted text-foreground font-semibold shadow-2xs'
-                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground font-normal'
+                          ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/20 shadow-xs'
+                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground font-medium'
                       }`}
                     >
-                      {Icon ? (
-                        <Icon
-                          className={`size-4 shrink-0 ${
-                            isActive ? 'text-foreground' : 'text-muted-foreground'
+                      <div className="flex items-center gap-2.5 truncate">
+                        {Icon ? (
+                          <Icon
+                            className={`size-4 shrink-0 transition-colors ${
+                              isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
+                            }`}
+                          />
+                        ) : null}
+                        <span className="truncate group-data-[collapsible=icon]:hidden">
+                          {item.title}
+                        </span>
+                      </div>
+
+                      {item.badge && (
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full shrink-0 group-data-[collapsible=icon]:hidden ${
+                            isActive
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-muted text-muted-foreground border border-border/60'
                           }`}
-                        />
-                      ) : null}
-                      <span className="truncate group-data-[collapsible=icon]:hidden">
-                        {item.title}
-                      </span>
+                        >
+                          {item.badge}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

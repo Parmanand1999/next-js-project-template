@@ -9,34 +9,23 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
-  Eye,
-  EyeOff,
-  Globe,
-  Loader2,
-  CheckCircle2,
-  Layers,
-  Plane,
-  Mail,
-  Lock,
-  AlertCircle,
+  Bus,
   ShieldCheck,
+  Loader2,
+  Lock,
+  Mail,
+  CheckCircle2,
+  Route,
+  Megaphone,
+  QrCode,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { loginWithEmail } from '@/services/authService';
 import useAuthStore from '@/store/useAuthStore';
 
-// Validation Schema
 const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'Email ID or Username is required')
-    .email('Please enter a valid email address'),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(6, 'Password must be at least 6 characters'),
-  rememberMe: z.boolean().optional(),
+  email: z.string().min(1, 'Email / Officer ID is required'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -47,444 +36,183 @@ export function LoginForm() {
   const isAuthenticated = useAuthStore((state) => Boolean(state.accessToken || state.user));
 
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
-  const user = useAuthStore((state) => state.user);
-
-  // If already authenticated, redirect to appropriate view according to role
   useEffect(() => {
     if (isAuthenticated) {
-      if (user?.isSuperAdmin || user?.roleName?.toLowerCase() === 'admin') {
-        router.replace('/admin');
-      } else if (user?.roleName?.toLowerCase() === 'manager') {
-        router.replace('/manager');
-      } else {
-        router.replace('/portal');
-      }
+      router.replace('/admin');
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, router]);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<LoginFormData>({
+  const { register, handleSubmit, setValue } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
-      rememberMe: false,
+      email: 'admin@dtc.delhi.gov.in',
+      password: '••••••••',
     },
   });
 
-  // Auto-populate email if passed via query params (e.g. from signup)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const emailParam = new URLSearchParams(window.location.search).get('email');
-      if (emailParam) {
-        setValue('email', emailParam);
-      }
-    }
-  }, [setValue]);
-
-  const onSubmit = async (data: LoginFormData) => {
+  const performLogin = (role: 'admin' | 'depot_manager') => {
     setLoading(true);
-    try {
-      // 1. Attempt backend API authentication
-      const response = await loginWithEmail({
-        email: data.email,
-        password: data.password,
-      });
-
-      const resData = (
-        response as {
-          data?: {
-            data?: import('@/types/auth').UserProfile;
-            accessToken?: string;
-            refreshToken?: string;
-          };
-        }
-      )?.data;
-
-      if (resData) {
-        login({
-          userDetails: resData.data,
-          accessToken: resData.accessToken || 'session_access_token',
-          refreshToken: resData.refreshToken,
-        });
-        toast.success(`Welcome back, ${resData.data?.name || 'User'}!`);
-        if (resData.data?.isSuperAdmin || resData.data?.roleName?.toLowerCase() === 'admin') {
-          router.replace('/admin');
-        } else if (resData.data?.roleName?.toLowerCase() === 'manager') {
-          router.replace('/manager');
-        } else {
-          router.replace('/portal');
-        }
-        return;
-      }
-    } catch (apiError: unknown) {
-      // Backend error response
-      const errResponse = (apiError as { response?: { data?: { message?: string } } })?.response?.data;
-      if (errResponse?.message) {
-        toast.error(errResponse.message);
-        setLoading(false);
-        return;
-      }
-
-      // Offline / disconnected demo fallback
-      console.warn('Backend endpoint unreachable, logging in with verified admin credentials.');
+    setTimeout(() => {
       login({
         userDetails: {
-          id: 'usr_admin',
-          name: data.email.split('@')[0].toUpperCase(),
-          email: data.email,
+          id: role === 'admin' ? 'dtc_hq_admin' : 'dtc_depot_mgr',
+          name: role === 'admin' ? 'DTC Central Controller' : 'Depot Manager (Millennium)',
+          email: role === 'admin' ? 'admin@dtc.delhi.gov.in' : 'manager.millennium@dtc.delhi.gov.in',
           roleName: 'Administrator',
           isSuperAdmin: true,
-          permissions: ['Admin.View', 'Users.View', 'Reports.View', 'Machines.View', 'Roles.View'],
+          permissions: ['admin:view', 'reports:view', 'system:view'],
         },
-        accessToken: 'session_access_token',
-        refreshToken: 'session_refresh_token',
+        accessToken: 'session_access_token_sanchalan',
       });
-      toast.success('Signed in successfully!');
+      toast.success('Welcome to SANCHALAN - DTC Central Command Portal');
       router.replace('/admin');
-    } finally {
       setLoading(false);
-    }
+    }, 400);
   };
 
-  // Quick Demo Account Auto-Fill
-  const handleQuickLogin = (role: 'admin' | 'manager' | 'user') => {
-    if (role === 'admin') {
-      setValue('email', 'admin@tts.com');
-      setValue('password', 'Admin@123');
-      toast.info('Loaded Administrator credentials');
-    } else if (role === 'manager') {
-      setValue('email', 'manager@tts.com');
-      setValue('password', 'Manager@123');
-      toast.info('Loaded Manager credentials');
-    } else {
-      setValue('email', 'client@tts.com');
-      setValue('password', 'Client@123');
-      toast.info('Loaded Client/User credentials');
-    }
-  };
-
-  const handleKeyDownPassword = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    setIsCapsLockOn(e.getModifierState('CapsLock'));
+  const onSubmit = () => {
+    performLogin('admin');
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col lg:flex-row bg-[#f8fafc]">
-      {/* ========================================== */}
-      {/* LEFT SIDE: Enterprise Airline Showcase Panel */}
-      {/* ========================================== */}
-      <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between bg-gradient-to-br from-[#0a152e] via-[#122554] to-[#254699] p-12 text-white overflow-hidden">
-        {/* Decorative Ambient Lighting */}
-        <div className="absolute top-0 right-0 -mr-24 -mt-24 size-[450px] rounded-full bg-blue-500/15 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-24 -mb-24 size-[450px] rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />
+    <div className="flex min-h-screen w-full flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
+      {/* LEFT SIDE: DTC Sanchalan Showcase */}
+      <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900 p-12 text-white overflow-hidden">
+        <div className="absolute top-0 right-0 -mr-24 -mt-24 size-[450px] rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-24 -mb-24 size-[450px] rounded-full bg-teal-400/10 blur-3xl pointer-events-none" />
 
         {/* Brand Header */}
-        <div className="relative z-10 flex items-center gap-3.5">
-          <div className="relative flex size-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-[#FFE8A3] shadow-lg">
-            <Globe className="size-6 text-[#FFE8A3]" />
-            <div className="absolute -top-1 -right-1 size-3 rounded-full bg-emerald-400 border-2 border-[#122554]" />
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-emerald-400 shadow-lg">
+            <Bus className="size-6 text-emerald-400" />
           </div>
           <div className="flex flex-col">
             <span className="text-2xl font-black tracking-wider text-white leading-none">
-              TTS
+              SANCHALAN (संचालन)
             </span>
-            <span className="text-[10px] font-black text-[#FFE8A3] tracking-widest uppercase mt-0.5">
-              RECOVER EVERY PENNY
+            <span className="text-[10px] font-bold text-emerald-300 tracking-widest uppercase mt-0.5">
+              Delhi Transport Corporation • GNCTD
             </span>
           </div>
         </div>
 
-        {/* Center Marketing Copy & Capabilities */}
-        <div className="relative z-10 max-w-lg space-y-8 my-auto py-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-blue-100 border border-white/20 backdrop-blur-sm">
-              <Plane className="size-3.5 text-[#FFE8A3]" />
-              Enterprise Airline Refund Engine
+        {/* Showcase Highlights */}
+        <div className="relative z-10 max-w-lg space-y-6 my-auto py-8">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-emerald-200 border border-white/20 backdrop-blur-sm">
+              <Sparkles className="size-3.5 text-emerald-300" />
+              Unified Transit Control & Vigilance Hub
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight text-white leading-[1.15]">
-              Automating Complex Airline Ticket Refunds at Scale.
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-[1.2]">
+              Delhi&apos;s Next-Gen Intelligent Transit Operations.
             </h1>
-            <p className="text-sm text-blue-100/80 leading-relaxed font-light">
-              High-throughput GDS ticket auditing, automated waiver calculation, and zero manual steps to disbursal.
+            <p className="text-sm text-emerald-100/80 leading-relaxed font-light">
+              Connecting Passenger Mobile Ticketing, Conductor ETIM Shift Duty, Live GPS Fleet Tracking, and Ticketless Vigilance Enforcement.
             </p>
           </div>
 
-          <div className="space-y-4 border-t border-white/15 pt-6">
-            <div className="flex items-start gap-3">
-              <div className="size-7 rounded-lg bg-white/10 flex items-center justify-center text-[#FFE8A3] shrink-0 mt-0.5">
-                <CheckCircle2 className="size-4" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-[#FFE8A3] leading-tight">
-                  1. Automated policy parsing across rules & waivers
-                </h4>
-                <p className="text-xs text-blue-100/70 mt-0.5 leading-relaxed">
-                  Instant penalty computation across all global fare classes and airlines.
-                </p>
-              </div>
+          <div className="space-y-3 border-t border-white/15 pt-5 text-xs text-emerald-100/80">
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span><strong>Routes & Slabs:</strong> Official DTC Govt fare stages (AC ₹10–₹25, Non-AC ₹5–₹15, Free Pink Pass).</span>
             </div>
-
-            <div className="flex items-start gap-3">
-              <div className="size-7 rounded-lg bg-white/10 flex items-center justify-center text-[#FFE8A3] shrink-0 mt-0.5">
-                <Layers className="size-4" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-[#FFE8A3] leading-tight">
-                  2. Native GDS and LCC coverage
-                </h4>
-                <p className="text-xs text-blue-100/70 mt-0.5 leading-relaxed">
-                  Ticket data is read directly from Amadeus, Sabre, and direct carrier APIs.
-                </p>
-              </div>
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span><strong>Enforcement:</strong> Spot Challans for No-Ticket (₹200 fine) and Invalid QR audit log.</span>
             </div>
-
-            <div className="flex items-start gap-3">
-              <div className="size-7 rounded-lg bg-white/10 flex items-center justify-center text-[#FFE8A3] shrink-0 mt-0.5">
-                <ShieldCheck className="size-4" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-[#FFE8A3] leading-tight">
-                  3. Zero manual steps, request to disbursal
-                </h4>
-                <p className="text-xs text-blue-100/70 mt-0.5 leading-relaxed">
-                  One validated pipeline carries every ticket case straight through to bank payout.
-                </p>
-              </div>
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span><strong>Crew Ops:</strong> Conductor duty roster, attendance, cash reconciliation & handover logs.</span>
             </div>
           </div>
         </div>
 
-        {/* Footer Subtext */}
-        <div className="relative z-10 flex items-center justify-between text-xs text-blue-200/60 font-light border-t border-white/10 pt-4">
-          <span>© 2026 Travel Tech Services (TTS)</span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-emerald-400" />
-            Core API Cluster: 99.98% Live
+        {/* Footer info */}
+        <div className="relative z-10 flex items-center justify-between text-[11px] text-emerald-300/70 border-t border-white/10 pt-4">
+          <span>&copy; Delhi Transport Corporation, Government of NCT of Delhi</span>
+          <span className="flex items-center gap-1">
+            <ShieldCheck className="size-3.5 text-emerald-400" />
+            Official Operations Portal
           </span>
         </div>
       </div>
 
-      {/* ========================================== */}
-      {/* RIGHT SIDE: Interactive Sign In Card */}
-      {/* ========================================== */}
-      <div className="flex flex-1 flex-col items-center justify-between p-6 sm:p-10 min-h-screen overflow-y-auto">
-        {/* Top Header Logo on Right */}
-        <div className="w-full flex items-center justify-between max-w-md pb-2">
-          {/* Logo Badge */}
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#3456A7] text-[#FFE8A3] shadow-md">
-              <Globe className="size-5" />
+      {/* RIGHT SIDE: Login Card */}
+      <div className="flex flex-1 items-center justify-center p-6 sm:p-12">
+        <div className="w-full max-w-md space-y-6">
+          <div className="space-y-1 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 mb-2">
+              <ShieldCheck className="size-3.5" />
+              Authorized Personnel Login
             </div>
-            <div className="flex flex-col">
-              <span className="font-black text-xl text-[#3456A7] leading-none">
-                TTS
-              </span>
-              <span className="text-[9px] font-black text-[#3456A7] uppercase tracking-wider mt-0.5">
-                RECOVER EVERY PENNY
-              </span>
-            </div>
-          </div>
-
-          {/* Quick Demo Pill Selector */}
-          <div className="flex items-center gap-1 bg-slate-200/60 p-1 rounded-xl text-[11px] font-semibold text-slate-700">
-            <span className="px-1.5 text-slate-500 font-medium hidden sm:inline flex items-center gap-1">
-              <Sparkles className="size-3 text-amber-500" />
-              Demo:
-            </span>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('admin')}
-              className="px-2 py-0.5 rounded-lg hover:bg-white hover:text-[#3456A7] hover:shadow-2xs transition-all cursor-pointer"
-              title="Fill Admin Credentials"
-            >
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('manager')}
-              className="px-2 py-0.5 rounded-lg hover:bg-white hover:text-[#3456A7] hover:shadow-2xs transition-all cursor-pointer"
-              title="Fill Manager Credentials"
-            >
-              Manager
-            </button>
-          </div>
-        </div>
-
-        {/* Royal Blue Sign-In Card (#3456A7) */}
-        <div className="w-full max-w-md bg-[#3456A7] rounded-3xl p-7 sm:p-9 shadow-2xl text-white my-auto border border-blue-400/30 relative">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-wider text-white uppercase">
-              WELCOME
+            <h2 className="text-2xl font-black tracking-tight text-foreground">
+              Sign In to Sanchalan
             </h2>
-            <p className="text-xs text-blue-100/90 mt-1 font-normal">
-              Please enter your login details
+            <p className="text-xs text-muted-foreground">
+              Enter credentials or use the 1-Click Demo Login to explore the admin panel.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Field */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white flex items-center gap-1.5">
-                <Mail className="size-3.5 text-blue-200" />
-                Email ID / Username <span className="text-[#FFE8A3]">*</span>
-              </label>
+          {/* 1-Click Demo Login Button (Highlight) */}
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2.5 text-center">
+            <div className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+              🚀 1-Click Demo Mode Active
+            </div>
+            <Button
+              onClick={() => performLogin('admin')}
+              disabled={loading}
+              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs h-10 shadow-sm"
+            >
+              {loading ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+              Sign In as DTC Central Admin (Instant Access)
+            </Button>
+          </div>
+
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-border w-full" />
+            <span className="bg-background px-3 text-[11px] text-muted-foreground font-normal shrink-0">
+              or enter officer credentials
+            </span>
+            <div className="border-t border-border w-full" />
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs">
+            <div className="space-y-1">
+              <label className="font-semibold text-foreground">Email / Officer ID</label>
               <div className="relative">
+                <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
                 <Input
-                  type="email"
-                  placeholder="admin@tts.com"
                   {...register('email')}
-                  className="h-10 w-full rounded-xl bg-white text-slate-900 text-sm focus:border-[#FFE8A3] focus:ring-2 focus:ring-[#FFE8A3]/50 border-none px-3.5 shadow-inner placeholder:text-slate-400 font-medium"
+                  className="pl-9 h-10 text-xs"
+                  placeholder="admin@dtc.delhi.gov.in"
                 />
               </div>
-              {errors.email && (
-                <p className="text-[#FFE8A3] text-xs font-medium flex items-center gap-1 mt-1">
-                  <AlertCircle className="size-3" />
-                  {errors.email.message}
-                </p>
-              )}
             </div>
 
-            {/* Password Field */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white flex items-center gap-1.5">
-                <Lock className="size-3.5 text-blue-200" />
-                Password <span className="text-[#FFE8A3]">*</span>
-              </label>
-              <div className="relative flex items-center">
+            <div className="space-y-1">
+              <label className="font-semibold text-foreground">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
                 <Input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  type="password"
                   {...register('password')}
-                  onKeyDown={handleKeyDownPassword}
-                  onKeyUp={handleKeyDownPassword}
-                  className="h-10 w-full rounded-xl bg-white text-slate-900 text-sm focus:border-[#FFE8A3] focus:ring-2 focus:ring-[#FFE8A3]/50 border-none pl-3.5 pr-11 shadow-inner placeholder:text-slate-400 font-medium"
+                  className="pl-9 h-10 text-xs"
+                  placeholder="••••••••"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
-                  tabIndex={-1}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
               </div>
-
-              {/* Caps Lock Alert */}
-              {isCapsLockOn && (
-                <div className="flex items-center gap-1.5 text-xs text-[#FFE8A3] font-semibold mt-1 bg-black/20 px-2.5 py-1 rounded-lg">
-                  <AlertCircle className="size-3.5 text-amber-300" />
-                  Caps Lock is ON
-                </div>
-              )}
-
-              {errors.password && (
-                <p className="text-[#FFE8A3] text-xs font-medium flex items-center gap-1 mt-1">
-                  <AlertCircle className="size-3" />
-                  {errors.password.message}
-                </p>
-              )}
             </div>
 
-            {/* Remember Me & Forget Password */}
-            <div className="flex items-center justify-between text-xs pt-1.5">
-              <label className="flex items-center gap-2 cursor-pointer select-none text-white font-medium">
-                <input
-                  type="checkbox"
-                  {...register('rememberMe')}
-                  className="size-4 rounded bg-white text-blue-600 focus:ring-[#FFE8A3] cursor-pointer accent-[#FFE8A3]"
-                />
-                Remember Me
-              </label>
-
-              <Link
-                href="/forgot-password"
-                className="text-white hover:text-[#FFE8A3] transition-colors font-medium hover:underline"
-              >
-                Forget Password?
-              </Link>
-            </div>
-
-            {/* Bright Yellow Sign In Button (#FFE8A3) */}
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-[#FFE8A3] hover:bg-[#ffd970] text-[#0d1738] font-bold rounded-full shadow-lg transition-all active:scale-[0.98] text-sm flex items-center justify-center mt-4 cursor-pointer border-none tracking-wide"
+              className="w-full h-10 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900"
             >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="size-4.5 animate-spin text-[#0d1738]" />
-                  <span>Signing In...</span>
-                </div>
-              ) : (
-                'Sign In'
-              )}
+              Sign In
             </Button>
-
-            {/* Divider */}
-            <div className="relative flex items-center justify-center my-4">
-              <div className="border-t border-blue-300/30 w-full" />
-              <span className="bg-[#3456A7] px-3 text-[11px] text-blue-100 font-normal shrink-0">
-                or sign in with
-              </span>
-              <div className="border-t border-blue-300/30 w-full" />
-            </div>
-
-            {/* Microsoft Outlook SSO Button */}
-            <button
-              type="button"
-              onClick={() => toast.info('Microsoft Outlook Single Sign-On initialized.')}
-              className="w-full h-10 bg-[#25438c] hover:bg-[#1d3778] text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2.5 border border-blue-300/30 shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-            >
-              {/* Microsoft 4-Color Grid SVG */}
-              <svg className="size-4 shrink-0" viewBox="0 0 21 21">
-                <path fill="#F25022" d="M1 1h9v9H1z" />
-                <path fill="#7FBA00" d="M11 1h9v9h-9z" />
-                <path fill="#00A4EF" d="M1 11h9v9H1z" />
-                <path fill="#FFB900" d="M11 11h9v9h-9z" />
-              </svg>
-              <span>Microsoft Outlook</span>
-            </button>
-
-            {/* Link to Signup */}
-            <div className="text-center pt-3 border-t border-blue-400/20 mt-4">
-              <p className="text-xs text-blue-100/90">
-                Don&apos;t have an account?{' '}
-                <Link
-                  href="/signup"
-                  className="font-bold text-[#FFE8A3] hover:underline transition-all ml-1"
-                >
-                  Create an account
-                </Link>
-              </p>
-            </div>
           </form>
-        </div>
-
-        {/* Footer Subtext Below Card */}
-        <div className="text-center space-y-1.5 mt-6 mb-2 max-w-sm">
-          <p className="text-[11px] text-slate-500 font-normal leading-relaxed">
-            Backed by travel professionals with 100+ combined years leading top European and Indian airlines.
-          </p>
-          <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-medium">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="size-3 text-emerald-500" />
-              256-bit SSL Encrypted
-            </span>
-            <span>•</span>
-            <span>Role-Based Access Control</span>
-          </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default LoginForm;

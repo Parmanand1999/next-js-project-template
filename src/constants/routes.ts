@@ -1,20 +1,24 @@
 import {
   LayoutDashboard,
-  Users,
+  Route,
+  ShieldAlert,
+  AlertTriangle,
+  Megaphone,
+  QrCode,
+  RotateCcw,
   UserCheck,
-  Layers,
-  Server,
-  ShieldCheck,
+  ArrowLeftRight,
+  Bus,
   FileText,
-  UserRound,
   LucideIcon,
 } from 'lucide-react';
-import { PERMISSIONS, Permission } from '@/config/roles';
+import { Permission } from '@/config/roles';
 
 export interface SidebarNavItem {
   title: string;
   url: string;
   icon?: LucideIcon;
+  badge?: string;
   permission?: Permission | string | null;
 }
 
@@ -25,54 +29,84 @@ export interface SidebarNavGroup {
 
 export const SIDEBAR_NAV_GROUPS: SidebarNavGroup[] = [
   {
-    groupLabel: 'MAIN MENU',
+    groupLabel: 'OPERATIONS CENTRAL',
     items: [
       {
-        title: 'Dashboard',
-        url: '/',
-        icon: LayoutDashboard,
-        permission: null, // open to all logged in users
-      },
-      {
-        title: 'Admin Control',
+        title: 'Command Dashboard',
         url: '/admin',
-        icon: ShieldCheck,
-        permission: PERMISSIONS.ADMIN_VIEW,
+        icon: LayoutDashboard,
+        permission: null,
       },
       {
-        title: 'Manage Users',
-        url: '/admin/users',
-        icon: Users,
-        permission: PERMISSIONS.USERS_VIEW,
+        title: 'Notices Board',
+        url: '/admin/notices',
+        icon: Megaphone,
+        badge: 'Live',
+        permission: null,
+      },
+    ],
+  },
+  {
+    groupLabel: 'FARES & TRANSIT',
+    items: [
+      {
+        title: 'Routes & Fares',
+        url: '/admin/routes-fares',
+        icon: Route,
+        permission: null,
       },
       {
-        title: 'Manager Workspace',
-        url: '/manager',
+        title: 'QR Tickets & Passes',
+        url: '/admin/passengers/tickets',
+        icon: QrCode,
+        permission: null,
+      },
+      {
+        title: 'Refunds & Grievances',
+        url: '/admin/passengers/refunds',
+        icon: RotateCcw,
+        permission: null,
+      },
+    ],
+  },
+  {
+    groupLabel: 'ENFORCEMENT & VIGILANCE',
+    items: [
+      {
+        title: 'No Ticket (Challan)',
+        url: '/admin/violations/no-ticket',
+        icon: ShieldAlert,
+        badge: 'Fine ₹200',
+        permission: null,
+      },
+      {
+        title: 'Invalid Ticket Log',
+        url: '/admin/violations/invalid-ticket',
+        icon: AlertTriangle,
+        permission: null,
+      },
+    ],
+  },
+  {
+    groupLabel: 'CREW & FLEET MANAGEMENT',
+    items: [
+      {
+        title: 'Conductor Duty & Shifts',
+        url: '/admin/conductors/duty',
         icon: UserCheck,
-        permission: PERMISSIONS.REPORTS_VIEW,
-      },
-      {
-        title: 'Member Portal',
-        url: '/portal',
-        icon: Layers,
         permission: null,
       },
       {
-        title: 'My Profile',
-        url: '/profile',
-        icon: UserRound,
+        title: 'Duty Handover Records',
+        url: '/admin/conductors/handover',
+        icon: ArrowLeftRight,
         permission: null,
       },
       {
-        title: 'System Services',
-        url: '/machines',
-        icon: Server,
-        permission: PERMISSIONS.SYSTEM_VIEW,
-      },
-      {
-        title: 'Documentation',
-        url: '/docs',
-        icon: FileText,
+        title: 'Live Bus Tracking',
+        url: '/admin/fleet/live-tracking',
+        icon: Bus,
+        badge: 'GPS',
         permission: null,
       },
     ],

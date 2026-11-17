@@ -11,39 +11,45 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { SIDEBAR_NAV_GROUPS } from '@/constants/routes';
-import { Shield } from 'lucide-react';
+import { Bus, ShieldCheck, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
       collapsible="icon"
-      className="bg-card border-r border-border text-foreground"
+      className="bg-card/95 backdrop-blur-md border-r border-border/80 text-foreground"
       {...props}
     >
-      {/* Header with App Logo */}
-      <SidebarHeader className="h-16 px-4 border-b border-border flex items-center justify-center">
-        <div className="flex items-center gap-2.5 w-full">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shrink-0 shadow-sm">
-            <Shield className="size-5" />
+      {/* Header with DTC Sanchalan Emblem */}
+      <SidebarHeader className="h-16 px-4 border-b border-border/80 flex items-center justify-center">
+        <Link href="/admin" className="flex items-center gap-3 w-full group">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white shrink-0 shadow-md shadow-emerald-700/20 group-hover:scale-105 transition-transform">
+            <Bus className="size-5" />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-black tracking-tight text-foreground leading-none">
-              VIKRAM PORTAL
-            </span>
-            <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase mt-0.5">
-              Enterprise Admin
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-black tracking-tight text-foreground leading-none">
+                SANCHALAN
+              </span>
+              <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white leading-tight uppercase tracking-wider">
+                DTC
+              </span>
+            </div>
+            <span className="text-[10px] font-semibold text-muted-foreground tracking-wider uppercase mt-1">
+              Delhi Transport Corp.
             </span>
           </div>
-        </div>
+        </Link>
       </SidebarHeader>
 
       {/* Main Grouped Navigation with Permissions */}
-      <SidebarContent className="px-2 py-3">
+      <SidebarContent className="px-2.5 py-3 space-y-2">
         <NavMain groups={SIDEBAR_NAV_GROUPS} />
       </SidebarContent>
 
-      {/* Footer User Avatar & Dropdown */}
-      <SidebarFooter className="border-t border-border p-2">
+      {/* Footer User Avatar & Status */}
+      <SidebarFooter className="border-t border-border/80 p-2.5">
         <NavUser />
       </SidebarFooter>
 

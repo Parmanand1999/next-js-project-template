@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,10 +17,12 @@ import {
 } from '@/components/ui/sidebar';
 import useAuthStore from '@/store/useAuthStore';
 import { ChevronsUpDown, LogOut, User as UserIcon } from 'lucide-react';
+import { ProfileAvatar } from '@/components/common/ProfileAvatar';
 
 export function NavUser() {
   const router = useRouter();
-  const { isMobile } = useSidebar();
+  const { isMobile, state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
   const userData = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
@@ -34,9 +35,9 @@ export function NavUser() {
     router.push('/profile');
   };
 
-  const displayName = userData?.name || 'Administrator';
+  const displayName = userData?.name || 'DTC Controller';
   const displayRole = userData?.roleName || (userData?.isSuperAdmin ? 'Super Admin' : 'Admin');
-  const displayContact = userData?.email || userData?.contactNumber || 'admin@enterprise.dev';
+  const displayContact = userData?.email || userData?.contactNumber || 'admin@dtc.delhi.gov.in';
 
   return (
     <DropdownMenu>
@@ -44,53 +45,49 @@ export function NavUser() {
         render={
           <SidebarMenuButton
             size="lg"
-            className="w-full flex items-center justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-colors"
+            className={`w-full flex items-center text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-colors rounded-xl p-2 ${
+              isCollapsed ? 'justify-center' : 'justify-between'
+            }`}
           />
         }
       >
-        <Avatar className="size-8 rounded-lg border border-sidebar-border shadow-xs shrink-0">
-          <AvatarImage src={userData?.avatar} alt={displayName} />
-          <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold flex items-center justify-center">
-            <UserIcon className="size-4" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-          <span className="truncate font-semibold text-foreground">{displayName}</span>
-          <span className="truncate text-xs text-muted-foreground font-medium">{displayRole}</span>
-        </div>
-        <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+        <ProfileAvatar size={isCollapsed ? 'sm' : 'md'} showOnlineBadge={true} />
+        {!isCollapsed && (
+          <>
+            <div className="grid flex-1 text-left text-xs leading-tight ml-2.5 min-w-0">
+              <span className="truncate font-bold text-foreground">{displayName}</span>
+              <span className="truncate text-[10px] text-muted-foreground font-medium">{displayRole}</span>
+            </div>
+            <ChevronsUpDown className="ml-auto size-4 text-muted-foreground shrink-0" />
+          </>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56"
+        className="w-56 rounded-xl"
         side={isMobile ? 'bottom' : 'right'}
         align="end"
-        sideOffset={4}
+        sideOffset={6}
       >
         <DropdownMenuGroup>
           <DropdownMenuLabel className="p-0 font-normal">
-            <div className="flex items-center gap-2 px-2 py-2 text-left text-sm">
-              <Avatar className="size-8 rounded-lg border border-border shadow-xs">
-                <AvatarImage src={userData?.avatar} alt={displayName} />
-                <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold flex items-center justify-center">
-                  <UserIcon className="size-4" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-foreground">{displayName}</span>
-                <span className="truncate text-xs text-muted-foreground">{displayContact}</span>
+            <div className="flex items-center gap-2.5 px-2 py-2 text-left text-sm">
+              <ProfileAvatar size="md" showOnlineBadge={false} />
+              <div className="grid flex-1 text-left text-xs leading-tight">
+                <span className="truncate font-bold text-foreground">{displayName}</span>
+                <span className="truncate text-[10px] text-muted-foreground">{displayContact}</span>
               </div>
             </div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleProfile} className="cursor-pointer">
-          <UserIcon className="size-4 mr-2" />
-          Profile
+        <DropdownMenuItem onClick={handleProfile} className="cursor-pointer text-xs font-medium">
+          <UserIcon className="size-3.5 mr-2 text-muted-foreground" />
+          My Profile & Settings
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
-          <LogOut className="size-4 mr-2" />
-          Log out
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs font-semibold text-rose-600 focus:text-rose-600">
+          <LogOut className="size-3.5 mr-2 text-rose-600" />
+          Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

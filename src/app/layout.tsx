@@ -5,7 +5,7 @@ import { AppProviders } from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "SANCHALAN (संचालन) | DTC Operations Command Center",
+  title: "SANCHALAN | DTC Operations Command Center",
   description: "Official Delhi Transport Corporation Transit & Vigilance Management System",
 };
 

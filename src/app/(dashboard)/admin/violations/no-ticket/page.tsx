@@ -121,7 +121,7 @@ export default function NoTicketViolationsPage() {
             Delhi Motor Vehicles Act 1988 (Sec 178) Enforcement
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            No Ticket Challans (बिना टिकट जुर्माना)
+            No Ticket Challans
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Real-time vigilance log of ticketless commuters apprehended by bus conductors and flying squads.
@@ -453,7 +453,7 @@ export default function NoTicketViolationsPage() {
               <div>
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <ShieldAlert className="size-4 text-rose-600" />
-                  Issue Spot Penalty Challan (बिना टिकट चालान)
+                  Issue Spot Penalty Challan
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Record ticketless passenger apprehended during live transit.

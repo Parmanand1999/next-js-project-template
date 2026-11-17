@@ -92,7 +92,7 @@ export default function InvalidTicketViolationsPage() {
             Conductor ETIM & QR Scan Verification Audit
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Invalid Ticket Log (अमान्य टिकट निगरानी)
+            Invalid Ticket Log
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Real-time feed of rejected scans, expired digital QR tickets, screenshot duplication, and fare stage violations.

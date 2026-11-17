@@ -55,7 +55,7 @@ export default function PassengerRefundsPage() {
             Passenger Automated UPI Claims & Cancellation Portal
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Refunds & Grievances (रिफंड प्रबंधन)
+            Refunds & Grievances
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Review and process ticket cancellation and breakdown refund claims initiated from the DTC Passenger App.

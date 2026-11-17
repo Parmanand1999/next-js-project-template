@@ -91,7 +91,7 @@ export default function NoticesBoardPage() {
             Delhi Transport Corporation Official Notices & Circulars
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Central Notices Board (सूचना पट्ट)
+            Central Notices Board
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Broadcast operational directives, route diversions, conductor shift instructions, and passenger advisories.

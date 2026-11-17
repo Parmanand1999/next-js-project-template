@@ -59,7 +59,7 @@ export default function AdminDashboardPage() {
             Delhi Transport Corporation • Central Operations & Telematics
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
-            SANCHALAN (संचालन)
+            SANCHALAN
             <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-700 text-white tracking-wide">
               HQ CONTROL ROOM
             </span>

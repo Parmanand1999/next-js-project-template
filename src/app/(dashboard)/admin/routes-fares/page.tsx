@@ -273,7 +273,7 @@ export default function RoutesAndFaresPage() {
                 </div>
                 <div>
                   <CardTitle className="text-sm font-extrabold text-pink-950 dark:text-pink-200">
-                    महिला सम्मान • निःशुल्क यात्रा
+                    Women Free Travel Scheme
                   </CardTitle>
                   <span className="text-[10px] font-bold text-pink-700 dark:text-pink-400">
                     Delhi Govt. Pink Ticket Scheme

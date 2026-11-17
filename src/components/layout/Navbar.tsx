@@ -4,9 +4,11 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, LogOut, Radio } from 'lucide-react';
+import { Bell, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DtcLogo } from '@/components/common/DtcLogo';
+import { ProfileAvatar } from '@/components/common/ProfileAvatar';
 
 export function Navbar() {
   const router = useRouter();
@@ -22,19 +24,20 @@ export function Navbar() {
 
   return (
     <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 bg-card/60 backdrop-blur-md">
-      {/* Left side: Clean context title */}
-      <div className="flex items-center gap-2.5">
-        <span className="size-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50" />
-        <span className="text-xs sm:text-sm font-bold text-foreground tracking-tight">
+      {/* Left side: Clean Context (Logo on mobile) */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <DtcLogo size={26} className="md:hidden shrink-0" />
+        <span className="size-2 rounded-full bg-emerald-500 animate-pulse shrink-0 hidden sm:inline-block" />
+        <span className="text-xs sm:text-sm font-bold text-foreground tracking-tight shrink-0">
           Sanchalan
         </span>
-        <span className="text-muted-foreground/40 font-light text-xs">/</span>
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="text-muted-foreground/40 font-light text-xs shrink-0">/</span>
+        <span className="text-xs font-medium text-muted-foreground truncate">
           DTC Central Control Room
         </span>
       </div>
 
-      {/* Right side: Minimal alerts & Officer Profile */}
+      {/* Right side: Notifications & Officer Profile Avatar */}
       <div className="flex items-center gap-3">
         {/* Subtle Notifications Link */}
         <Link href="/admin/notices">
@@ -50,12 +53,10 @@ export function Navbar() {
         </Link>
 
         {user && (
-          <div className="flex items-center gap-2.5 pl-2 border-l border-border/60">
-            {/* User Details */}
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-full bg-emerald-700/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-400 font-bold flex items-center justify-center text-xs border border-emerald-500/20">
-                {displayName.charAt(0)}
-              </div>
+          <div className="flex items-center gap-3 pl-2 border-l border-border/60">
+            {/* Officer Profile Icon & Details */}
+            <div className="flex items-center gap-2.5">
+              <ProfileAvatar size="md" showOnlineBadge={true} />
               <div className="hidden sm:block text-left">
                 <div className="text-xs font-semibold leading-tight text-foreground">
                   {displayName}

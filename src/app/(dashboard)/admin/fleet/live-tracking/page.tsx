@@ -51,7 +51,7 @@ export default function LiveFleetTrackingPage() {
             Delhi AIS-140 GPS Real-time Telemetry
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Live Fleet Tracking (लाइव बस ट्रैकिंग)
+            Live Fleet Tracking
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Real-time speeds, route stages, ETA to next bus stops, passenger occupancy, and depot telematics.

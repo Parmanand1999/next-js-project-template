@@ -89,7 +89,7 @@ export function LoginForm() {
           </div>
           <div className="flex flex-col">
             <span className="text-2xl font-black tracking-wider text-white leading-none">
-              SANCHALAN (संचालन)
+              SANCHALAN
             </span>
             <span className="text-[10px] font-bold text-emerald-300 tracking-widest uppercase mt-0.5">
               Delhi Transport Corporation • GNCTD

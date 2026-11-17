@@ -75,7 +75,7 @@ export default function ShiftHandoverPage() {
             Mid-Route & Terminal Conductor Shift Handover
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Duty Handover Logs (ड्यूटी हैंडओवर)
+            Duty Handover Logs
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Verification of ticket machine status, cash reconciliation, and crew interchange protocols.

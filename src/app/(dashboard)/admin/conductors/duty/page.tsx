@@ -85,7 +85,7 @@ export default function ConductorDutyPage() {
             Conductor Mobile App Roster & Duty Dispatch
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Conductor Duty & Attendance (ड्यूटी एवं उपस्थिति)
+            Conductor Duty & Attendance
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Real-time tracking of conductor duty punch-in, ETIM issuance, ticket collection, and end-of-shift cash tally.

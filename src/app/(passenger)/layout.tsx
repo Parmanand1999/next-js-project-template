@@ -66,10 +66,10 @@ export default function PassengerAppLayout({
   return (
     <div className="min-h-screen bg-slate-900/5 dark:bg-black text-foreground flex justify-center selection:bg-emerald-500 selection:text-white">
       {/* Mobile Smartphone Frame Container */}
-      <div className="w-full max-w-md min-h-screen bg-background flex flex-col relative shadow-2xl border-x border-border/40 pb-20">
+      <div className="w-full max-w-md min-h-screen bg-slate-100 dark:bg-background flex flex-col relative shadow-2xl border-x border-border/40 pb-20">
         
         {/* Top Sticky App Bar */}
-        <header className="sticky top-0 z-40 h-14 bg-card/95 backdrop-blur-md border-b border-border/80 px-3.5 flex items-center justify-between shadow-2xs">
+        <header className="sticky top-0 z-40 h-14 bg-white/95 dark:bg-card/95 backdrop-blur-md border-b border-slate-200/80 dark:border-border px-3.5 flex items-center justify-between shadow-2xs">
           <Link href="/passenger" className="flex items-center gap-2 group">
             <DtcLogo size={30} className="group-hover:scale-105 transition-transform" />
             <div className="flex flex-col">
@@ -119,7 +119,7 @@ export default function PassengerAppLayout({
         {/* Fixed Mobile Bottom Navigation Bar */}
         <nav
           aria-label="Passenger Bottom Navigation"
-          className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-50 h-16 bg-card/95 backdrop-blur-lg border-t border-border flex items-center justify-around px-1 shadow-lg"
+          className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-50 h-16 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border flex items-center justify-around px-1 shadow-lg"
         >
           {navItems.map((item) => {
             const active = isNavActive(item.href, item.exact);

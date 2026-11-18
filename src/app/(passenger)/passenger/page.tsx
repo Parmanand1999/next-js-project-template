@@ -498,45 +498,17 @@ export default function PassengerHomePage() {
         </div>
       )}
 
-      {/* 3. SLEEK QUICK ACTIONS BAR */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-        <button
-          onClick={handleQuickPinkPass}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/25 text-pink-700 dark:text-pink-300 text-[11px] font-bold shrink-0 transition-all shadow-2xs"
-        >
-          <Sparkles className="size-3.5 text-pink-500" />
-          <span>Women Pink Pass (Free)</span>
-        </button>
-
-        <Link
-          href="/passenger/live"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 text-blue-700 dark:text-blue-300 text-[11px] font-bold shrink-0 transition-all shadow-2xs"
-        >
-          <Bus className="size-3.5 text-blue-500" />
-          <span>Live Radar</span>
-        </Link>
-
-        <button
-          onClick={handleUseCurrentLocation}
-          disabled={isLocating}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold shrink-0 transition-all shadow-2xs"
-        >
-          <Crosshair className={`size-3.5 text-emerald-600 ${isLocating ? 'animate-spin' : ''}`} />
-          <span>{isLocating ? 'Locating...' : 'Near Me (GPS)'}</span>
-        </button>
-      </div>
-
-      {/* 4. UNIFIED STREAMLINED ROUTE SEARCH CARD */}
-      <Card id="route-discovery-card" className="border-border/80 shadow-xs rounded-2xl overflow-visible p-3 space-y-2.5 bg-card">
+      {/* 2. UNIFIED STREAMLINED ROUTE SEARCH CARD */}
+      <div id="route-discovery-card" className="border border-slate-200/90 dark:border-border shadow-xs rounded-2xl p-3.5 space-y-2.5 bg-white dark:bg-card">
         {/* Connected Inputs Row */}
-        <div className="relative space-y-2">
+        <div className="relative space-y-2.5">
           {/* Vertical connecting line */}
-          <div className="absolute left-[17px] top-[18px] bottom-[18px] w-0.5 bg-border pointer-events-none" />
+          <div className="absolute left-[19px] top-[22px] bottom-[22px] w-0.5 bg-slate-200 dark:bg-border pointer-events-none" />
 
           {/* From Input */}
           <div ref={fromRef} className="relative">
             <div className="relative flex items-center">
-              <span className="absolute left-3 size-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20 shrink-0 z-10" />
+              <span className="absolute left-3.5 size-3 rounded-full bg-emerald-600 ring-4 ring-emerald-500/20 shrink-0 z-10" />
               <input
                 type="text"
                 value={fromSearchQuery}
@@ -549,7 +521,7 @@ export default function PassengerHomePage() {
                   setIsToFocused(false);
                 }}
                 placeholder="From: Boarding stop (e.g. Saket, INA)..."
-                className="w-full h-10 pl-8 pr-8 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-1 focus:ring-emerald-600 transition-all"
+                className="w-full h-12 pl-10 pr-10 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-background text-sm font-bold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-emerald-600 transition-all"
               />
               {fromSearchQuery && (
                 <button
@@ -559,25 +531,25 @@ export default function PassengerHomePage() {
                     setOriginStop('');
                     setIsFromFocused(true);
                   }}
-                  className="absolute right-2.5 p-1 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-700"
                 >
-                  <X className="size-3.5" />
+                  <X className="size-4" />
                 </button>
               )}
             </div>
 
             {/* From Dropdown */}
             {isFromFocused && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-xl p-1.5 space-y-1">
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl shadow-xl p-1.5 space-y-1">
                 <button
                   type="button"
                   onClick={() => handleSelectOriginStop('ALL_NEARBY')}
-                  className={`w-full p-2 rounded-lg text-left text-xs font-bold transition-colors flex items-center justify-between ${
-                    originStop === 'ALL_NEARBY' ? 'bg-emerald-700 text-white' : 'hover:bg-muted text-foreground'
+                  className={`w-full p-2.5 rounded-lg text-left text-xs font-bold transition-colors flex items-center justify-between ${
+                    originStop === 'ALL_NEARBY' ? 'bg-emerald-700 text-white' : 'hover:bg-slate-100 text-slate-900'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="size-3.5 text-amber-400 shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="size-4 text-amber-500 shrink-0" />
                     <span>✨ All Nearest Stops (Auto-Discover)</span>
                   </div>
                 </button>
@@ -590,13 +562,13 @@ export default function PassengerHomePage() {
                       key={`from-opt-${stop}`}
                       type="button"
                       onClick={() => handleSelectOriginStop(stop)}
-                      className={`w-full p-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
-                        isSelected ? 'bg-emerald-700 text-white font-bold' : 'hover:bg-muted text-foreground'
+                      className={`w-full p-2.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
+                        isSelected ? 'bg-emerald-700 text-white font-bold' : 'hover:bg-slate-100 text-slate-900'
                       }`}
                     >
-                      <span className="font-semibold">{stop}</span>
+                      <span className="font-bold">{stop}</span>
                       {isNearby && (
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
                           📍 {isNearby.distanceFormatted}
                         </span>
                       )}
@@ -608,21 +580,21 @@ export default function PassengerHomePage() {
           </div>
 
           {/* Swap Button on side */}
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
             <button
               type="button"
               onClick={handleSwapStops}
-              className="size-7 rounded-full bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shadow-2xs hover:scale-105 transition-all"
+              className="size-8 rounded-full bg-white dark:bg-muted border border-slate-300 dark:border-border flex items-center justify-center text-slate-700 dark:text-foreground shadow-xs hover:scale-105 transition-all"
               title="Swap From and To"
             >
-              <ArrowUpDown className="size-3.5 text-foreground" />
+              <ArrowUpDown className="size-4 text-slate-700 dark:text-foreground" />
             </button>
           </div>
 
           {/* To Input */}
           <div ref={toRef} className="relative">
             <div className="relative flex items-center">
-              <span className="absolute left-3 size-2.5 rounded-full bg-rose-500 ring-2 ring-rose-500/20 shrink-0 z-10" />
+              <span className="absolute left-3.5 size-3 rounded-full bg-rose-600 ring-4 ring-rose-500/20 shrink-0 z-10" />
               <input
                 type="text"
                 value={toSearchQuery}
@@ -635,7 +607,7 @@ export default function PassengerHomePage() {
                   setIsFromFocused(false);
                 }}
                 placeholder="To: Where are you heading?"
-                className="w-full h-10 pl-8 pr-8 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-1 focus:ring-rose-600 transition-all"
+                className="w-full h-12 pl-10 pr-10 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-background text-sm font-bold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-rose-600 transition-all"
               />
               {toSearchQuery && (
                 <button
@@ -645,16 +617,16 @@ export default function PassengerHomePage() {
                     setDestinationStop('');
                     setIsToFocused(true);
                   }}
-                  className="absolute right-2.5 p-1 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-700"
                 >
-                  <X className="size-3.5" />
+                  <X className="size-4" />
                 </button>
               )}
             </div>
 
             {/* To Dropdown */}
             {isToFocused && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-xl p-1.5 space-y-1">
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl shadow-xl p-1.5 space-y-1">
                 {filteredToStops.map((stop) => {
                   const isSelected = destinationStop === stop;
                   return (
@@ -662,11 +634,11 @@ export default function PassengerHomePage() {
                       key={`to-opt-${stop}`}
                       type="button"
                       onClick={() => handleSelectDestinationStop(stop)}
-                      className={`w-full p-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
-                        isSelected ? 'bg-rose-600 text-white font-bold' : 'hover:bg-muted text-foreground'
+                      className={`w-full p-2.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
+                        isSelected ? 'bg-rose-600 text-white font-bold' : 'hover:bg-slate-100 text-slate-900'
                       }`}
                     >
-                      <span className="font-semibold">{stop}</span>
+                      <span className="font-bold">{stop}</span>
                     </button>
                   );
                 })}
@@ -674,39 +646,7 @@ export default function PassengerHomePage() {
             )}
           </div>
         </div>
-
-        {/* Quick Suggestion Chips (Combined Nearest & Popular Destinations in 1 sleek scroll) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
-          {nearestStops.map((s) => (
-            <button
-              key={s.name}
-              type="button"
-              onClick={() => handleSelectOriginStop(s.name)}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 border transition-all ${
-                originStop === s.name
-                  ? 'bg-emerald-700 text-white border-emerald-600 shadow-2xs'
-                  : 'bg-muted/50 text-muted-foreground hover:text-foreground border-border/60'
-              }`}
-            >
-              📍 {s.name} ({s.distanceFormatted})
-            </button>
-          ))}
-          {['Janpath / CP', 'Kashmere Gate ISBT', 'Dhaula Kuan', 'AIIMS / Safdarjung'].map((dest) => (
-            <button
-              key={dest}
-              type="button"
-              onClick={() => handleSelectDestinationStop(dest)}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 border transition-all ${
-                destinationStop === dest
-                  ? 'bg-rose-600 text-white border-rose-500 shadow-2xs'
-                  : 'bg-muted/50 text-muted-foreground hover:text-foreground border-border/60'
-              }`}
-            >
-              ➔ {dest.split(' ')[0]}
-            </button>
-          ))}
-        </div>
-      </Card>
+      </div>
 
       {/* AVAILABLE CONNECTING BUSES LIST (EXPLICIT STOP & DISTANCE BREAKDOWN) */}
       <div className="space-y-2.5">
@@ -800,116 +740,102 @@ export default function PassengerHomePage() {
               return (
                 <div
                   key={bus.id}
-                  className="p-3.5 rounded-2xl bg-card border border-border/80 hover:border-emerald-500/40 shadow-xs transition-all space-y-2.5"
+                  className="p-4 rounded-2xl bg-white dark:bg-card border border-slate-200/90 dark:border-border shadow-xs space-y-3"
                 >
                   {/* Row 1: Bus Route Number, AC badge, Live Arrival & Fare */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <span
-                        className={`px-2.5 py-1 rounded-xl font-black text-xs text-white shadow-2xs ${
+                        className={`px-3 py-1 rounded-xl font-black text-sm text-white shadow-2xs ${
                           isAC ? 'bg-emerald-700' : 'bg-slate-700'
                         }`}
                       >
                         {bus.routeNumber}
                       </span>
-                      <span className="text-[11px] font-bold text-foreground">
-                        {bus.busType}
-                      </span>
-                      {busEta !== undefined && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                          <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Arriving in {busEta}m
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-900 dark:text-foreground">
+                          {bus.busType}
                         </span>
-                      )}
+                        {busEta !== undefined && (
+                          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                            ● Arriving in {busEta} mins
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-sm font-black text-foreground">₹{bus.fare}</span>
+                      <span className="text-lg font-black text-slate-900 dark:text-foreground">₹{bus.fare}</span>
+                      <span className="text-[10px] text-slate-500 block">per ticket</span>
                     </div>
                   </div>
 
-                  {/* Row 2: Origin (Boarding) & Destination Journey Details */}
-                  <div className="flex items-center justify-between text-xs pt-0.5">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-[11px] text-muted-foreground">Board at:</span>
-                      <strong className="text-foreground font-black truncate">{bus.fromStop}</strong>
-                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold shrink-0 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
+                  {/* Row 2: Boarding Stop & Destination Details */}
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-muted/30 border border-slate-100 dark:border-border flex items-center justify-between text-xs">
+                    <div className="space-y-0.5 min-w-0 pr-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                        Boarding Stop
+                      </span>
+                      <span className="font-bold text-slate-900 dark:text-foreground text-sm truncate block">
+                        {bus.fromStop}
+                      </span>
+                      <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold block">
                         {bus.distanceFromUserFormatted} (~{bus.walkingMinutesFromUser}m walk)
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0 pl-1">
-                      <ArrowRight className="size-3 text-muted-foreground" />
-                      <span className="font-bold text-foreground truncate max-w-[90px]">{bus.toStop.split(' ')[0]}</span>
+                    <ArrowRight className="size-4 text-slate-400 shrink-0 mx-1" />
+
+                    <div className="space-y-0.5 text-right min-w-0 pl-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                        Destination
+                      </span>
+                      <span className="font-bold text-slate-900 dark:text-foreground text-sm truncate block">
+                        {bus.toStop}
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-medium block">
+                        ~{Math.round(bus.distanceKm * 2.2)} mins trip
+                      </span>
                     </div>
                   </div>
 
-                  {/* Row 3: Action Buttons (View Stops / Book) */}
-                  <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                  {/* Row 3: Action Buttons */}
+                  <div className="flex items-center gap-2 pt-1">
                     <button
                       type="button"
                       onClick={() => setExpandedBusId(isExpanded ? null : bus.id)}
-                      className="text-[11px] font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                      className="h-11 px-3 text-xs font-bold text-slate-600 dark:text-muted-foreground hover:text-slate-900 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/40 flex items-center gap-1 shrink-0"
                     >
-                      <span>{isExpanded ? 'Hide stops' : 'View stops & details'}</span>
+                      <span>{isExpanded ? 'Hide' : 'Stops'}</span>
                       {isExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
                     </button>
 
                     <Button
                       type="button"
-                      size="sm"
                       onClick={() => handleSelectBusToBook(bus)}
-                      className="h-8 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-xl shadow-2xs flex items-center gap-1.5"
+                      className="flex-1 h-11 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm rounded-xl shadow-xs flex items-center justify-center gap-2"
                     >
                       <span>Book Ticket</span>
-                      <ArrowRight className="size-3.5" />
+                      <ArrowRight className="size-4" />
                     </Button>
                   </div>
 
-                  {/* Expandable Stops & Details */}
-                  {isExpanded && (
-                    <div className="pt-2 border-t border-border/60 space-y-2 text-xs animate-in fade-in duration-150">
-                      <div className="p-2.5 rounded-xl bg-muted/40 space-y-1 text-[11px]">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-foreground">📍 Boarding Stop: {bus.fromStop}</span>
-                          <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">
-                            {bus.distanceFromUserFormatted} (~{bus.walkingMinutesFromUser}m walk)
-                          </span>
-                        </div>
-                        {bus.stopLandmark && (
-                          <span className="text-[10px] text-muted-foreground block">
-                            Landmark: {bus.stopLandmark}
-                          </span>
-                        )}
-                        <span className="text-[10px] text-muted-foreground block">
-                          Journey: ~{Math.round(bus.distanceKm * 2.2)} mins • {bus.distanceKm} km
-                        </span>
-                        {bus.otherNearbyStops && bus.otherNearbyStops.length > 0 && (
-                          <div className="pt-1 text-[10px] text-muted-foreground">
-                            <span>Also boarding nearby at: </span>
-                            {bus.otherNearbyStops.map((alt) => `${alt.name} (${alt.distanceFormatted})`).join(', ')}
-                          </div>
-                        )}
+                  {/* Simple clean stops list if expanded */}
+                  {isExpanded && tripStops.length > 0 && (
+                    <div className="pt-2 border-t border-slate-200/80 dark:border-border space-y-2 text-xs">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Route Stops ({tripStops.length} Total)
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
+                        {tripStops.map((st, sIdx) => (
+                          <React.Fragment key={st.id || sIdx}>
+                            <span className={sIdx === 0 || sIdx === tripStops.length - 1 ? 'font-black text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md' : 'bg-slate-100 dark:bg-muted px-2 py-0.5 rounded-md'}>
+                              {st.name}
+                            </span>
+                            {sIdx < tripStops.length - 1 && <span className="text-slate-400">➔</span>}
+                          </React.Fragment>
+                        ))}
                       </div>
-
-                      {/* Stops progression timeline */}
-                      {tripStops.length > 0 && (
-                        <div className="p-2.5 rounded-xl bg-muted/20 border border-border/50 space-y-1.5 text-[10px]">
-                          <span className="font-bold text-muted-foreground block uppercase tracking-wider text-[9px]">
-                            Route Timeline ({tripStops.length} stops)
-                          </span>
-                          <div className="flex flex-wrap items-center gap-1 text-muted-foreground">
-                            {tripStops.map((st, sIdx) => (
-                              <React.Fragment key={st.id || sIdx}>
-                                <span className={sIdx === 0 || sIdx === tripStops.length - 1 ? 'font-bold text-foreground' : ''}>
-                                  {st.name}
-                                </span>
-                                {sIdx < tripStops.length - 1 && <span className="opacity-40">➔</span>}
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>

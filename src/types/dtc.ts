@@ -5,6 +5,20 @@ export interface BusStop {
   name: string;
   distanceKm: number;
   stage: number;
+  lat?: number;
+  lng?: number;
+  landmark?: string;
+}
+
+export interface NearestStopInfo {
+  name: string;
+  distanceMeters: number;
+  distanceFormatted: string;
+  walkingTimeMinutes: number;
+  walkingAdvice: string;
+  landmark?: string;
+  lat: number;
+  lng: number;
 }
 
 export interface DtcRoute {

@@ -1,10 +1,19 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDtcStore } from '@/store/useDtcStore';
-import { BusCategory, DtcRoute, LiveBus } from '@/types/dtc';
+import { BusCategory, DtcRoute, LiveBus, NearestStopInfo } from '@/types/dtc';
+import {
+  findNearestStops,
+  COMMUTER_LOCATION_PRESETS,
+  CommuterLocationPreset,
+  calculateHaversineDistanceMeters,
+  formatDistance,
+  calculateWalkingMinutes,
+  DTC_STOP_COORDINATES,
+} from '@/lib/geoUtils';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +40,8 @@ import {
   ArrowUpDown,
   Users,
   Filter,
+  Navigation2,
+  Crosshair,
 } from 'lucide-react';
 
 interface ConnectingBusItem {
@@ -67,7 +78,29 @@ export default function PassengerHomePage() {
     return Array.from(set).sort();
   }, [routes]);
 
-  // Stop-to-Stop Inputs
+  // Current GPS Location State (Simulated/Device location when passenger is away from stop)
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+    label: string;
+    isCustomGps?: boolean;
+  }>({
+    lat: 28.5718,
+    lng: 77.2085,
+    label: 'Dilli Haat / Kidwai Nagar (INA Market)',
+  });
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [isGpsActive, setIsGpsActive] = useState<boolean>(false);
+  const [showLocationPicker, setShowLocationPicker] = useState<boolean>(false);
+
+  // Compute Nearest Stops from current commuter position
+  const nearestStops = useMemo<NearestStopInfo[]>(() => {
+    return findNearestStops(userLocation.lat, userLocation.lng, 3);
+  }, [userLocation]);
+
+  const nearestPrimaryStop = nearestStops[0] || null;
+
+  // Stop-to-Stop Inputs (default to Saket Crossing -> Janpath / CP)
   const [originStop, setOriginStop] = useState<string>('Saket Crossing');
   const [destinationStop, setDestinationStop] = useState<string>('Janpath / CP');
 
@@ -81,11 +114,98 @@ export default function PassengerHomePage() {
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
   const [paymentMethod, setPaymentMethod] = useState<'Wallet' | 'UPI' | 'Card'>('Wallet');
 
+  // Distance from current location to currently selected originStop
+  const distanceToCurrentOriginStop = useMemo<{
+    meters: number;
+    formatted: string;
+    walkingMins: number;
+  } | null>(() => {
+    const coords = DTC_STOP_COORDINATES[originStop];
+    if (!coords) return null;
+    const meters = calculateHaversineDistanceMeters(userLocation.lat, userLocation.lng, coords.lat, coords.lng);
+    return {
+      meters,
+      formatted: formatDistance(meters),
+      walkingMins: calculateWalkingMinutes(meters),
+    };
+  }, [originStop, userLocation]);
+
   // Swap From and To Stops
   const handleSwapStops = () => {
     const temp = originStop;
     setOriginStop(destinationStop);
     setDestinationStop(temp);
+  };
+
+  // Auto-Detect Current GPS Location & Auto-Select Nearest Bus Stop
+  const handleUseCurrentLocation = () => {
+    setIsLocating(true);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setUserLocation({
+            lat: latitude,
+            lng: longitude,
+            label: 'Your Current Live Location (GPS)',
+            isCustomGps: true,
+          });
+          const computed = findNearestStops(latitude, longitude, 3);
+          if (computed.length > 0) {
+            setOriginStop(computed[0].name);
+            setIsGpsActive(true);
+            toast.success(`Nearest Stop Found: ${computed[0].name} (${computed[0].distanceFormatted} away)`);
+          }
+          setIsLocating(false);
+        },
+        () => {
+          // Graceful fallback to Delhi Commuter preset if denied / mock environment
+          const fallback = COMMUTER_LOCATION_PRESETS[0];
+          setUserLocation({
+            lat: fallback.lat,
+            lng: fallback.lng,
+            label: fallback.label,
+          });
+          const computed = findNearestStops(fallback.lat, fallback.lng, 3);
+          if (computed.length > 0) {
+            setOriginStop(computed[0].name);
+            setIsGpsActive(true);
+            toast.info(`Current Location: ${fallback.label}. Nearest Stop: ${computed[0].name} (${computed[0].distanceFormatted})`);
+          }
+          setIsLocating(false);
+        },
+        { timeout: 6000 }
+      );
+    } else {
+      const fallback = COMMUTER_LOCATION_PRESETS[0];
+      setUserLocation({
+        lat: fallback.lat,
+        lng: fallback.lng,
+        label: fallback.label,
+      });
+      const computed = findNearestStops(fallback.lat, fallback.lng, 3);
+      if (computed.length > 0) {
+        setOriginStop(computed[0].name);
+        setIsGpsActive(true);
+      }
+      setIsLocating(false);
+    }
+  };
+
+  // Change Commuter Location to a Preset (e.g. at Select Citywalk, Aerocity, AIIMS, etc.)
+  const handleSelectPresetLocation = (preset: CommuterLocationPreset) => {
+    setUserLocation({
+      lat: preset.lat,
+      lng: preset.lng,
+      label: preset.label,
+    });
+    const computed = findNearestStops(preset.lat, preset.lng, 3);
+    if (computed.length > 0) {
+      setOriginStop(computed[0].name);
+      setIsGpsActive(true);
+      toast.success(`Location set to ${preset.label}. Nearest stop: ${computed[0].name} (${computed[0].distanceFormatted} away)`);
+    }
+    setShowLocationPicker(false);
   };
 
   // Discover all buses connecting originStop and destinationStop
@@ -207,10 +327,18 @@ export default function PassengerHomePage() {
           </h2>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border text-[10px] font-medium text-muted-foreground">
-          <MapPin className="size-3 text-emerald-600 animate-pulse" />
-          <span>INA Colony Metro</span>
-        </div>
+        {/* Clickable GPS Location pill */}
+        <button
+          onClick={() => setShowLocationPicker(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/70 hover:bg-muted border border-border text-[10px] font-medium text-foreground transition-colors shadow-2xs group"
+          title="Click to change your current location"
+        >
+          <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="truncate max-w-[120px] font-bold">{userLocation.label.split('/')[0]}</span>
+          <span className="text-[9px] text-emerald-700 dark:text-emerald-400 font-bold group-hover:underline">
+            Change
+          </span>
+        </button>
       </div>
 
       {/* Active Ticket Notification Banner */}
@@ -313,14 +441,29 @@ export default function PassengerHomePage() {
         </CardHeader>
 
         <CardContent className="p-3.5 space-y-3">
-          {/* Stop Selectors with Swap Button */}
+          {/* Stop Selectors with Current Location GPS Trigger */}
           <div className="relative space-y-2">
-            {/* From (Boarding) Stop */}
+            {/* From (Boarding) Stop with GPS Auto-detect button */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <span className="size-2 rounded-full bg-emerald-600 animate-pulse" />
-                Boarding Stop (From)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <span className="size-2 rounded-full bg-emerald-600 animate-pulse" />
+                  Boarding Stop (From)
+                </label>
+
+                {/* 1-Tap "Near Me" GPS Button */}
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={isLocating}
+                  className="px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1 transition-all"
+                  title="Auto-detect nearest bus stop from your current location"
+                >
+                  <Crosshair className={`size-3 text-emerald-600 ${isLocating ? 'animate-spin' : ''}`} />
+                  <span>{isLocating ? 'Detecting...' : 'Near Me (GPS)'}</span>
+                </button>
+              </div>
+
               <select
                 value={originStop}
                 onChange={(e) => setOriginStop(e.target.value)}
@@ -333,6 +476,81 @@ export default function PassengerHomePage() {
                 ))}
               </select>
             </div>
+
+            {/* NEAREST BUS STOP DISTANCE & WALKING TIME ADVISORY CARD */}
+            {distanceToCurrentOriginStop && (
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-500/30 space-y-2 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Navigation2 className="size-3.5 text-emerald-700 dark:text-emerald-400 rotate-45" />
+                    <span className="text-xs font-black text-foreground">
+                      Nearest Bus Stop: {originStop}
+                    </span>
+                  </div>
+                  <Badge className="bg-emerald-700 text-white font-black text-[10px] px-2 py-0.5">
+                    {distanceToCurrentOriginStop.formatted} doori
+                  </Badge>
+                </div>
+
+                {/* Walking Guidance Explanation */}
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-card/70 p-2 rounded-xl border border-border/60">
+                  <Clock className="size-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                  <div className="space-y-0.5">
+                    <p className="leading-snug">
+                      Aap is waqt <strong className="text-foreground">{userLocation.label}</strong> par hain.
+                      Aapke sabse paas ka bus stop <strong className="text-foreground">{originStop}</strong> lagbhag{' '}
+                      <strong className="text-emerald-700 dark:text-emerald-400">
+                        {distanceToCurrentOriginStop.formatted}
+                      </strong>{' '}
+                      hai (~
+                      <strong className="text-foreground">
+                        {distanceToCurrentOriginStop.walkingMins} min paidal
+                      </strong>{' '}
+                      walk).
+                    </p>
+                    {DTC_STOP_COORDINATES[originStop]?.landmark && (
+                      <span className="text-[10px] text-muted-foreground block">
+                        📍 Landmark: {DTC_STOP_COORDINATES[originStop].landmark}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Other Nearest Stops Quick Selector */}
+                <div className="space-y-1 pt-0.5">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground font-semibold">Other Nearby Stops:</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowLocationPicker(true)}
+                      className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline"
+                    >
+                      Change My Location
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                    {nearestStops.map((stop) => (
+                      <button
+                        key={stop.name}
+                        type="button"
+                        onClick={() => {
+                          setOriginStop(stop.name);
+                          setIsGpsActive(true);
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors shrink-0 flex items-center gap-1 ${
+                          originStop === stop.name
+                            ? 'bg-emerald-700 text-white border-emerald-600 shadow-2xs'
+                            : 'bg-card text-muted-foreground border-border hover:bg-muted'
+                        }`}
+                      >
+                        <span>{stop.name}</span>
+                        <span className="opacity-80">({stop.distanceFormatted})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Quick Swap Stops Button */}
             <div className="flex justify-end pr-3 -my-1 z-10 relative">
@@ -372,10 +590,10 @@ export default function PassengerHomePage() {
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
               {[
                 { from: 'Saket Crossing', to: 'Janpath / CP' },
+                { from: 'INA Colony', to: 'Janpath / CP' },
                 { from: 'Saket Crossing', to: 'Kashmere Gate ISBT' },
                 { from: 'Mahipalpur', to: 'Dhaula Kuan' },
                 { from: 'AIIMS / Safdarjung', to: 'Janpath / CP' },
-                { from: 'Kapashera Border', to: 'Mori Gate Terminal' },
               ].map((routePair, idx) => (
                 <button
                   key={idx}
@@ -471,6 +689,10 @@ export default function PassengerHomePage() {
           <div className="space-y-2.5">
             {connectingBuses.map((bus) => {
               const isAC = bus.busType === 'AC Electric' || bus.busType === 'AC Low Floor CNG';
+              const walkMins = distanceToCurrentOriginStop?.walkingMins || 4;
+              const busEta = bus.liveBus?.etaNextStopMins;
+              const willCatchOnTime = busEta !== undefined ? busEta >= walkMins : true;
+
               return (
                 <Card
                   key={`${bus.routeNumber}-${bus.busType}`}
@@ -544,6 +766,27 @@ export default function PassengerHomePage() {
                       )}
                     </div>
 
+                    {/* Walking Feasibility Advisory: Compares user walking time with bus arrival */}
+                    {busEta !== undefined && distanceToCurrentOriginStop && (
+                      <div
+                        className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between ${
+                          willCatchOnTime
+                            ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20'
+                        }`}
+                      >
+                        <span className="flex items-center gap-1">
+                          {willCatchOnTime ? '🟢' : '🟡'}
+                          {willCatchOnTime
+                            ? `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Aaram se catch kar lenge!)`
+                            : `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Thoda tez chalna hoga)`}
+                        </span>
+                        <span className="text-[9px] opacity-80">
+                          {distanceToCurrentOriginStop.formatted} walk
+                        </span>
+                      </div>
+                    )}
+
                     {/* Book Ticket Button */}
                     <Button
                       onClick={() => handleSelectBusToBook(bus)}
@@ -559,6 +802,80 @@ export default function PassengerHomePage() {
           </div>
         )}
       </div>
+
+      {/* CHANGE MY LOCATION MODAL (When commuter is elsewhere in city) */}
+      {showLocationPicker && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-sm bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-3.5">
+            <div className="flex items-center justify-between border-b pb-2.5 border-border">
+              <div className="flex items-center gap-2">
+                <MapPin className="size-4 text-emerald-600" />
+                <h3 className="text-xs font-black text-foreground">
+                  Select Your Current Location
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowLocationPicker(false)}
+                className="size-7 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              Aap Delhi me jaha bhi hain, waha ke sabse nazdeek bus stop ki doori auto-calculate hogi:
+            </p>
+
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLocationPicker(false);
+                  handleUseCurrentLocation();
+                }}
+                className="w-full p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-left flex items-center justify-between transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Crosshair className="size-4 text-emerald-600" />
+                  <div>
+                    <span className="text-xs font-bold text-foreground block">
+                      Use Device Live GPS
+                    </span>
+                    <span className="text-[10px] text-muted-foreground block">
+                      Auto-detect using phone sensor
+                    </span>
+                  </div>
+                </div>
+                <Badge className="bg-emerald-700 text-white text-[9px]">Live GPS</Badge>
+              </button>
+
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Popular Locations In Delhi
+                </span>
+                {COMMUTER_LOCATION_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPresetLocation(preset)}
+                    className="w-full p-2.5 rounded-xl border border-border hover:border-emerald-500/50 bg-card hover:bg-muted/40 text-left flex items-center justify-between transition-all"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-foreground block">
+                        {preset.label}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground block">
+                        {preset.area}
+                      </span>
+                    </div>
+                    <ChevronRight className="size-3.5 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BOOKING MODAL WITH MULTI-PASSENGER INDIVIDUAL QR NOTICE */}
       {showBookingModal && selectedBus && (

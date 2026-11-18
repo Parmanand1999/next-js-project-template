@@ -157,7 +157,8 @@ export default function PassengerHomePage() {
 
   // Selected Bus for Booking Modal
   const [selectedBus, setSelectedBus] = useState<ConnectingBusItem | null>(null);
-  const [passengersCount, setPassengersCount] = useState<number>(1);
+  const [adultCount, setAdultCount] = useState<number>(1);
+  const [childCount, setChildCount] = useState<number>(0);
   const [isPinkTicket, setIsPinkTicket] = useState<boolean>(false);
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
   const [paymentMethod, setPaymentMethod] = useState<'Wallet' | 'UPI' | 'Card'>('Wallet');
@@ -403,21 +404,26 @@ export default function PassengerHomePage() {
   // Handle bus selection for booking
   const handleSelectBusToBook = (busItem: ConnectingBusItem) => {
     setSelectedBus(busItem);
-    setPassengersCount(1);
+    setAdultCount(1);
+    setChildCount(0);
     setIsPinkTicket(false);
     setShowBookingModal(true);
   };
 
-  // Compute total booking amount
-  const { totalFare, farePerPerson } = useMemo(() => {
-    if (!selectedBus) return { totalFare: 0, farePerPerson: 0 };
-    if (isPinkTicket) return { totalFare: 0, farePerPerson: 0 };
-    const perPerson = selectedBus.fare;
+  // Compute total booking amount with Adult & Child breakdown
+  const { totalFare, adultFare, childFare, totalPassengers } = useMemo(() => {
+    if (!selectedBus) return { totalFare: 0, adultFare: 0, childFare: 0, totalPassengers: 0 };
+    const aFare = selectedBus.fare;
+    const cFare = Math.max(5, Math.floor(aFare / 2));
+    if (isPinkTicket) return { totalFare: 0, adultFare: 0, childFare: 0, totalPassengers: 1 };
+    const total = (adultCount * aFare) + (childCount * cFare);
     return {
-      totalFare: perPerson * passengersCount,
-      farePerPerson: perPerson,
+      totalFare: total,
+      adultFare: aFare,
+      childFare: cFare,
+      totalPassengers: adultCount + childCount,
     };
-  }, [selectedBus, passengersCount, isPinkTicket]);
+  }, [selectedBus, adultCount, childCount, isPinkTicket]);
 
   // Confirm and generate individual QR tickets
   const handleConfirmBooking = () => {
@@ -431,6 +437,11 @@ export default function PassengerHomePage() {
       return;
     }
 
+    if (totalPassengers <= 0) {
+      toast.error('Please select at least 1 passenger.');
+      return;
+    }
+
     if (paymentMethod === 'Wallet' && passengerProfile.walletBalance < totalFare) {
       toast.error(`Insufficient wallet balance (₹${passengerProfile.walletBalance}). Please top-up or choose UPI.`);
       return;
@@ -441,15 +452,19 @@ export default function PassengerHomePage() {
       destination: selectedBus.toStop,
       routeNumber: selectedBus.routeNumber,
       busType: selectedBus.busType,
-      passengersCount,
-      fare: farePerPerson,
+      passengersCount: totalPassengers,
+      adultCount: isPinkTicket ? 1 : adultCount,
+      childCount: isPinkTicket ? 0 : childCount,
+      adultFare,
+      childFare,
+      fare: adultFare,
       totalAmount: totalFare,
       paymentMode: paymentMethod,
     });
 
     toast.success(
-      passengersCount > 1
-        ? `Booked for ${passengersCount} passengers! ${passengersCount} individual QR codes generated.`
+      totalPassengers > 1
+        ? `Booked for ${totalPassengers} commuters! ${totalPassengers} individual QR codes generated.`
         : `Ticket #${ticket.ticketNumber} generated!`
     );
     setShowBookingModal(false);
@@ -982,204 +997,187 @@ export default function PassengerHomePage() {
             </div>
 
             {/* Scrollable Modal Content */}
-            <div className="p-4 space-y-3.5 overflow-y-auto flex-1">
+            <div className="p-3.5 space-y-3 overflow-y-auto flex-1">
               {/* COMPACT JOURNEY ROUTE HEADER */}
-              <div className="p-3 rounded-2xl bg-muted/60 border border-border/80 flex items-center justify-between text-xs">
-                <div className="space-y-0.5 min-w-0 pr-2">
-                  <div className="flex items-center gap-1.5 font-black text-foreground truncate">
-                    <span>{selectedBus.fromStop}</span>
-                    <ArrowRight className="size-3 text-muted-foreground shrink-0" />
-                    <span>{selectedBus.toStop}</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground block truncate">
-                    Board at <strong className="text-foreground">{selectedBus.fromStop}</strong> ({selectedBus.distanceFromUserFormatted} away)
-                  </span>
+              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/70 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-foreground truncate">
+                  <span className="truncate">{selectedBus.fromStop}</span>
+                  <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                  <span className="truncate">{selectedBus.toStop}</span>
                 </div>
-
-                <div className="text-right shrink-0">
-                  <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">
-                    ₹{selectedBus.fare}
-                  </span>
-                  <span className="text-[9px] text-muted-foreground block">per commuter</span>
-                </div>
+                <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 shrink-0">
+                  ₹{selectedBus.fare}/adult
+                </span>
               </div>
 
-              {/* Passenger Count Selection */}
+              {/* Passenger Selectors: Adult & Child */}
               {!isPinkTicket && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                      <Users className="size-3 text-emerald-600" />
-                      Number of Passengers
-                    </label>
-                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">
-                      ₹{farePerPerson} per commuter
-                    </span>
-                  </div>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    Select Passengers
+                  </span>
 
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-background border border-border shadow-2xs">
-                    <div className="space-y-0.5">
-                      <span className="text-xs font-black text-foreground block">
-                        {passengersCount} {passengersCount === 1 ? 'Passenger' : 'Passengers'}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground block">
-                        {passengersCount > 1
-                          ? `Generates ${passengersCount} separate QR codes`
-                          : 'Single QR code generated'}
-                      </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Adult Stepper */}
+                    <div className="p-2.5 rounded-xl bg-background border border-border shadow-2xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">Adult</span>
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">₹{adultFare}</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-0.5">
+                        <button
+                          type="button"
+                          disabled={adultCount <= 0 || (adultCount === 1 && childCount === 0)}
+                          onClick={() => setAdultCount(Math.max(0, adultCount - 1))}
+                          className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground font-bold disabled:opacity-30"
+                        >
+                          <Minus className="size-3" />
+                        </button>
+                        <span className="text-sm font-black text-foreground font-mono">{adultCount}</span>
+                        <button
+                          type="button"
+                          disabled={adultCount + childCount >= 6}
+                          onClick={() => setAdultCount(adultCount + 1)}
+                          className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground font-bold disabled:opacity-30"
+                        >
+                          <Plus className="size-3" />
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setPassengersCount(Math.max(1, passengersCount - 1))}
-                        className="size-8 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground font-bold hover:bg-muted/80 transition-colors"
-                      >
-                        <Minus className="size-3.5" />
-                      </button>
-                      <span className="text-sm font-black text-foreground min-w-5 text-center">
-                        {passengersCount}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setPassengersCount(Math.min(6, passengersCount + 1))}
-                        className="size-8 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground font-bold hover:bg-muted/80 transition-colors"
-                      >
-                        <Plus className="size-3.5" />
-                      </button>
+                    {/* Child Stepper */}
+                    <div className="p-2.5 rounded-xl bg-background border border-border shadow-2xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">Child (5-12 yr)</span>
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">₹{childFare}</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-0.5">
+                        <button
+                          type="button"
+                          disabled={childCount <= 0}
+                          onClick={() => setChildCount(Math.max(0, childCount - 1))}
+                          className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground font-bold disabled:opacity-30"
+                        >
+                          <Minus className="size-3" />
+                        </button>
+                        <span className="text-sm font-black text-foreground font-mono">{childCount}</span>
+                        <button
+                          type="button"
+                          disabled={adultCount + childCount >= 6}
+                          onClick={() => setChildCount(childCount + 1)}
+                          className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center text-foreground font-bold disabled:opacity-30"
+                        >
+                          <Plus className="size-3" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Quick Passenger Selector Pills */}
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    <span className="text-[10px] text-muted-foreground font-semibold">Quick Select:</span>
-                    {[1, 2, 3, 4, 5].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setPassengersCount(num)}
-                        className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-colors ${
-                          passengersCount === num
-                            ? 'bg-emerald-700 text-white shadow-2xs'
-                            : 'bg-muted/70 text-muted-foreground hover:bg-muted'
-                        }`}
-                      >
-                        {num} {num === 1 ? 'P' : 'Ps'}
-                      </button>
-                    ))}
                   </div>
                 </div>
               )}
 
-              {/* Multi-Passenger QR Explainer Alert */}
-              {passengersCount > 1 && !isPinkTicket && (
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300 text-[11px]">
-                    <CheckCircle2 className="size-3.5 text-emerald-600" />
-                    <span>Individual QR Codes Generated</span>
-                  </div>
-                  <p className="text-[10px] text-emerald-700/90 dark:text-emerald-400/90 leading-relaxed">
-                    A separate digital QR code will be generated for each passenger. The conductor will scan each QR code individually.
-                  </p>
-                </div>
-              )}
-
-              {/* Women Free Pink Pass Toggle */}
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-pink-500/10 to-rose-500/10 border border-pink-500/30 flex items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="size-3.5 text-pink-600" />
-                    <span className="text-xs font-bold text-pink-900 dark:text-pink-200">
+              {/* Compact Women Free Pink Pass Strip */}
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-pink-500/10 border border-pink-500/25">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-pink-600 shrink-0" />
+                  <div>
+                    <span className="text-xs font-bold text-pink-900 dark:text-pink-200 block">
                       Women Free Pink Pass
                     </span>
+                    <span className="text-[9px] text-pink-700/80 dark:text-pink-300/80 block">
+                      Zero-Fare Scheme (₹0)
+                    </span>
                   </div>
-                  <p className="text-[10px] text-pink-700 dark:text-pink-300">
-                    Govt of NCT Delhi Zero-Fare Scheme for Female Commuters
-                  </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => {
                     setIsPinkTicket(!isPinkTicket);
-                    if (!isPinkTicket) setPassengersCount(1);
+                    if (!isPinkTicket) {
+                      setAdultCount(1);
+                      setChildCount(0);
+                    }
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
                     isPinkTicket
                       ? 'bg-pink-600 text-white shadow-xs'
-                      : 'bg-card border border-pink-500/40 text-pink-700 dark:text-pink-300'
+                      : 'bg-card border border-pink-500/40 text-pink-700 dark:text-pink-300 hover:bg-pink-500/10'
                   }`}
                 >
-                  {isPinkTicket ? 'Selected (₹0)' : 'Apply Pink Pass'}
+                  {isPinkTicket ? 'Applied (₹0)' : 'Apply'}
                 </button>
               </div>
 
-              {/* Payment Method Selector */}
+              {/* Compact Payment Method Selector */}
               {!isPinkTicket && (
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Select Payment Method
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    Payment Method
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('Wallet')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                      className={`flex items-center justify-between p-2 rounded-xl border text-left transition-all ${
                         paymentMethod === 'Wallet'
-                          ? 'border-emerald-600 bg-emerald-500/10 text-foreground font-bold'
-                          : 'border-border bg-card text-muted-foreground'
+                          ? 'border-emerald-600 bg-emerald-500/10 text-foreground font-bold ring-1 ring-emerald-600'
+                          : 'border-border bg-card text-muted-foreground hover:border-emerald-600/50'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <CreditCard className="size-4 text-emerald-600" />
-                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                          ₹{passengerProfile.walletBalance}
-                        </span>
+                      <div className="flex items-center gap-1.5">
+                        <CreditCard className="size-3.5 text-emerald-600 shrink-0" />
+                        <div>
+                          <span className="text-[11px] font-bold block leading-none">Fast Wallet</span>
+                          <span className="text-[9px] text-muted-foreground">1-Tap Pay</span>
+                        </div>
                       </div>
-                      <span className="text-[11px] font-bold block">Fast Wallet</span>
-                      <span className="text-[9px] text-muted-foreground">1-Tap Payment</span>
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                        ₹{passengerProfile.walletBalance}
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('UPI')}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                      className={`flex items-center justify-between p-2 rounded-xl border text-left transition-all ${
                         paymentMethod === 'UPI'
-                          ? 'border-emerald-600 bg-emerald-500/10 text-foreground font-bold'
-                          : 'border-border bg-card text-muted-foreground'
+                          ? 'border-emerald-600 bg-emerald-500/10 text-foreground font-bold ring-1 ring-emerald-600'
+                          : 'border-border bg-card text-muted-foreground hover:border-emerald-600/50'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <Zap className="size-4 text-blue-600" />
-                        <span className="text-[9px] font-bold px-1.5 rounded bg-blue-500/10 text-blue-600">
-                          UPI
-                        </span>
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="size-3.5 text-blue-600 shrink-0" />
+                        <div>
+                          <span className="text-[11px] font-bold block leading-none">UPI Apps</span>
+                          <span className="text-[9px] text-muted-foreground">GPay / PhonePe</span>
+                        </div>
                       </div>
-                      <span className="text-[11px] font-bold block">UPI Apps</span>
-                      <span className="text-[9px] text-muted-foreground">GPay / PhonePe</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600">
+                        UPI
+                      </span>
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* DOCKED STICKY FOOTER: ALWAYS VISIBLE ABOVE ALL NAVIGATION BARS */}
-            <div className="p-4 pb-6 bg-card border-t border-border space-y-2 shrink-0 shadow-lg">
+            {/* DOCKED STICKY FOOTER: CLEAN & FITS ON MOBILE SCREEN WITHOUT SCROLL */}
+            <div className="p-3.5 pb-4 bg-card border-t border-border space-y-2 shrink-0 shadow-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-muted-foreground font-semibold block">
                     {isPinkTicket
                       ? 'Zero-Fare Scheme Applied'
-                      : `₹${farePerPerson} × ${passengersCount} Commuter${passengersCount > 1 ? 's' : ''}`}
+                      : `${adultCount} Adult${adultCount > 1 ? 's' : ''}${childCount > 0 ? ` + ${childCount} Child` : ''}`}
                   </span>
-                  <span className="text-xl font-black text-foreground">
+                  <span className="text-lg font-black text-foreground leading-tight">
                     {isPinkTicket ? 'FREE (₹0.00)' : `₹${totalFare.toFixed(2)}`}
                   </span>
                 </div>
 
                 <div className="text-right">
                   <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block">
-                    {passengersCount} Individual QR{passengersCount > 1 ? 's' : ''}
+                    {totalPassengers} QR Ticket{totalPassengers > 1 ? 's' : ''}
                   </span>
                   <span className="text-[9px] text-muted-foreground font-medium">Valid for 2 Hours</span>
                 </div>
@@ -1187,16 +1185,16 @@ export default function PassengerHomePage() {
 
               <Button
                 onClick={handleConfirmBooking}
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-xl h-11 shadow-sm flex items-center justify-center gap-2"
+                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-xl h-10 shadow-sm flex items-center justify-center gap-2"
               >
                 <span>
                   {isPinkTicket
-                    ? 'Generate Free Pink Ticket'
-                    : `Pay ₹${totalFare.toFixed(2)} & Generate ${passengersCount} QR${
-                        passengersCount > 1 ? 's' : ''
-                      }`}
+                    ? 'Generate Free Pink Pass'
+                    : `Pay ₹${totalFare.toFixed(2)} & Book (${totalPassengers} QR${
+                        totalPassengers > 1 ? 's' : ''
+                      })`}
                 </span>
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-3.5" />
               </Button>
             </div>
           </div>

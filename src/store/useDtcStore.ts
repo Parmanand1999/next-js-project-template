@@ -69,6 +69,10 @@ interface DtcState {
     routeNumber: string;
     busType: BusCategory;
     passengersCount: number;
+    adultCount?: number;
+    childCount?: number;
+    adultFare?: number;
+    childFare?: number;
     fare: number;
     totalAmount: number;
     paymentMode: 'Wallet' | 'UPI' | 'Card' | 'Free Pink Pass';
@@ -1261,22 +1265,43 @@ export const useDtcStore = create<DtcState>()(
         const profile = get().passengerProfile;
         const count = get().passengerTickets.length + 9421;
         const ticketNum = `DTC-QR-2026-${count}`;
-        const pCount = Math.max(1, data.passengersCount);
+        const adultC = data.adultCount !== undefined ? data.adultCount : data.passengersCount;
+        const childC = data.childCount !== undefined ? data.childCount : 0;
+        const pCount = Math.max(1, adultC + childC);
+        const aFare = data.adultFare ?? data.fare;
+        const cFare = data.childFare ?? Math.max(5, Math.floor(data.fare / 2));
 
         // Generate individual QR codes for each passenger
-        const individualQrs: IndividualQrItem[] = Array.from({ length: pCount }, (_, idx) => {
-          const pIndex = idx + 1;
+        const individualQrs: IndividualQrItem[] = [];
+        let pIndex = 1;
+
+        for (let i = 0; i < adultC; i++) {
           const pSerial = `${ticketNum}-P${pIndex}`;
-          return {
+          individualQrs.push({
             passengerIndex: pIndex,
-            passengerLabel: `Passenger ${pIndex} of ${pCount}`,
+            passengerLabel: `Adult (${pIndex} of ${pCount})`,
             passengerType: data.paymentMode === 'Free Pink Pass' ? 'Pink Pass (Free)' : 'Adult',
             qrSerial: pSerial,
-            qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${data.fare}|SEC_${Date.now()}_P${pIndex}`,
-            fare: data.fare,
+            qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${data.paymentMode === 'Free Pink Pass' ? 0 : aFare}|SEC_${Date.now()}_P${pIndex}`,
+            fare: data.paymentMode === 'Free Pink Pass' ? 0 : aFare,
             status: 'Valid',
-          };
-        });
+          });
+          pIndex++;
+        }
+
+        for (let i = 0; i < childC; i++) {
+          const pSerial = `${ticketNum}-P${pIndex}`;
+          individualQrs.push({
+            passengerIndex: pIndex,
+            passengerLabel: `Child (${pIndex} of ${pCount})`,
+            passengerType: 'Child',
+            qrSerial: pSerial,
+            qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${cFare}|SEC_${Date.now()}_P${pIndex}`,
+            fare: cFare,
+            status: 'Valid',
+          });
+          pIndex++;
+        }
 
         const newTicket: PassengerTicket = {
           id: `tkt-${Date.now()}`,

@@ -304,41 +304,67 @@ export default function PassengerHomePage() {
           const dist = Math.abs(route.stops[toIndex].distanceKm - route.stops[fromIndex].distanceKm);
           const roundedDist = Math.max(1, Math.round(dist * 10) / 10);
           const fare = calculateFare(route.busType, roundedDist);
-          const liveBus = liveBuses.find((b) => b.routeNumber === route.routeNumber);
           const walkMins = calculateWalkingMinutes(candStop.distMeters);
-          const busKey = `${route.routeNumber}-${route.busType}`;
 
-          const existing = busMap.get(busKey);
+          // Find ALL active live buses for this route
+          const routeLiveBuses = liveBuses.filter((b) => b.routeNumber === route.routeNumber);
 
-          if (!existing) {
-            busMap.set(busKey, {
-              id: busKey,
-              route,
-              routeNumber: route.routeNumber,
-              routeName: route.routeName,
-              busType: route.busType,
-              distanceKm: roundedDist,
-              fare,
-              fromStop: candStop.name,
-              toStop: destinationStop,
-              distanceFromUserMeters: candStop.distMeters,
-              distanceFromUserFormatted: formatDistance(candStop.distMeters),
-              walkingMinutesFromUser: walkMins,
-              stopLandmark: candStop.landmark,
-              liveBus,
-              otherNearbyStops: [],
+          if (routeLiveBuses.length > 0) {
+            routeLiveBuses.forEach((liveBus) => {
+              const busKey = `${route.routeNumber}-${liveBus.id}`;
+              const existing = busMap.get(busKey);
+
+              if (!existing) {
+                busMap.set(busKey, {
+                  id: busKey,
+                  route,
+                  routeNumber: route.routeNumber,
+                  routeName: route.routeName,
+                  busType: liveBus.busType || route.busType,
+                  distanceKm: roundedDist,
+                  fare,
+                  fromStop: candStop.name,
+                  toStop: destinationStop,
+                  distanceFromUserMeters: candStop.distMeters,
+                  distanceFromUserFormatted: formatDistance(candStop.distMeters),
+                  walkingMinutesFromUser: walkMins,
+                  stopLandmark: candStop.landmark,
+                  liveBus,
+                  otherNearbyStops: [],
+                });
+              } else if (candStop.distMeters < existing.distanceFromUserMeters) {
+                existing.fromStop = candStop.name;
+                existing.distanceKm = roundedDist;
+                existing.fare = fare;
+                existing.distanceFromUserMeters = candStop.distMeters;
+                existing.distanceFromUserFormatted = formatDistance(candStop.distMeters);
+                existing.walkingMinutesFromUser = walkMins;
+                existing.stopLandmark = candStop.landmark;
+              }
             });
           } else {
-            // Keep the stop that is closer to the user
-            if (candStop.distMeters < existing.distanceFromUserMeters) {
-              const previousStop = {
-                name: existing.fromStop,
-                distanceFormatted: existing.distanceFromUserFormatted,
-              };
-              existing.otherNearbyStops = [
-                ...(existing.otherNearbyStops || []).filter((s) => s.name !== candStop.name),
-                previousStop,
-              ];
+            const busKey = `${route.routeNumber}-${route.busType}`;
+            const existing = busMap.get(busKey);
+
+            if (!existing) {
+              busMap.set(busKey, {
+                id: busKey,
+                route,
+                routeNumber: route.routeNumber,
+                routeName: route.routeName,
+                busType: route.busType,
+                distanceKm: roundedDist,
+                fare,
+                fromStop: candStop.name,
+                toStop: destinationStop,
+                distanceFromUserMeters: candStop.distMeters,
+                distanceFromUserFormatted: formatDistance(candStop.distMeters),
+                walkingMinutesFromUser: walkMins,
+                stopLandmark: candStop.landmark,
+                liveBus: undefined,
+                otherNearbyStops: [],
+              });
+            } else if (candStop.distMeters < existing.distanceFromUserMeters) {
               existing.fromStop = candStop.name;
               existing.distanceKm = roundedDist;
               existing.fare = fare;
@@ -346,13 +372,6 @@ export default function PassengerHomePage() {
               existing.distanceFromUserFormatted = formatDistance(candStop.distMeters);
               existing.walkingMinutesFromUser = walkMins;
               existing.stopLandmark = candStop.landmark;
-            } else if (candStop.name !== existing.fromStop) {
-              if (!existing.otherNearbyStops?.some((s) => s.name === candStop.name)) {
-                existing.otherNearbyStops = [
-                  ...(existing.otherNearbyStops || []),
-                  { name: candStop.name, distanceFormatted: formatDistance(candStop.distMeters) },
-                ];
-              }
             }
           }
         }
@@ -372,12 +391,12 @@ export default function PassengerHomePage() {
       return true;
     });
 
-    // Sort by shortest walking distance from user, then fare
+    // Sort by earliest arrival ETA, then walking distance
     return filtered.sort((a, b) => {
-      if (a.distanceFromUserMeters !== b.distanceFromUserMeters) {
-        return a.distanceFromUserMeters - b.distanceFromUserMeters;
-      }
-      return a.fare - b.fare;
+      const etaA = a.liveBus?.etaNextStopMins ?? 999;
+      const etaB = b.liveBus?.etaNextStopMins ?? 999;
+      if (etaA !== etaB) return etaA - etaB;
+      return a.distanceFromUserMeters - b.distanceFromUserMeters;
     });
   }, [routes, originStop, destinationStop, nearestStops, userLocation, liveBuses, calculateFare, busClassFilter]);
 
@@ -761,9 +780,16 @@ export default function PassengerHomePage() {
                         {bus.routeNumber}
                       </span>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-foreground">
-                          {bus.busType}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-foreground">
+                            {bus.busType}
+                          </span>
+                          {bus.liveBus?.busNumber && (
+                            <span className="text-[10px] font-mono text-muted-foreground bg-muted/80 px-1.5 py-0.2 rounded font-semibold">
+                              {bus.liveBus.busNumber}
+                            </span>
+                          )}
+                        </div>
                         {busEta !== undefined && (
                           <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
                             ● Arriving in {busEta} mins

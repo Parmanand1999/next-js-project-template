@@ -180,7 +180,7 @@ export default function PassengerLiveBusPage() {
 
       {/* Bus Route Journey Detail Modal */}
       {activeBusModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
           <div className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-2xl p-5 space-y-4 my-8 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b pb-2.5 border-border">
               <div>

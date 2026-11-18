@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'in.gov.delhi.dtc.sanchalan',
-  appName: 'DTC Sanchalan One',
+  appId: 'in.gov.delhi.dtc.conductor',
+  appName: 'DTC ETIM Conductor',
   webDir: 'out',
   server: {
     androidScheme: 'https',

@@ -171,6 +171,7 @@ export interface PassengerTicket {
   bookedAt: string;
   validUntil: string;
   qrCodeData: string;
+  paymentMode?: 'Wallet' | 'UPI' | 'Card' | 'Free Pink Pass' | 'Cash' | string;
   individualQrs?: IndividualQrItem[];
   status: 'Valid' | 'Scanned & Used' | 'Expired' | 'Refunded';
 }

@@ -78,6 +78,41 @@ interface DtcState {
   submitPassengerRefund: (ticketNumber: string, amount: number, reason: RefundRequest['reason']) => void;
 
   calculateFare: (busType: BusCategory, distanceKm: number) => number;
+
+  // Conductor ETIM Terminal State & Actions
+  activeDutyId: string;
+  setActiveDutyId: (id: string) => void;
+  currentStopIndex: number;
+  setCurrentStopIndex: (idx: number) => void;
+  advanceBusStop: () => void;
+  reverseBusStop: () => void;
+  verifyPassengerQr: (qrString: string) => {
+    success: boolean;
+    status: 'VALID' | 'ALREADY_USED' | 'INVALID_ROUTE' | 'EXPIRED' | 'NOT_FOUND';
+    ticket?: PassengerTicket;
+    qrItem?: IndividualQrItem;
+    message: string;
+    timestamp: string;
+  };
+  issueEtimTicket: (data: {
+    origin: string;
+    destination: string;
+    routeNumber: string;
+    busType: BusCategory;
+    passengerType: 'Adult' | 'Child' | 'Pink Pass (Free)';
+    count: number;
+    fare: number;
+  }) => PassengerTicket;
+  issueConductorChallan: (data: {
+    violatorName: string;
+    violatorPhone: string;
+    gender?: 'Male' | 'Female' | 'Other';
+    violationReason: string;
+    fineAmount: number;
+    fareDue: number;
+    paymentMode: 'Cash' | 'Conductor UPI QR' | 'Pending';
+    stopName: string;
+  }) => NoTicketChallan;
 }
 
 // Initial realistic DTC Routes
@@ -1351,6 +1386,218 @@ export const useDtcStore = create<DtcState>()(
         if (match) return match.fare;
         if (busType === 'Non-AC Standard') return 15;
         return 25;
+      },
+
+      // Conductor ETIM Terminal State & Actions
+      activeDutyId: 'cd-1',
+      setActiveDutyId: (id) => set({ activeDutyId: id }),
+      currentStopIndex: 2, // Default at Saket Crossing
+      setCurrentStopIndex: (idx) => set({ currentStopIndex: idx }),
+      advanceBusStop: () => {
+        set((state) => {
+          const duty = state.conductorDuties.find((d) => d.id === state.activeDutyId);
+          const route = state.routes.find((r) => r.routeNumber === duty?.routeNumber);
+          const maxIdx = (route?.stops.length || 1) - 1;
+          return { currentStopIndex: Math.min(maxIdx, state.currentStopIndex + 1) };
+        });
+      },
+      reverseBusStop: () => {
+        set((state) => ({ currentStopIndex: Math.max(0, state.currentStopIndex - 1) }));
+      },
+
+      verifyPassengerQr: (qrString) => {
+        const state = get();
+        const activeDuty = state.conductorDuties.find((d) => d.id === state.activeDutyId) || state.conductorDuties[0];
+        const trimmed = qrString.trim();
+        const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+        // Search for matching ticket
+        const matchedTicket = state.passengerTickets.find((t) => {
+          if (t.ticketNumber === trimmed || t.qrCodeData === trimmed) return true;
+          if (trimmed.includes(t.ticketNumber)) return true;
+          if (t.individualQrs?.some((q) => q.qrSerial === trimmed || q.qrCodeData === trimmed || trimmed.includes(q.qrSerial))) return true;
+          return false;
+        });
+
+        if (!matchedTicket) {
+          if (trimmed.startsWith('DTC|')) {
+            const parts = trimmed.split('|');
+            const routePart = parts.find((p) => p.startsWith('RT_'))?.replace('RT_', '') || parts[2] || '';
+            if (routePart && routePart !== activeDuty.routeNumber) {
+              return {
+                success: false,
+                status: 'INVALID_ROUTE',
+                message: `Ticket issued for Route ${routePart}, but current bus is Route ${activeDuty.routeNumber}`,
+                timestamp: now,
+              };
+            }
+          }
+
+          return {
+            success: false,
+            status: 'NOT_FOUND',
+            message: 'Ticket not found in DTC central registry or invalid barcode format.',
+            timestamp: now,
+          };
+        }
+
+        // Validate Route
+        if (matchedTicket.routeNumber && activeDuty.routeNumber && matchedTicket.routeNumber !== activeDuty.routeNumber) {
+          return {
+            success: false,
+            status: 'INVALID_ROUTE',
+            ticket: matchedTicket,
+            message: `Route Mismatch! Ticket is for Route ${matchedTicket.routeNumber}, but this bus is Route ${activeDuty.routeNumber}.`,
+            timestamp: now,
+          };
+        }
+
+        // Find individual QR item
+        let matchedQr = matchedTicket.individualQrs?.find(
+          (q) => q.qrSerial === trimmed || q.qrCodeData === trimmed || trimmed.includes(q.qrSerial)
+        );
+
+        if (!matchedQr && matchedTicket.individualQrs && matchedTicket.individualQrs.length > 0) {
+          matchedQr = matchedTicket.individualQrs.find((q) => q.status === 'Valid') || matchedTicket.individualQrs[0];
+        }
+
+        // Check if already used
+        if (matchedQr?.status === 'Scanned & Used' || matchedTicket.status === 'Scanned & Used') {
+          return {
+            success: false,
+            status: 'ALREADY_USED',
+            ticket: matchedTicket,
+            qrItem: matchedQr,
+            message: `FRAUD DETECTED! QR code (${matchedQr?.qrSerial || matchedTicket.ticketNumber}) was ALREADY scanned & used previously.`,
+            timestamp: now,
+          };
+        }
+
+        // Mark individual QR and ticket as scanned
+        set((s) => ({
+          passengerTickets: s.passengerTickets.map((t) => {
+            if (t.id === matchedTicket.id) {
+              const updatedIndividualQrs = t.individualQrs?.map((q) =>
+                matchedQr && q.qrSerial === matchedQr.qrSerial ? { ...q, status: 'Scanned & Used' as const } : q
+              );
+              const allUsed = updatedIndividualQrs ? updatedIndividualQrs.every((q) => q.status === 'Scanned & Used') : true;
+              return {
+                ...t,
+                individualQrs: updatedIndividualQrs,
+                status: allUsed ? ('Scanned & Used' as const) : t.status,
+              };
+            }
+            return t;
+          }),
+          conductorDuties: s.conductorDuties.map((d) =>
+            d.id === activeDuty.id
+              ? { ...d, ticketsSoldDigital: d.ticketsSoldDigital + 1 }
+              : d
+          ),
+        }));
+
+        return {
+          success: true,
+          status: 'VALID',
+          ticket: matchedTicket,
+          qrItem: matchedQr,
+          message: `Ticket Verified! ${matchedQr?.passengerLabel || '1 Commuter'} authorized to board.`,
+          timestamp: now,
+        };
+      },
+
+      issueEtimTicket: (data) => {
+        const state = get();
+        const activeDuty = state.conductorDuties.find((d) => d.id === state.activeDutyId) || state.conductorDuties[0];
+        const count = state.passengerTickets.length + 9450;
+        const ticketNum = `DTC-ETIM-2026-${count}`;
+        const isPink = data.passengerType === 'Pink Pass (Free)';
+        const fare = isPink ? 0 : data.fare;
+        const total = fare * data.count;
+
+        const individualQrs: IndividualQrItem[] = Array.from({ length: data.count }, (_, idx) => ({
+          passengerIndex: idx + 1,
+          passengerLabel: `Passenger ${idx + 1} of ${data.count}`,
+          passengerType: isPink ? 'Pink Pass (Free)' : 'Adult',
+          qrSerial: `${ticketNum}-P${idx + 1}`,
+          qrCodeData: `DTC|${ticketNum}-P${idx + 1}|${data.routeNumber}|${data.origin}|${data.destination}|CASH_ETIM|${Date.now()}`,
+          fare,
+          status: 'Scanned & Used',
+        }));
+
+        const newTicket: PassengerTicket = {
+          id: `etim-${Date.now()}`,
+          ticketNumber: ticketNum,
+          passengerName: isPink ? 'Female Commuter (Pink Pass)' : 'Cash Passenger',
+          passengerPhone: 'Cash Commuter',
+          phone: 'Cash Commuter',
+          routeNumber: data.routeNumber,
+          sourceStop: data.origin,
+          boardingStop: data.origin,
+          destinationStop: data.destination,
+          busType: data.busType,
+          fare,
+          passengersCount: data.count,
+          totalAmount: total,
+          bookedAt: 'Just Now',
+          validUntil: 'Valid for Current Trip Only',
+          qrCodeData: `DTC|${ticketNum}|${data.routeNumber}|CASH|PAID`,
+          individualQrs,
+          status: 'Scanned & Used',
+        };
+
+        set((s) => ({
+          passengerTickets: [newTicket, ...s.passengerTickets],
+          conductorDuties: s.conductorDuties.map((d) =>
+            d.id === activeDuty.id
+              ? {
+                  ...d,
+                  ticketsSoldCash: isPink ? d.ticketsSoldCash : d.ticketsSoldCash + data.count,
+                  pinkTicketsIssued: isPink ? d.pinkTicketsIssued + data.count : d.pinkTicketsIssued,
+                  totalCashCollected: d.totalCashCollected + total,
+                }
+              : d
+          ),
+        }));
+
+        return newTicket;
+      },
+
+      issueConductorChallan: (data) => {
+        const state = get();
+        const activeDuty = state.conductorDuties.find((d) => d.id === state.activeDutyId) || state.conductorDuties[0];
+        const count = state.noTicketChallans.length + 1050;
+        const total = data.fineAmount + data.fareDue;
+        const newChallan: NoTicketChallan = {
+          id: `ch-${Date.now()}`,
+          challanNumber: `DTC-CH-2026-${count}`,
+          passengerName: data.violatorName,
+          passengerPhone: data.violatorPhone,
+          gender: data.gender || 'Male',
+          routeNumber: activeDuty.routeNumber,
+          busNumber: activeDuty.busNumber,
+          locationStop: data.stopName,
+          conductorName: activeDuty.conductorName,
+          conductorBadge: activeDuty.badgeNumber,
+          penaltyAmount: data.fineAmount,
+          fareDue: data.fareDue,
+          totalAmount: total,
+          notes: data.violationReason,
+          status: data.paymentMode === 'Pending' ? 'Pending Payment' : 'Paid on Spot',
+          paymentMode: data.paymentMode,
+          issuedAt: 'Just Now',
+        };
+
+        set((s) => ({
+          noTicketChallans: [newChallan, ...s.noTicketChallans],
+          conductorDuties: s.conductorDuties.map((d) =>
+            d.id === activeDuty.id && data.paymentMode === 'Cash'
+              ? { ...d, totalCashCollected: d.totalCashCollected + total }
+              : d
+          ),
+        }));
+
+        return newChallan;
       },
     }),
     {

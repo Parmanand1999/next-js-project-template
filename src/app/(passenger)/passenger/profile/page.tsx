@@ -142,20 +142,14 @@ export default function PassengerProfilePage() {
         </p>
       </div>
 
-      {/* Switch to Admin Control Room Link (For Demo / Switching) */}
-      <div className="p-3.5 rounded-2xl bg-card border border-border/80 shadow-2xs space-y-2">
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-          Demo & Switch Console
-        </span>
-        <Link href="/admin">
-          <Button
-            variant="outline"
-            className="w-full justify-between text-xs font-bold rounded-xl h-9 border-border text-foreground hover:bg-muted"
-          >
-            <span>Open DTC Admin Control Room</span>
-            <ExternalLink className="size-3.5 text-muted-foreground" />
-          </Button>
-        </Link>
+      {/* App Version & Info */}
+      <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/70 text-center space-y-1">
+        <div className="text-xs font-bold text-foreground">
+          DTC Sanchalan One v1.0.4 (Build 240)
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Delhi Transport Corporation • Transport Dept. GNCTD
+        </p>
       </div>
     </div>
   );

@@ -133,9 +133,12 @@ export interface ShiftHandover {
 export interface PassengerTicket {
   id: string;
   ticketNumber: string;
+  passengerName?: string;
   passengerPhone: string;
+  phone?: string;
   routeNumber: string;
   sourceStop: string;
+  boardingStop?: string;
   destinationStop: string;
   busType: BusCategory;
   fare: number;
@@ -227,3 +230,13 @@ export interface SupportTicket {
   resolutionNotes?: string;
   slaStatus: 'Within SLA' | 'Near Breach' | 'SLA Breached';
 }
+
+export interface PassengerProfile {
+  name: string;
+  phone: string;
+  email: string;
+  gender: 'Female' | 'Male' | 'Other';
+  walletBalance: number;
+  dtcCardNumber: string;
+}
+

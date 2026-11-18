@@ -10,18 +10,9 @@ export default function RootPage() {
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    // If logged in, redirect to admin or appropriate portal
-    if (accessToken || user) {
-      if (user?.isSuperAdmin || user?.roleName?.toLowerCase() === 'admin') {
-        router.replace('/admin');
-      } else {
-        router.replace('/portal');
-      }
-    } else {
-      // Otherwise, redirect directly to real login
-      router.replace('/login');
-    }
-  }, [accessToken, user, router]);
+    // In passenger app branch, direct commuters straight to the Mobile Passenger App
+    router.replace('/passenger');
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">

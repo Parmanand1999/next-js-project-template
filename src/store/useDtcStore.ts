@@ -18,6 +18,7 @@ import {
   SupportCategory,
   SupportPriority,
   SupportChannel,
+  PassengerProfile,
 } from '@/types/dtc';
 
 interface DtcState {
@@ -33,6 +34,7 @@ interface DtcState {
   refundRequests: RefundRequest[];
   liveBuses: LiveBus[];
   supportTickets: SupportTicket[];
+  passengerProfile: PassengerProfile;
 
   // Actions
   addNoTicketChallan: (challan: Omit<NoTicketChallan, 'id' | 'challanNumber' | 'issuedAt'>) => void;
@@ -58,6 +60,21 @@ interface DtcState {
   addSupportTicket: (ticket: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'updatedAt' | 'slaStatus'>) => void;
   updateTicketStatus: (id: string, status: SupportStatus, notes?: string) => void;
   assignTicketOfficer: (id: string, officerName: string) => void;
+
+  // Passenger Specific Actions
+  bookPassengerTicket: (data: {
+    origin: string;
+    destination: string;
+    routeNumber: string;
+    busType: BusCategory;
+    passengersCount: number;
+    fare: number;
+    totalAmount: number;
+    paymentMode: 'Wallet' | 'UPI' | 'Card' | 'Free Pink Pass';
+  }) => PassengerTicket;
+  issuePinkPass: (routeNumber: string) => PassengerTicket;
+  topUpWallet: (amount: number) => void;
+  submitPassengerRefund: (ticketNumber: string, amount: number, reason: RefundRequest['reason']) => void;
 
   calculateFare: (busType: BusCategory, distanceKm: number) => number;
 }
@@ -829,6 +846,16 @@ const initialSupportTickets: SupportTicket[] = [
   },
 ];
 
+// Initial Commuter Profile
+const initialPassengerProfile: PassengerProfile = {
+  name: 'Priya Sharma',
+  phone: '+91 98112 34567',
+  email: 'priya.sharma@gmail.com',
+  gender: 'Female',
+  walletBalance: 240,
+  dtcCardNumber: 'DTC-CARD-9921-4820',
+};
+
 export const useDtcStore = create<DtcState>()(
   persist(
     (set, get) => ({
@@ -844,6 +871,7 @@ export const useDtcStore = create<DtcState>()(
       refundRequests: initialRefunds,
       liveBuses: initialLiveBuses,
       supportTickets: initialSupportTickets,
+      passengerProfile: initialPassengerProfile,
 
       addNoTicketChallan: (data) => {
         const count = get().noTicketChallans.length + 1045;
@@ -1052,6 +1080,108 @@ export const useDtcStore = create<DtcState>()(
                   updatedAt: 'Just Now',
                 }
               : t
+          ),
+        }));
+      },
+
+      bookPassengerTicket: (data) => {
+        const profile = get().passengerProfile;
+        const count = get().passengerTickets.length + 9421;
+        const ticketNum = `DTC-QR-2026-${count}`;
+        const newTicket: PassengerTicket = {
+          id: `tkt-${Date.now()}`,
+          ticketNumber: ticketNum,
+          passengerName: profile.name,
+          passengerPhone: profile.phone,
+          phone: profile.phone,
+          routeNumber: data.routeNumber,
+          sourceStop: data.origin,
+          boardingStop: data.origin,
+          destinationStop: data.destination,
+          busType: data.busType,
+          fare: data.fare,
+          passengersCount: data.passengersCount,
+          totalAmount: data.totalAmount,
+          bookedAt: 'Just Now',
+          validUntil: 'Valid for 2 Hours',
+          qrCodeData: `DTC|${ticketNum}|${data.routeNumber}|${data.origin}|${data.destination}|${data.passengersCount}P|INR${data.totalAmount}|SEC_${Date.now()}`,
+          status: 'Valid',
+        };
+
+        // Deduct from wallet if wallet payment
+        if (data.paymentMode === 'Wallet' && profile.walletBalance >= data.totalAmount) {
+          set((state) => ({
+            passengerProfile: {
+              ...state.passengerProfile,
+              walletBalance: state.passengerProfile.walletBalance - data.totalAmount,
+            },
+          }));
+        }
+
+        set((state) => ({
+          passengerTickets: [newTicket, ...state.passengerTickets],
+        }));
+
+        return newTicket;
+      },
+
+      issuePinkPass: (routeNumber) => {
+        const profile = get().passengerProfile;
+        const count = get().passengerTickets.length + 9422;
+        const ticketNum = `DTC-PINK-2026-${count}`;
+        const newTicket: PassengerTicket = {
+          id: `tkt-pink-${Date.now()}`,
+          ticketNumber: ticketNum,
+          passengerName: profile.name,
+          passengerPhone: profile.phone,
+          phone: profile.phone,
+          routeNumber: routeNumber || 'All Routes',
+          sourceStop: 'Delhi NCR Corridor',
+          boardingStop: 'Delhi NCR Corridor',
+          destinationStop: 'Delhi NCR Corridor',
+          busType: 'Non-AC Standard',
+          fare: 0,
+          passengersCount: 1,
+          totalAmount: 0,
+          bookedAt: 'Just Now',
+          validUntil: 'Valid Until Midnight (23:59)',
+          qrCodeData: `DTC|PINK_FREE|${profile.name}|GNCTD_WOMEN_EMPOWERMENT|${Date.now()}`,
+          status: 'Valid',
+        };
+
+        set((state) => ({
+          passengerTickets: [newTicket, ...state.passengerTickets],
+        }));
+
+        return newTicket;
+      },
+
+      topUpWallet: (amount) => {
+        set((state) => ({
+          passengerProfile: {
+            ...state.passengerProfile,
+            walletBalance: state.passengerProfile.walletBalance + amount,
+          },
+        }));
+      },
+
+      submitPassengerRefund: (ticketNumber, amount, reason) => {
+        const profile = get().passengerProfile;
+        const newRefund: RefundRequest = {
+          id: `ref-${Date.now()}`,
+          ticketNumber,
+          passengerName: profile.name,
+          phone: profile.phone,
+          amount,
+          reason,
+          requestedAt: 'Just Now',
+          status: 'Pending',
+        };
+
+        set((state) => ({
+          refundRequests: [newRefund, ...state.refundRequests],
+          passengerTickets: state.passengerTickets.map((t) =>
+            t.ticketNumber === ticketNumber ? { ...t, status: 'Refunded' } : t
           ),
         }));
       },

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DTC Sanchalan One</string>
+    <string name="title_activity_main">DTC Sanchalan One</string>
+    <string name="package_name">in.gov.delhi.dtc.sanchalan</string>
+    <string name="custom_url_scheme">in.gov.delhi.dtc.sanchalan</string>
+</resources>

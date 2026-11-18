@@ -6,10 +6,15 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cap:build": "next build --webpack && npx cap sync",
+    "cap:open": "npx cap open android"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
     "@hookform/resolvers": "^5.9.1",
     "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",

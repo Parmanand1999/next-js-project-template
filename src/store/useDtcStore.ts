@@ -9,6 +9,7 @@ import {
   ConductorDuty,
   ShiftHandover,
   PassengerTicket,
+  IndividualQrItem,
   DtcPass,
   RefundRequest,
   LiveBus,
@@ -108,6 +109,30 @@ const initialRoutes: DtcRoute[] = [
     ],
   },
   {
+    id: 'rt-1b',
+    routeNumber: '503',
+    routeName: 'Malviya Nagar ⇄ Kashmere Gate ISBT (Non-AC)',
+    origin: 'Saket Crossing',
+    destination: 'Kashmere Gate ISBT',
+    busType: 'Non-AC Standard',
+    totalDistanceKm: 24.0,
+    stopsCount: 28,
+    frequencyMinutes: 12,
+    firstBus: '05:45 AM',
+    lastBus: '10:45 PM',
+    status: 'Active',
+    stops: [
+      { id: 's1b-1', name: 'Saket Crossing', distanceKm: 0, stage: 1 },
+      { id: 's1b-2', name: 'Hauz Khas', distanceKm: 4.1, stage: 2 },
+      { id: 's1b-3', name: 'AIIMS / Safdarjung', distanceKm: 8.5, stage: 3 },
+      { id: 's1b-4', name: 'INA Colony', distanceKm: 10.2, stage: 4 },
+      { id: 's1b-5', name: 'Janpath / CP', distanceKm: 15.8, stage: 5 },
+      { id: 's1b-6', name: 'New Delhi Rly Station', distanceKm: 18.5, stage: 6 },
+      { id: 's1b-7', name: 'Red Fort', distanceKm: 21.4, stage: 7 },
+      { id: 's1b-8', name: 'Kashmere Gate ISBT', distanceKm: 24.0, stage: 7 },
+    ],
+  },
+  {
     id: 'rt-2',
     routeNumber: '729',
     routeName: 'Kapashera Border ⇄ Mori Gate Terminal',
@@ -127,6 +152,28 @@ const initialRoutes: DtcRoute[] = [
       { id: 's24', name: 'Dhaula Kuan', distanceKm: 16.0, stage: 4 },
       { id: 's25', name: 'Karol Bagh Metro', distanceKm: 24.5, stage: 6 },
       { id: 's26', name: 'Mori Gate Terminal', distanceKm: 34.0, stage: 8 },
+    ],
+  },
+  {
+    id: 'rt-2b',
+    routeNumber: '729A',
+    routeName: 'Kapashera Border ⇄ Mori Gate Terminal (Non-AC)',
+    origin: 'Kapashera Border',
+    destination: 'Mori Gate Terminal',
+    busType: 'Non-AC Standard',
+    totalDistanceKm: 34.0,
+    stopsCount: 38,
+    frequencyMinutes: 15,
+    firstBus: '05:30 AM',
+    lastBus: '10:15 PM',
+    status: 'Active',
+    stops: [
+      { id: 's21b', name: 'Kapashera Border', distanceKm: 0, stage: 1 },
+      { id: 's22b', name: 'Samalka', distanceKm: 3.5, stage: 1 },
+      { id: 's23b', name: 'Mahipalpur', distanceKm: 8.2, stage: 2 },
+      { id: 's24b', name: 'Dhaula Kuan', distanceKm: 16.0, stage: 4 },
+      { id: 's25b', name: 'Karol Bagh Metro', distanceKm: 24.5, stage: 6 },
+      { id: 's26b', name: 'Mori Gate Terminal', distanceKm: 34.0, stage: 8 },
     ],
   },
   {
@@ -537,9 +584,12 @@ const initialTickets: PassengerTicket[] = [
   {
     id: 'tk-1',
     ticketNumber: 'DTC-TK-90812',
+    passengerName: 'Aarav Sharma',
     passengerPhone: '9810123456',
+    phone: '9810123456',
     routeNumber: '502',
     sourceStop: 'Saket Crossing',
+    boardingStop: 'Saket Crossing',
     destinationStop: 'Janpath / CP',
     busType: 'AC Electric',
     fare: 20,
@@ -547,15 +597,29 @@ const initialTickets: PassengerTicket[] = [
     totalAmount: 20,
     bookedAt: 'Today, 10:12 AM',
     validUntil: 'Today, 12:12 PM',
-    qrCodeData: 'DTC|502|SAKET|JANPATH|20|VALID',
+    qrCodeData: 'DTC|DTC-TK-90812-P1|502|Saket Crossing|Janpath / CP|INR20|VALID',
+    individualQrs: [
+      {
+        passengerIndex: 1,
+        passengerLabel: 'Passenger 1 of 1',
+        passengerType: 'Adult',
+        qrSerial: 'DTC-TK-90812-P1',
+        qrCodeData: 'DTC|DTC-TK-90812-P1|RT_502|Saket Crossing|Janpath / CP|INR20|VALID_1',
+        fare: 20,
+        status: 'Valid',
+      },
+    ],
     status: 'Valid',
   },
   {
     id: 'tk-2',
     ticketNumber: 'DTC-TK-90813',
+    passengerName: 'Aarav Sharma',
     passengerPhone: '9899887766',
+    phone: '9899887766',
     routeNumber: '729',
     sourceStop: 'Mahipalpur',
+    boardingStop: 'Mahipalpur',
     destinationStop: 'Dhaula Kuan',
     busType: 'AC Low Floor CNG',
     fare: 15,
@@ -563,15 +627,38 @@ const initialTickets: PassengerTicket[] = [
     totalAmount: 30,
     bookedAt: 'Today, 09:30 AM',
     validUntil: 'Today, 11:30 AM',
-    qrCodeData: 'DTC|729|MAHIPALPUR|DHAULA_KUAN|30|SCANNED',
+    qrCodeData: 'DTC|DTC-TK-90813|729|Mahipalpur|Dhaula Kuan|30|SCANNED',
+    individualQrs: [
+      {
+        passengerIndex: 1,
+        passengerLabel: 'Passenger 1 of 2',
+        passengerType: 'Adult',
+        qrSerial: 'DTC-TK-90813-P1',
+        qrCodeData: 'DTC|DTC-TK-90813-P1|RT_729|Mahipalpur|Dhaula Kuan|INR15|SCANNED',
+        fare: 15,
+        status: 'Scanned & Used',
+      },
+      {
+        passengerIndex: 2,
+        passengerLabel: 'Passenger 2 of 2',
+        passengerType: 'Adult',
+        qrSerial: 'DTC-TK-90813-P2',
+        qrCodeData: 'DTC|DTC-TK-90813-P2|RT_729|Mahipalpur|Dhaula Kuan|INR15|SCANNED',
+        fare: 15,
+        status: 'Scanned & Used',
+      },
+    ],
     status: 'Scanned & Used',
   },
   {
     id: 'tk-3',
     ticketNumber: 'DTC-TK-90814',
+    passengerName: 'Aarav Sharma',
     passengerPhone: '9711223344',
+    phone: '9711223344',
     routeNumber: '615',
     sourceStop: 'Munirka',
+    boardingStop: 'Munirka',
     destinationStop: 'Safdarjung Hospital',
     busType: 'Non-AC Standard',
     fare: 10,
@@ -579,7 +666,18 @@ const initialTickets: PassengerTicket[] = [
     totalAmount: 10,
     bookedAt: 'Today, 08:15 AM',
     validUntil: 'Today, 10:15 AM',
-    qrCodeData: 'DTC|615|MUNIRKA|SAFDARJUNG|10|EXPIRED',
+    qrCodeData: 'DTC|DTC-TK-90814-P1|615|Munirka|Safdarjung Hospital|10|EXPIRED',
+    individualQrs: [
+      {
+        passengerIndex: 1,
+        passengerLabel: 'Passenger 1 of 1',
+        passengerType: 'Adult',
+        qrSerial: 'DTC-TK-90814-P1',
+        qrCodeData: 'DTC|DTC-TK-90814-P1|RT_615|Munirka|Safdarjung Hospital|INR10|EXPIRED',
+        fare: 10,
+        status: 'Expired',
+      },
+    ],
     status: 'Expired',
   },
 ];
@@ -671,8 +769,23 @@ const initialLiveBuses: LiveBus[] = [
     currentSpeedKmH: 38,
     currentStop: 'INA Colony',
     nextStop: 'Janpath / CP',
-    etaNextStopMins: 6,
+    etaNextStopMins: 4,
     occupancyPercent: 82,
+    status: 'On Route',
+  },
+  {
+    id: 'bus-1b',
+    busNumber: 'DL 1PD 3110',
+    routeNumber: '503',
+    busType: 'Non-AC Standard',
+    depot: 'Sarojini Nagar Depot',
+    driverName: 'Rampal Yadav',
+    conductorName: 'Kishore Kumar',
+    currentSpeedKmH: 32,
+    currentStop: 'Hauz Khas',
+    nextStop: 'AIIMS / Safdarjung',
+    etaNextStopMins: 7,
+    occupancyPercent: 60,
     status: 'On Route',
   },
   {
@@ -688,6 +801,21 @@ const initialLiveBuses: LiveBus[] = [
     nextStop: 'Dhaula Kuan',
     etaNextStopMins: 9,
     occupancyPercent: 94,
+    status: 'On Route',
+  },
+  {
+    id: 'bus-2b',
+    busNumber: 'DL 1PD 2099',
+    routeNumber: '729A',
+    busType: 'Non-AC Standard',
+    depot: 'BBM Depot',
+    driverName: 'Jitender Kumar',
+    conductorName: 'Rameshwar Dayal',
+    currentSpeedKmH: 30,
+    currentStop: 'Samalka',
+    nextStop: 'Mahipalpur',
+    etaNextStopMins: 5,
+    occupancyPercent: 75,
     status: 'On Route',
   },
   {
@@ -1088,6 +1216,23 @@ export const useDtcStore = create<DtcState>()(
         const profile = get().passengerProfile;
         const count = get().passengerTickets.length + 9421;
         const ticketNum = `DTC-QR-2026-${count}`;
+        const pCount = Math.max(1, data.passengersCount);
+
+        // Generate individual QR codes for each passenger
+        const individualQrs: IndividualQrItem[] = Array.from({ length: pCount }, (_, idx) => {
+          const pIndex = idx + 1;
+          const pSerial = `${ticketNum}-P${pIndex}`;
+          return {
+            passengerIndex: pIndex,
+            passengerLabel: `Passenger ${pIndex} of ${pCount}`,
+            passengerType: data.paymentMode === 'Free Pink Pass' ? 'Pink Pass (Free)' : 'Adult',
+            qrSerial: pSerial,
+            qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${data.fare}|SEC_${Date.now()}_P${pIndex}`,
+            fare: data.fare,
+            status: 'Valid',
+          };
+        });
+
         const newTicket: PassengerTicket = {
           id: `tkt-${Date.now()}`,
           ticketNumber: ticketNum,
@@ -1100,11 +1245,12 @@ export const useDtcStore = create<DtcState>()(
           destinationStop: data.destination,
           busType: data.busType,
           fare: data.fare,
-          passengersCount: data.passengersCount,
+          passengersCount: pCount,
           totalAmount: data.totalAmount,
           bookedAt: 'Just Now',
           validUntil: 'Valid for 2 Hours',
-          qrCodeData: `DTC|${ticketNum}|${data.routeNumber}|${data.origin}|${data.destination}|${data.passengersCount}P|INR${data.totalAmount}|SEC_${Date.now()}`,
+          qrCodeData: `DTC|${ticketNum}|${data.routeNumber}|${data.origin}|${data.destination}|${pCount}P|INR${data.totalAmount}|SEC_${Date.now()}`,
+          individualQrs,
           status: 'Valid',
         };
 
@@ -1129,13 +1275,25 @@ export const useDtcStore = create<DtcState>()(
         const profile = get().passengerProfile;
         const count = get().passengerTickets.length + 9422;
         const ticketNum = `DTC-PINK-2026-${count}`;
+        const individualQrs: IndividualQrItem[] = [
+          {
+            passengerIndex: 1,
+            passengerLabel: 'Passenger 1 of 1 (Pink Pass)',
+            passengerType: 'Pink Pass (Free)',
+            qrSerial: `${ticketNum}-P1`,
+            qrCodeData: `DTC|PINK_FREE|${profile.name}|GNCTD_WOMEN_EMPOWERMENT|${Date.now()}`,
+            fare: 0,
+            status: 'Valid',
+          },
+        ];
+
         const newTicket: PassengerTicket = {
           id: `tkt-pink-${Date.now()}`,
           ticketNumber: ticketNum,
           passengerName: profile.name,
           passengerPhone: profile.phone,
           phone: profile.phone,
-          routeNumber: routeNumber || 'All Routes',
+          routeNumber: routeNumber || 'All Delhi Routes',
           sourceStop: 'Delhi NCR Corridor',
           boardingStop: 'Delhi NCR Corridor',
           destinationStop: 'Delhi NCR Corridor',
@@ -1146,6 +1304,7 @@ export const useDtcStore = create<DtcState>()(
           bookedAt: 'Just Now',
           validUntil: 'Valid Until Midnight (23:59)',
           qrCodeData: `DTC|PINK_FREE|${profile.name}|GNCTD_WOMEN_EMPOWERMENT|${Date.now()}`,
+          individualQrs,
           status: 'Valid',
         };
 

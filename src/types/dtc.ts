@@ -130,6 +130,16 @@ export interface ShiftHandover {
   notes?: string;
 }
 
+export interface IndividualQrItem {
+  passengerIndex: number;
+  passengerLabel: string;
+  passengerType: 'Adult' | 'Child' | 'Pink Pass (Free)';
+  qrSerial: string;
+  qrCodeData: string;
+  fare: number;
+  status: 'Valid' | 'Scanned & Used' | 'Expired';
+}
+
 export interface PassengerTicket {
   id: string;
   ticketNumber: string;
@@ -147,6 +157,7 @@ export interface PassengerTicket {
   bookedAt: string;
   validUntil: string;
   qrCodeData: string;
+  individualQrs?: IndividualQrItem[];
   status: 'Valid' | 'Scanned & Used' | 'Expired' | 'Refunded';
 }
 

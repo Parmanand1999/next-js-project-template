@@ -445,422 +445,267 @@ export default function PassengerHomePage() {
 
   return (
     <div className="p-4 space-y-4 animate-in fade-in duration-200">
-      {/* Commuter Welcome & GPS Location Header */}
-      <div className="flex items-center justify-between pb-1">
+      {/* 1. CLEAN MODERN HEADER */}
+      <div className="flex items-center justify-between pb-0.5">
         <div>
-          <span className="text-[11px] font-semibold text-muted-foreground">
-            Welcome back 👋
+          <span className="text-[11px] font-medium text-muted-foreground">
+            👋 Welcome back
           </span>
-          <h2 className="text-lg font-black text-foreground tracking-tight">
+          <h2 className="text-base font-black text-foreground tracking-tight">
             {passengerProfile.name}
           </h2>
         </div>
 
-        {/* Clickable GPS Location pill */}
-        <button
-          onClick={() => setShowLocationPicker(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/70 hover:bg-muted border border-border text-[10px] font-medium text-foreground transition-colors shadow-2xs group"
-          title="Click to change your current location"
-        >
-          <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="truncate max-w-[125px] font-bold">{userLocation.label.split('/')[0]}</span>
-          <span className="text-[9px] text-emerald-700 dark:text-emerald-400 font-bold group-hover:underline">
-            Change
-          </span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          {/* Clickable GPS Location pill */}
+          <button
+            onClick={() => setShowLocationPicker(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted border border-border/80 text-[10px] font-semibold text-foreground transition-all shadow-2xs"
+            title="Change Location"
+          >
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="truncate max-w-[100px]">{userLocation.label.split('/')[0]}</span>
+          </button>
+
+          {/* Quick Wallet Balance */}
+          <Link
+            href="/passenger/profile"
+            className="px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1"
+          >
+            <CreditCard className="size-3" />
+            <span>₹{passengerProfile.walletBalance}</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Active Ticket Notification Banner */}
+      {/* 2. ACTIVE TICKET (IF ANY) - Compact Pill Banner */}
       {activeTicket && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="p-2 rounded-xl bg-white/20 backdrop-blur-xs text-white shrink-0">
-              <QrCode className="size-4.5" />
-            </div>
+        <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-teal-800 text-white shadow-sm flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 overflow-hidden min-w-0">
+            <QrCode className="size-4 shrink-0 text-white" />
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-white/20">
-                  Active Journey
-                </span>
-                <span className="text-[10px] opacity-90 truncate">Route {activeTicket.routeNumber}</span>
-                {activeTicket.passengersCount > 1 && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-black/25">
-                    {activeTicket.passengersCount} QRs
-                  </span>
-                )}
-              </div>
-              <p className="text-xs font-bold truncate mt-0.5">
+              <span className="text-[10px] font-bold opacity-80 block">Active Ticket • Route {activeTicket.routeNumber}</span>
+              <p className="text-xs font-black truncate">
                 {activeTicket.sourceStop || activeTicket.boardingStop} ➔ {activeTicket.destinationStop}
               </p>
             </div>
           </div>
-
           <Link href="/passenger/tickets">
-            <Button size="sm" className="bg-white hover:bg-slate-100 text-emerald-800 font-bold text-xs rounded-xl shadow-xs shrink-0 h-8 px-3">
+            <Button size="sm" className="bg-white hover:bg-slate-100 text-emerald-900 font-black text-[11px] rounded-xl h-7 px-2.5">
               Show QR
             </Button>
           </Link>
         </div>
       )}
 
-      {/* Quick Action 4-Grid */}
-      <div className="grid grid-cols-4 gap-2">
-        <button
-          onClick={() => {
-            const el = document.getElementById('route-discovery-card');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-          className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-card border border-border/70 hover:border-emerald-500/50 shadow-2xs transition-all text-center group"
-        >
-          <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-            <QrCode className="size-5" />
-          </div>
-          <span className="text-[10px] font-bold text-foreground">Book QR</span>
-        </button>
-
+      {/* 3. SLEEK QUICK ACTIONS BAR */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
         <button
           onClick={handleQuickPinkPass}
-          className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-br from-pink-500/10 to-rose-500/10 border border-pink-500/30 hover:border-pink-500/60 shadow-2xs transition-all text-center group relative overflow-hidden"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/25 text-pink-700 dark:text-pink-300 text-[11px] font-bold shrink-0 transition-all shadow-2xs"
         >
-          <span className="absolute top-1 right-1 size-1.5 rounded-full bg-pink-600 animate-ping" />
-          <div className="size-10 rounded-xl bg-pink-500/20 text-pink-700 dark:text-pink-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-            <Sparkles className="size-5" />
-          </div>
-          <span className="text-[10px] font-bold text-pink-900 dark:text-pink-200">Pink Pass</span>
+          <Sparkles className="size-3.5 text-pink-500" />
+          <span>Women Pink Pass (Free)</span>
         </button>
 
         <Link
           href="/passenger/live"
-          className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-card border border-border/70 hover:border-blue-500/50 shadow-2xs transition-all text-center group"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 text-blue-700 dark:text-blue-300 text-[11px] font-bold shrink-0 transition-all shadow-2xs"
         >
-          <div className="size-10 rounded-xl bg-blue-500/10 text-blue-700 dark:text-blue-400 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-            <Bus className="size-5" />
-          </div>
-          <span className="text-[10px] font-bold text-foreground">Live Bus</span>
+          <Bus className="size-3.5 text-blue-500" />
+          <span>Live Radar</span>
         </Link>
 
-        <Link
-          href="/passenger/profile"
-          className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-card border border-border/70 hover:border-purple-500/50 shadow-2xs transition-all text-center group"
+        <button
+          onClick={handleUseCurrentLocation}
+          disabled={isLocating}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold shrink-0 transition-all shadow-2xs"
         >
-          <div className="size-10 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-            <CreditCard className="size-5" />
-          </div>
-          <span className="text-[10px] font-bold text-foreground">Top-Up</span>
-        </Link>
+          <Crosshair className={`size-3.5 text-emerald-600 ${isLocating ? 'animate-spin' : ''}`} />
+          <span>{isLocating ? 'Locating...' : 'Near Me (GPS)'}</span>
+        </button>
       </div>
 
-      {/* STOP-TO-STOP AUTO ROUTE DISCOVERY CARD WITH SEARCHABLE FIELDS */}
-      <Card id="route-discovery-card" className="border-border/90 shadow-sm rounded-2xl overflow-visible">
-        <CardHeader className="p-3.5 pb-2.5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-b border-border/60 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Compass className="size-4 text-emerald-600" />
-              <CardTitle className="text-xs font-bold text-foreground">
-                Search & Select Bus Stops
-              </CardTitle>
-            </div>
-            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-              Live Route Discovery
-            </span>
-          </div>
-          <CardDescription className="text-[11px] text-muted-foreground pt-0.5">
-            Type to search Boarding (From) and Destination (To) stops, or select from nearest stops
-          </CardDescription>
-        </CardHeader>
+      {/* 4. UNIFIED STREAMLINED ROUTE SEARCH CARD */}
+      <Card id="route-discovery-card" className="border-border/80 shadow-xs rounded-2xl overflow-visible p-3 space-y-2.5 bg-card">
+        {/* Connected Inputs Row */}
+        <div className="relative space-y-2">
+          {/* Vertical connecting line */}
+          <div className="absolute left-[17px] top-[18px] bottom-[18px] w-0.5 bg-border pointer-events-none" />
 
-        <CardContent className="p-3.5 space-y-3 overflow-visible">
-          <div className="space-y-3">
-            {/* 1. SEARCHABLE FROM (BOARDING STOP) FIELD */}
-            <div ref={fromRef} className="space-y-1 relative">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                  <span className="size-2 rounded-full bg-emerald-600 animate-pulse" />
-                  Boarding Stop (From) — Type to Search
-                </label>
-
-                {/* 1-Tap "Near Me" GPS Button */}
+          {/* From Input */}
+          <div ref={fromRef} className="relative">
+            <div className="relative flex items-center">
+              <span className="absolute left-3 size-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20 shrink-0 z-10" />
+              <input
+                type="text"
+                value={fromSearchQuery}
+                onChange={(e) => {
+                  setFromSearchQuery(e.target.value);
+                  setIsFromFocused(true);
+                }}
+                onFocus={() => {
+                  setIsFromFocused(true);
+                  setIsToFocused(false);
+                }}
+                placeholder="From: Boarding stop (e.g. Saket, INA)..."
+                className="w-full h-10 pl-8 pr-8 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-1 focus:ring-emerald-600 transition-all"
+              />
+              {fromSearchQuery && (
                 <button
                   type="button"
-                  onClick={handleUseCurrentLocation}
-                  disabled={isLocating}
-                  className="px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1 transition-all"
-                  title="Auto-detect nearest bus stop from your current location"
+                  onClick={() => {
+                    setFromSearchQuery('');
+                    setOriginStop('');
+                    setIsFromFocused(true);
+                  }}
+                  className="absolute right-2.5 p-1 text-muted-foreground hover:text-foreground"
                 >
-                  <Crosshair className={`size-3 text-emerald-600 ${isLocating ? 'animate-spin' : ''}`} />
-                  <span>{isLocating ? 'Locating...' : 'Near Me (GPS)'}</span>
+                  <X className="size-3.5" />
                 </button>
-              </div>
-
-              {/* Searchable Input with Icons */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-600">
-                  <MapPin className="size-4" />
-                </div>
-                <input
-                  type="text"
-                  value={fromSearchQuery}
-                  onChange={(e) => {
-                    setFromSearchQuery(e.target.value);
-                    setIsFromFocused(true);
-                  }}
-                  onFocus={() => {
-                    setIsFromFocused(true);
-                    setIsToFocused(false);
-                  }}
-                  placeholder="Type to search boarding stop (e.g. Saket, INA, Hauz Khas)..."
-                  className="w-full h-11 pl-9 pr-9 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 transition-all shadow-2xs"
-                />
-                {fromSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFromSearchQuery('');
-                      setOriginStop('');
-                      setIsFromFocused(true);
-                    }}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Autocomplete Dropdown for From Field */}
-              {isFromFocused && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-2 py-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60">
-                    Select Boarding Bus Stop
-                  </div>
-
-                  {/* All Nearest Stops Quick Option */}
-                  <button
-                    type="button"
-                    onClick={() => handleSelectOriginStop('ALL_NEARBY')}
-                    className={`w-full p-2 rounded-xl text-left text-xs font-bold transition-colors flex items-center justify-between ${
-                      originStop === 'ALL_NEARBY'
-                        ? 'bg-emerald-700 text-white'
-                        : 'hover:bg-muted text-foreground'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="size-3.5 text-amber-400 shrink-0" />
-                      <div>
-                        <span>✨ All Nearest Stops (Auto-Discover)</span>
-                        <span className="text-[10px] opacity-80 block font-normal">
-                          Searches across all {nearestStops.length} stops nearest to you
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* List matching stops */}
-                  {filteredFromStops.length === 0 ? (
-                    <div className="p-3 text-center text-xs text-muted-foreground">
-                      No matching bus stops found for &quot;{fromSearchQuery}&quot;
-                    </div>
-                  ) : (
-                    filteredFromStops.map((stop) => {
-                      const isNearby = nearestStops.find((n) => n.name === stop);
-                      const isSelected = originStop === stop;
-
-                      return (
-                        <button
-                          key={`from-opt-${stop}`}
-                          type="button"
-                          onClick={() => handleSelectOriginStop(stop)}
-                          className={`w-full p-2 rounded-xl text-left text-xs transition-colors flex items-center justify-between ${
-                            isSelected
-                              ? 'bg-emerald-700 text-white font-bold'
-                              : 'hover:bg-muted text-foreground'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <MapPin className={`size-3.5 ${isSelected ? 'text-white' : 'text-emerald-600'}`} />
-                            <span className="font-bold">{stop}</span>
-                          </div>
-
-                          {isNearby && (
-                            <span
-                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                                isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300'
-                              }`}
-                            >
-                              📍 {isNearby.distanceFormatted} away
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-
-              {/* NEAREST STOPS DIRECTLY DISPLAYED NEXT TO BOARDING STOP FIELD */}
-              <div className="space-y-1.5 p-2 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-500/25 mt-1.5">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1">
-                    <Navigation2 className="size-3 text-emerald-600 rotate-45" />
-                    Nearest Bus Stops Around You:
-                  </span>
-                  <span className="text-[9px] text-muted-foreground">
-                    near {userLocation.label.split('/')[0]}
-                  </span>
-                </div>
-
-                {/* Horizontal Quick-Select Nearest Stops Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectOriginStop('ALL_NEARBY')}
-                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border shrink-0 transition-all ${
-                      originStop === 'ALL_NEARBY'
-                        ? 'bg-emerald-700 text-white border-emerald-600 shadow-xs'
-                        : 'bg-card text-foreground border-border hover:bg-muted'
-                    }`}
-                  >
-                    ✨ All Nearest ({nearestStops.length})
-                  </button>
-
-                  {nearestStops.map((stop) => (
-                    <button
-                      key={stop.name}
-                      type="button"
-                      onClick={() => handleSelectOriginStop(stop.name)}
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border shrink-0 transition-all flex items-center gap-1 ${
-                        originStop === stop.name
-                          ? 'bg-emerald-700 text-white border-emerald-600 shadow-xs'
-                          : 'bg-card text-muted-foreground border-border hover:bg-muted'
-                      }`}
-                    >
-                      <span>{stop.name}</span>
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 font-bold">
-                        {stop.distanceFormatted}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Swap Stops Button */}
-            <div className="flex justify-end pr-3 -my-0.5 z-10 relative">
-              <button
-                type="button"
-                onClick={handleSwapStops}
-                title="Swap From and To stops"
-                className="size-7 rounded-full bg-card border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500 transition-colors"
-              >
-                <ArrowUpDown className="size-3.5" />
-              </button>
-            </div>
-
-            {/* 2. SEARCHABLE TO (DESTINATION STOP) FIELD */}
-            <div ref={toRef} className="space-y-1 relative">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <span className="size-2 rounded-full bg-rose-600" />
-                Destination Stop (To) — Type to Search
-              </label>
-
-              {/* Searchable Input with Icons */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-rose-600">
-                  <MapPin className="size-4" />
-                </div>
-                <input
-                  type="text"
-                  value={toSearchQuery}
-                  onChange={(e) => {
-                    setToSearchQuery(e.target.value);
-                    setIsToFocused(true);
-                  }}
-                  onFocus={() => {
-                    setIsToFocused(true);
-                    setIsFromFocused(false);
-                  }}
-                  placeholder="Type to search destination stop (e.g. Janpath, Kashmere Gate)..."
-                  className="w-full h-11 pl-9 pr-9 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-rose-600/30 focus:border-rose-600 transition-all shadow-2xs"
-                />
-                {toSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setToSearchQuery('');
-                      setDestinationStop('');
-                      setIsToFocused(true);
-                    }}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Autocomplete Dropdown for To Field */}
-              {isToFocused && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-2 py-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60">
-                    Select Destination Bus Stop
-                  </div>
-
-                  {filteredToStops.length === 0 ? (
-                    <div className="p-3 text-center text-xs text-muted-foreground">
-                      No matching bus stops found for &quot;{toSearchQuery}&quot;
-                    </div>
-                  ) : (
-                    filteredToStops.map((stop) => {
-                      const isSelected = destinationStop === stop;
-                      return (
-                        <button
-                          key={`to-opt-${stop}`}
-                          type="button"
-                          onClick={() => handleSelectDestinationStop(stop)}
-                          className={`w-full p-2 rounded-xl text-left text-xs transition-colors flex items-center justify-between ${
-                            isSelected
-                              ? 'bg-rose-600 text-white font-bold'
-                              : 'hover:bg-muted text-foreground'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <MapPin className={`size-3.5 ${isSelected ? 'text-white' : 'text-rose-600'}`} />
-                            <span className="font-bold">{stop}</span>
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
               )}
             </div>
-          </div>
 
-          {/* Popular Destination Hubs */}
-          <div className="space-y-1 pt-0.5">
-            <span className="text-[10px] text-muted-foreground font-semibold">Popular Destinations:</span>
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
-              {[
-                'Janpath / CP',
-                'Kashmere Gate ISBT',
-                'Dhaula Kuan',
-                'AIIMS / Safdarjung',
-                'Old Delhi Railway Station',
-              ].map((dest, idx) => (
+            {/* From Dropdown */}
+            {isFromFocused && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-xl p-1.5 space-y-1">
                 <button
-                  key={idx}
                   type="button"
-                  onClick={() => handleSelectDestinationStop(dest)}
-                  className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 border transition-colors ${
-                    destinationStop === dest
-                      ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 shadow-2xs'
-                      : 'bg-muted/60 text-muted-foreground hover:text-foreground border-border/60'
+                  onClick={() => handleSelectOriginStop('ALL_NEARBY')}
+                  className={`w-full p-2 rounded-lg text-left text-xs font-bold transition-colors flex items-center justify-between ${
+                    originStop === 'ALL_NEARBY' ? 'bg-emerald-700 text-white' : 'hover:bg-muted text-foreground'
                   }`}
                 >
-                  ➔ {dest.split(' ')[0]}
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="size-3.5 text-amber-400 shrink-0" />
+                    <span>✨ All Nearest Stops (Auto-Discover)</span>
+                  </div>
                 </button>
-              ))}
-            </div>
+
+                {filteredFromStops.map((stop) => {
+                  const isNearby = nearestStops.find((n) => n.name === stop);
+                  const isSelected = originStop === stop;
+                  return (
+                    <button
+                      key={`from-opt-${stop}`}
+                      type="button"
+                      onClick={() => handleSelectOriginStop(stop)}
+                      className={`w-full p-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
+                        isSelected ? 'bg-emerald-700 text-white font-bold' : 'hover:bg-muted text-foreground'
+                      }`}
+                    >
+                      <span className="font-semibold">{stop}</span>
+                      {isNearby && (
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'}`}>
+                          📍 {isNearby.distanceFormatted}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </CardContent>
+
+          {/* Swap Button on side */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
+            <button
+              type="button"
+              onClick={handleSwapStops}
+              className="size-7 rounded-full bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shadow-2xs hover:scale-105 transition-all"
+              title="Swap From and To"
+            >
+              <ArrowUpDown className="size-3.5 text-foreground" />
+            </button>
+          </div>
+
+          {/* To Input */}
+          <div ref={toRef} className="relative">
+            <div className="relative flex items-center">
+              <span className="absolute left-3 size-2.5 rounded-full bg-rose-500 ring-2 ring-rose-500/20 shrink-0 z-10" />
+              <input
+                type="text"
+                value={toSearchQuery}
+                onChange={(e) => {
+                  setToSearchQuery(e.target.value);
+                  setIsToFocused(true);
+                }}
+                onFocus={() => {
+                  setIsToFocused(true);
+                  setIsFromFocused(false);
+                }}
+                placeholder="To: Where are you heading?"
+                className="w-full h-10 pl-8 pr-8 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-1 focus:ring-rose-600 transition-all"
+              />
+              {toSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setToSearchQuery('');
+                    setDestinationStop('');
+                    setIsToFocused(true);
+                  }}
+                  className="absolute right-2.5 p-1 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* To Dropdown */}
+            {isToFocused && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-xl p-1.5 space-y-1">
+                {filteredToStops.map((stop) => {
+                  const isSelected = destinationStop === stop;
+                  return (
+                    <button
+                      key={`to-opt-${stop}`}
+                      type="button"
+                      onClick={() => handleSelectDestinationStop(stop)}
+                      className={`w-full p-2 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
+                        isSelected ? 'bg-rose-600 text-white font-bold' : 'hover:bg-muted text-foreground'
+                      }`}
+                    >
+                      <span className="font-semibold">{stop}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Suggestion Chips (Combined Nearest & Popular Destinations in 1 sleek scroll) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+          {nearestStops.map((s) => (
+            <button
+              key={s.name}
+              type="button"
+              onClick={() => handleSelectOriginStop(s.name)}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 border transition-all ${
+                originStop === s.name
+                  ? 'bg-emerald-700 text-white border-emerald-600 shadow-2xs'
+                  : 'bg-muted/50 text-muted-foreground hover:text-foreground border-border/60'
+              }`}
+            >
+              📍 {s.name} ({s.distanceFormatted})
+            </button>
+          ))}
+          {['Janpath / CP', 'Kashmere Gate ISBT', 'Dhaula Kuan', 'AIIMS / Safdarjung'].map((dest) => (
+            <button
+              key={dest}
+              type="button"
+              onClick={() => handleSelectDestinationStop(dest)}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 border transition-all ${
+                destinationStop === dest
+                  ? 'bg-rose-600 text-white border-rose-500 shadow-2xs'
+                  : 'bg-muted/50 text-muted-foreground hover:text-foreground border-border/60'
+              }`}
+            >
+              ➔ {dest.split(' ')[0]}
+            </button>
+          ))}
+        </div>
       </Card>
 
       {/* AVAILABLE CONNECTING BUSES LIST (EXPLICIT STOP & DISTANCE BREAKDOWN) */}
@@ -936,7 +781,7 @@ export default function PassengerHomePage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {connectingBuses.map((bus) => {
               const isAC = bus.busType === 'AC Electric' || bus.busType === 'AC Low Floor CNG';
               const walkMins = bus.walkingMinutesFromUser;
@@ -953,238 +798,121 @@ export default function PassengerHomePage() {
                   : [];
 
               return (
-                <Card
+                <div
                   key={bus.id}
-                  className="border-border/80 hover:border-emerald-500/40 shadow-xs rounded-2xl overflow-hidden transition-all bg-card"
+                  className="p-3.5 rounded-2xl bg-card border border-border/80 hover:border-emerald-500/40 shadow-xs transition-all space-y-2.5"
                 >
-                  {/* Distinct Boarding Stop & Exact Distance Header */}
-                  <div className="px-3.5 py-2 bg-muted/50 border-b border-border/60 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <MapPin className="size-3.5 text-emerald-600 shrink-0" />
-                      <span className="text-[11px] text-muted-foreground truncate">
-                        Board at:{' '}
-                        <strong className="text-foreground font-black">{bus.fromStop}</strong>
+                  {/* Row 1: Bus Route Number, AC badge, Live Arrival & Fare */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2.5 py-1 rounded-xl font-black text-xs text-white shadow-2xs ${
+                          isAC ? 'bg-emerald-700' : 'bg-slate-700'
+                        }`}
+                      >
+                        {bus.routeNumber}
                       </span>
-                    </div>
-
-                    <Badge className="bg-emerald-700 text-white font-black text-[9px] px-2 py-0.5 shrink-0">
-                      📍 {bus.distanceFromUserFormatted} away (~{bus.walkingMinutesFromUser} min walk)
-                    </Badge>
-                  </div>
-
-                  <CardContent className="p-3.5 space-y-3">
-                    {/* Header: Route Number, Category Badge, Live ETA */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`px-2.5 py-1 rounded-xl font-black text-sm text-white ${
-                            isAC ? 'bg-emerald-700' : 'bg-slate-700'
-                          }`}
-                        >
-                          {bus.routeNumber}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <Badge
-                              variant="outline"
-                              className={`text-[9px] font-bold px-1.5 py-0 ${
-                                isAC
-                                  ? 'border-emerald-500/40 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10'
-                                  : 'border-slate-500/40 text-slate-700 dark:text-slate-300 bg-slate-500/10'
-                              }`}
-                            >
-                              {bus.busType}
-                            </Badge>
-                            {bus.liveBus && (
-                              <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
-                                <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                LIVE GPS
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground block truncate max-w-[200px]">
-                            {bus.routeName}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-base font-black text-foreground">
-                          ₹{bus.fare}
-                        </span>
-                        <span className="text-[9px] text-muted-foreground block">per commuter</span>
-                      </div>
-                    </div>
-
-                    {/* Telemetry info row */}
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40 border border-border/60 text-[11px]">
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Clock className="size-3 text-emerald-600" />
-                        <span>
-                          {bus.liveBus
-                            ? `Arriving in ${bus.liveBus.etaNextStopMins} mins`
-                            : 'Every 10-12 mins'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
-                        <span>{bus.distanceKm} km</span>
-                        <span>•</span>
-                        <span>~{Math.round(bus.distanceKm * 2.2)} mins trip</span>
-                      </div>
-
-                      {bus.liveBus && (
-                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                          {bus.liveBus.occupancyPercent}% crowd
+                      <span className="text-[11px] font-bold text-foreground">
+                        {bus.busType}
+                      </span>
+                      {busEta !== undefined && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                          <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Arriving in {busEta}m
                         </span>
                       )}
                     </div>
 
-                    {/* Walking Feasibility vs Live Bus Arrival */}
-                    {busEta !== undefined && (
-                      <div
-                        className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-between ${
-                          willCatchOnTime
-                            ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20'
-                            : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20'
-                        }`}
-                      >
-                        <span className="flex items-center gap-1">
-                          {willCatchOnTime ? '🟢' : '🟡'}
-                          {willCatchOnTime
-                            ? `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Safe to board on time)`
-                            : `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Need to walk fast)`}
-                        </span>
-                        <span className="text-[9px] opacity-80">
-                          {bus.distanceFromUserFormatted} distance
-                        </span>
-                      </div>
-                    )}
-
-                    {/* EXPANDABLE BUS DEPARTURE & ROUTE DETAILS (Revealed on clicking "View Stop Details") */}
-                    {isExpanded && (
-                      <div className="space-y-2.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-150">
-                        {/* DEPARTURE STOP & WALKING DETAILS */}
-                        <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-500/30 space-y-2 text-xs">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <MapPin className="size-4 text-emerald-600 shrink-0" />
-                              <span className="text-xs font-black text-foreground">
-                                Bus Departure Stop: {bus.fromStop}
-                              </span>
-                            </div>
-                            <Badge className="bg-emerald-700 text-white font-black text-[9px] px-1.5 py-0.5">
-                              {bus.distanceFromUserFormatted} away
-                            </Badge>
-                          </div>
-
-                          <p className="leading-snug text-muted-foreground text-[11px]">
-                            To board this bus, please proceed to{' '}
-                            <strong className="text-foreground">{bus.fromStop}</strong> stop. This stop is
-                            approx.{' '}
-                            <strong className="text-emerald-700 dark:text-emerald-400">
-                              {bus.distanceFromUserFormatted}
-                            </strong>{' '}
-                            from your current location (~
-                            <strong className="text-foreground">
-                              {bus.walkingMinutesFromUser} min
-                            </strong>{' '}
-                            walk).
-                          </p>
-
-                          {bus.stopLandmark && (
-                            <span className="text-[10px] text-muted-foreground block">
-                              📍 Landmark: {bus.stopLandmark}
-                            </span>
-                          )}
-
-                          {/* Other nearby boarding stops for this same bus */}
-                          {bus.otherNearbyStops && bus.otherNearbyStops.length > 0 && (
-                            <div className="pt-1.5 border-t border-border/60">
-                              <span className="text-[10px] text-muted-foreground block font-semibold mb-1">
-                                Also reachable at nearby stops:
-                              </span>
-                              <div className="flex flex-wrap gap-1">
-                                {bus.otherNearbyStops.map((alt, aIdx) => (
-                                  <span
-                                    key={aIdx}
-                                    className="text-[9px] px-2 py-0.5 rounded-lg bg-background border border-border/80 text-foreground font-medium"
-                                  >
-                                    {alt.name} ({alt.distanceFormatted})
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* TRIP STOPS ROUTE TIMELINE */}
-                        {tripStops.length > 0 && (
-                          <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-2">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                              Route Stops ({tripStops.length} stops on journey)
-                            </span>
-                            <div className="space-y-1.5 pl-1">
-                              {tripStops.map((st, idx) => {
-                                const isStart = idx === 0;
-                                const isEnd = idx === tripStops.length - 1;
-                                return (
-                                  <div key={st.id || idx} className="flex items-center gap-2 text-[11px]">
-                                    <div
-                                      className={`size-2 rounded-full shrink-0 ${
-                                        isStart
-                                          ? 'bg-emerald-600 ring-2 ring-emerald-500/30'
-                                          : isEnd
-                                          ? 'bg-rose-600 ring-2 ring-rose-500/30'
-                                          : 'bg-muted-foreground/50'
-                                      }`}
-                                    />
-                                    <span
-                                      className={`truncate ${
-                                        isStart || isEnd
-                                          ? 'font-bold text-foreground'
-                                          : 'text-muted-foreground'
-                                      }`}
-                                    >
-                                      {st.name} {isStart ? '(Boarding)' : isEnd ? '(Destination)' : ''}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Buttons: View Details Toggle & Book Ticket */}
-                    <div className="flex items-center gap-2 pt-0.5">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setExpandedBusId(isExpanded ? null : bus.id)}
-                        className="flex-1 h-9 rounded-xl text-xs font-bold border-border/80 text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
-                      >
-                        <span>{isExpanded ? 'Hide Details' : 'View Stop Details'}</span>
-                        {isExpanded ? (
-                          <ChevronUp className="size-3.5" />
-                        ) : (
-                          <ChevronDown className="size-3.5" />
-                        )}
-                      </Button>
-
-                      <Button
-                        type="button"
-                        onClick={() => handleSelectBusToBook(bus)}
-                        className="flex-1 h-9 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-2xs flex items-center justify-center gap-1.5"
-                      >
-                        <span>Book Ticket (₹{bus.fare})</span>
-                        <ArrowRight className="size-3.5" />
-                      </Button>
+                    <div className="text-right">
+                      <span className="text-sm font-black text-foreground">₹{bus.fare}</span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  {/* Row 2: Origin (Boarding) & Destination Journey Details */}
+                  <div className="flex items-center justify-between text-xs pt-0.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-[11px] text-muted-foreground">Board at:</span>
+                      <strong className="text-foreground font-black truncate">{bus.fromStop}</strong>
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold shrink-0 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
+                        {bus.distanceFromUserFormatted} (~{bus.walkingMinutesFromUser}m walk)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0 pl-1">
+                      <ArrowRight className="size-3 text-muted-foreground" />
+                      <span className="font-bold text-foreground truncate max-w-[90px]">{bus.toStop.split(' ')[0]}</span>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Action Buttons (View Stops / Book) */}
+                  <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedBusId(isExpanded ? null : bus.id)}
+                      className="text-[11px] font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                    >
+                      <span>{isExpanded ? 'Hide stops' : 'View stops & details'}</span>
+                      {isExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                    </button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleSelectBusToBook(bus)}
+                      className="h-8 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-xl shadow-2xs flex items-center gap-1.5"
+                    >
+                      <span>Book Ticket</span>
+                      <ArrowRight className="size-3.5" />
+                    </Button>
+                  </div>
+
+                  {/* Expandable Stops & Details */}
+                  {isExpanded && (
+                    <div className="pt-2 border-t border-border/60 space-y-2 text-xs animate-in fade-in duration-150">
+                      <div className="p-2.5 rounded-xl bg-muted/40 space-y-1 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-foreground">📍 Boarding Stop: {bus.fromStop}</span>
+                          <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">
+                            {bus.distanceFromUserFormatted} (~{bus.walkingMinutesFromUser}m walk)
+                          </span>
+                        </div>
+                        {bus.stopLandmark && (
+                          <span className="text-[10px] text-muted-foreground block">
+                            Landmark: {bus.stopLandmark}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground block">
+                          Journey: ~{Math.round(bus.distanceKm * 2.2)} mins • {bus.distanceKm} km
+                        </span>
+                        {bus.otherNearbyStops && bus.otherNearbyStops.length > 0 && (
+                          <div className="pt-1 text-[10px] text-muted-foreground">
+                            <span>Also boarding nearby at: </span>
+                            {bus.otherNearbyStops.map((alt) => `${alt.name} (${alt.distanceFormatted})`).join(', ')}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Stops progression timeline */}
+                      {tripStops.length > 0 && (
+                        <div className="p-2.5 rounded-xl bg-muted/20 border border-border/50 space-y-1.5 text-[10px]">
+                          <span className="font-bold text-muted-foreground block uppercase tracking-wider text-[9px]">
+                            Route Timeline ({tripStops.length} stops)
+                          </span>
+                          <div className="flex flex-wrap items-center gap-1 text-muted-foreground">
+                            {tripStops.map((st, sIdx) => (
+                              <React.Fragment key={st.id || sIdx}>
+                                <span className={sIdx === 0 || sIdx === tripStops.length - 1 ? 'font-bold text-foreground' : ''}>
+                                  {st.name}
+                                </span>
+                                {sIdx < tripStops.length - 1 && <span className="opacity-40">➔</span>}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

@@ -523,7 +523,7 @@ export default function PassengerHomePage() {
             </span>
           </div>
           <CardDescription className="text-[11px] text-muted-foreground pt-0.5">
-            Boarding (From) aur Destination (To) type karke search karein ya paas wale stop se select karein
+            Type to search Boarding (From) and Destination (To) stops, or select from nearest stops
           </CardDescription>
         </CardHeader>
 
@@ -644,7 +644,7 @@ export default function PassengerHomePage() {
                                 isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300'
                               }`}
                             >
-                              📍 {isNearby.distanceFormatted} doori
+                              📍 {isNearby.distanceFormatted} away
                             </span>
                           )}
                         </button>
@@ -659,7 +659,7 @@ export default function PassengerHomePage() {
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1">
                     <Navigation2 className="size-3 text-emerald-600 rotate-45" />
-                    Paas Ke Bus Stops (Nearest Stops):
+                    Nearest Bus Stops Around You:
                   </span>
                   <span className="text-[9px] text-muted-foreground">
                     near {userLocation.label.split('/')[0]}
@@ -917,7 +917,7 @@ export default function PassengerHomePage() {
                     </div>
 
                     <Badge className="bg-emerald-700 text-white font-black text-[9px] px-2 py-0.5 shrink-0">
-                      📍 {bus.distanceFromUserFormatted} doori (~{bus.walkingMinutesFromUser}m walk)
+                      📍 {bus.distanceFromUserFormatted} away (~{bus.walkingMinutesFromUser} min walk)
                     </Badge>
                   </div>
 
@@ -979,7 +979,7 @@ export default function PassengerHomePage() {
                       <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
                         <span>{bus.distanceKm} km</span>
                         <span>•</span>
-                        <span>~{Math.round(bus.distanceKm * 2.2)} mins bus run</span>
+                        <span>~{Math.round(bus.distanceKm * 2.2)} mins trip</span>
                       </div>
 
                       {bus.liveBus && (
@@ -1001,11 +1001,11 @@ export default function PassengerHomePage() {
                         <span className="flex items-center gap-1">
                           {willCatchOnTime ? '🟢' : '🟡'}
                           {willCatchOnTime
-                            ? `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Aaram se catch kar lenge)`
-                            : `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Thoda tez chalna hoga)`}
+                            ? `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Safe to board on time)`
+                            : `Bus arrives in ${busEta}m • Walk is ${walkMins}m (Need to walk fast)`}
                         </span>
                         <span className="text-[9px] opacity-80">
-                          {bus.distanceFromUserFormatted} doori
+                          {bus.distanceFromUserFormatted} distance
                         </span>
                       </div>
                     )}
@@ -1046,7 +1046,7 @@ export default function PassengerHomePage() {
             </div>
 
             <p className="text-[11px] text-muted-foreground">
-              Aap Delhi me jaha bhi hain, waha ke sabse nazdeek bus stop ki doori auto-calculate hogi:
+              Wherever you are located in Delhi NCR, distances to nearby bus stops are automatically calculated:
             </p>
 
             <div className="space-y-2">
@@ -1137,21 +1137,21 @@ export default function PassengerHomePage() {
                   </span>
                 </div>
                 <Badge className="bg-emerald-700 text-white font-black text-[10px] px-2 py-0.5">
-                  {selectedBus.distanceFromUserFormatted} doori
+                  {selectedBus.distanceFromUserFormatted} away
                 </Badge>
               </div>
 
               <div className="p-2.5 rounded-xl bg-card/80 border border-border/60 text-xs space-y-1">
                 <p className="leading-snug text-muted-foreground">
-                  Is bus ko pakadne ke liye aapko{' '}
-                  <strong className="text-foreground">{selectedBus.fromStop}</strong> stop par jana hoga.
-                  Aapki current location se yeh stop lagbhag{' '}
+                  To board this bus, please proceed to{' '}
+                  <strong className="text-foreground">{selectedBus.fromStop}</strong> stop.
+                  This stop is approx.{' '}
                   <strong className="text-emerald-700 dark:text-emerald-400">
                     {selectedBus.distanceFromUserFormatted}
                   </strong>{' '}
-                  door hai (~
+                  from your current location (~
                   <strong className="text-foreground">
-                    {selectedBus.walkingMinutesFromUser} min paidal
+                    {selectedBus.walkingMinutesFromUser} min
                   </strong>{' '}
                   walk).
                 </p>
@@ -1243,7 +1243,7 @@ export default function PassengerHomePage() {
                   <span>Individual QR Codes Generated</span>
                 </div>
                 <p className="text-[10px] text-emerald-700/90 dark:text-emerald-400/90 leading-relaxed">
-                  Har commuter ke liye <strong>alag QR code</strong> banega. Bus conductor aapke mobile se dono/teeno QR alag-alag scan karenge.
+                  A separate digital QR code will be generated for each passenger. The bus conductor will scan each QR code individually on their handheld ETIM machine.
                 </p>
               </div>
             )}

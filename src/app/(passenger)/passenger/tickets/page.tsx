@@ -319,7 +319,7 @@ export default function PassengerTicketsPage() {
                           {activeQr.qrSerial}
                         </span>
                         <p className="text-[9px] text-slate-500 font-medium">
-                          Conductor ETIM device par scan karwayein
+                          Present screen to Conductor ETIM Scanner
                         </p>
                       </div>
                     </div>

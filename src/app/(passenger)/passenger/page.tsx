@@ -43,6 +43,8 @@ import {
   Navigation2,
   Crosshair,
   Search,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface ConnectingBusItem {
@@ -60,6 +62,7 @@ interface ConnectingBusItem {
   walkingMinutesFromUser: number;
   stopLandmark?: string;
   liveBus?: LiveBus;
+  otherNearbyStops?: { name: string; distanceFormatted: string }[];
 }
 
 export default function PassengerHomePage() {
@@ -148,6 +151,9 @@ export default function PassengerHomePage() {
 
   // Bus Filter: All | AC Only | Non-AC Only
   const [busClassFilter, setBusClassFilter] = useState<'all' | 'ac' | 'non-ac'>('all');
+
+  // Expanded Bus Card for Departure/Route details
+  const [expandedBusId, setExpandedBusId] = useState<string | null>(null);
 
   // Selected Bus for Booking Modal
   const [selectedBus, setSelectedBus] = useState<ConnectingBusItem | null>(null);
@@ -255,11 +261,12 @@ export default function PassengerHomePage() {
     setShowLocationPicker(false);
   };
 
-  // Discover all buses connecting originStop (or all nearest stops) to destinationStop
+  // Discover all unique buses connecting originStop (or all nearest stops) to destinationStop
+  // Deduplicates routes so each bus only appears once, selecting the best (closest) boarding stop to commuter
   const connectingBuses = useMemo<ConnectingBusItem[]>(() => {
     if (!destinationStop) return [];
 
-    const matched: ConnectingBusItem[] = [];
+    const busMap = new Map<string, ConnectingBusItem>();
 
     // Determine candidate boarding stops: either specific originStop or all nearestStops
     const candidateStops: { name: string; distMeters: number; landmark?: string }[] = [];
@@ -292,32 +299,67 @@ export default function PassengerHomePage() {
         const fromIndex = route.stops.findIndex((s) => s.name === candStop.name);
         const toIndex = route.stops.findIndex((s) => s.name === destinationStop);
 
-        if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+        // Check if route serves both stops and travels in forward direction
+        if (fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex) {
           const dist = Math.abs(route.stops[toIndex].distanceKm - route.stops[fromIndex].distanceKm);
           const roundedDist = Math.max(1, Math.round(dist * 10) / 10);
           const fare = calculateFare(route.busType, roundedDist);
           const liveBus = liveBuses.find((b) => b.routeNumber === route.routeNumber);
           const walkMins = calculateWalkingMinutes(candStop.distMeters);
+          const busKey = `${route.routeNumber}-${route.busType}`;
 
-          matched.push({
-            id: `${route.routeNumber}-${route.busType}-${candStop.name}`,
-            route,
-            routeNumber: route.routeNumber,
-            routeName: route.routeName,
-            busType: route.busType,
-            distanceKm: roundedDist,
-            fare,
-            fromStop: candStop.name,
-            toStop: destinationStop,
-            distanceFromUserMeters: candStop.distMeters,
-            distanceFromUserFormatted: formatDistance(candStop.distMeters),
-            walkingMinutesFromUser: walkMins,
-            stopLandmark: candStop.landmark,
-            liveBus,
-          });
+          const existing = busMap.get(busKey);
+
+          if (!existing) {
+            busMap.set(busKey, {
+              id: busKey,
+              route,
+              routeNumber: route.routeNumber,
+              routeName: route.routeName,
+              busType: route.busType,
+              distanceKm: roundedDist,
+              fare,
+              fromStop: candStop.name,
+              toStop: destinationStop,
+              distanceFromUserMeters: candStop.distMeters,
+              distanceFromUserFormatted: formatDistance(candStop.distMeters),
+              walkingMinutesFromUser: walkMins,
+              stopLandmark: candStop.landmark,
+              liveBus,
+              otherNearbyStops: [],
+            });
+          } else {
+            // Keep the stop that is closer to the user
+            if (candStop.distMeters < existing.distanceFromUserMeters) {
+              const previousStop = {
+                name: existing.fromStop,
+                distanceFormatted: existing.distanceFromUserFormatted,
+              };
+              existing.otherNearbyStops = [
+                ...(existing.otherNearbyStops || []).filter((s) => s.name !== candStop.name),
+                previousStop,
+              ];
+              existing.fromStop = candStop.name;
+              existing.distanceKm = roundedDist;
+              existing.fare = fare;
+              existing.distanceFromUserMeters = candStop.distMeters;
+              existing.distanceFromUserFormatted = formatDistance(candStop.distMeters);
+              existing.walkingMinutesFromUser = walkMins;
+              existing.stopLandmark = candStop.landmark;
+            } else if (candStop.name !== existing.fromStop) {
+              if (!existing.otherNearbyStops?.some((s) => s.name === candStop.name)) {
+                existing.otherNearbyStops = [
+                  ...(existing.otherNearbyStops || []),
+                  { name: candStop.name, distanceFormatted: formatDistance(candStop.distMeters) },
+                ];
+              }
+            }
+          }
         }
       });
     });
+
+    const matched = Array.from(busMap.values());
 
     // Filter by category (All, AC, Non-AC)
     const filtered = matched.filter((b) => {
@@ -330,7 +372,7 @@ export default function PassengerHomePage() {
       return true;
     });
 
-    // Sort by shortest walking distance from user, then live bus arrival
+    // Sort by shortest walking distance from user, then fare
     return filtered.sort((a, b) => {
       if (a.distanceFromUserMeters !== b.distanceFromUserMeters) {
         return a.distanceFromUserMeters - b.distanceFromUserMeters;
@@ -900,6 +942,15 @@ export default function PassengerHomePage() {
               const walkMins = bus.walkingMinutesFromUser;
               const busEta = bus.liveBus?.etaNextStopMins;
               const willCatchOnTime = busEta !== undefined ? busEta >= walkMins : true;
+              const isExpanded = expandedBusId === bus.id;
+
+              // Compute route stops between fromStop and toStop
+              const fromIdx = bus.route.stops.findIndex((s) => s.name === bus.fromStop);
+              const toIdx = bus.route.stops.findIndex((s) => s.name === bus.toStop);
+              const tripStops =
+                fromIdx !== -1 && toIdx !== -1 && fromIdx < toIdx
+                  ? bus.route.stops.slice(fromIdx, toIdx + 1)
+                  : [];
 
               return (
                 <Card
@@ -1010,14 +1061,128 @@ export default function PassengerHomePage() {
                       </div>
                     )}
 
-                    {/* Select Bus & Book Ticket Button */}
-                    <Button
-                      onClick={() => handleSelectBusToBook(bus)}
-                      className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl h-9 shadow-2xs flex items-center justify-center gap-1.5"
-                    >
-                      <span>Select Bus & Book Ticket</span>
-                      <ArrowRight className="size-3.5" />
-                    </Button>
+                    {/* EXPANDABLE BUS DEPARTURE & ROUTE DETAILS (Revealed on clicking "View Stop Details") */}
+                    {isExpanded && (
+                      <div className="space-y-2.5 pt-1 animate-in fade-in slide-in-from-top-2 duration-150">
+                        {/* DEPARTURE STOP & WALKING DETAILS */}
+                        <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-500/30 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <MapPin className="size-4 text-emerald-600 shrink-0" />
+                              <span className="text-xs font-black text-foreground">
+                                Bus Departure Stop: {bus.fromStop}
+                              </span>
+                            </div>
+                            <Badge className="bg-emerald-700 text-white font-black text-[9px] px-1.5 py-0.5">
+                              {bus.distanceFromUserFormatted} away
+                            </Badge>
+                          </div>
+
+                          <p className="leading-snug text-muted-foreground text-[11px]">
+                            To board this bus, please proceed to{' '}
+                            <strong className="text-foreground">{bus.fromStop}</strong> stop. This stop is
+                            approx.{' '}
+                            <strong className="text-emerald-700 dark:text-emerald-400">
+                              {bus.distanceFromUserFormatted}
+                            </strong>{' '}
+                            from your current location (~
+                            <strong className="text-foreground">
+                              {bus.walkingMinutesFromUser} min
+                            </strong>{' '}
+                            walk).
+                          </p>
+
+                          {bus.stopLandmark && (
+                            <span className="text-[10px] text-muted-foreground block">
+                              📍 Landmark: {bus.stopLandmark}
+                            </span>
+                          )}
+
+                          {/* Other nearby boarding stops for this same bus */}
+                          {bus.otherNearbyStops && bus.otherNearbyStops.length > 0 && (
+                            <div className="pt-1.5 border-t border-border/60">
+                              <span className="text-[10px] text-muted-foreground block font-semibold mb-1">
+                                Also reachable at nearby stops:
+                              </span>
+                              <div className="flex flex-wrap gap-1">
+                                {bus.otherNearbyStops.map((alt, aIdx) => (
+                                  <span
+                                    key={aIdx}
+                                    className="text-[9px] px-2 py-0.5 rounded-lg bg-background border border-border/80 text-foreground font-medium"
+                                  >
+                                    {alt.name} ({alt.distanceFormatted})
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* TRIP STOPS ROUTE TIMELINE */}
+                        {tripStops.length > 0 && (
+                          <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                              Route Stops ({tripStops.length} stops on journey)
+                            </span>
+                            <div className="space-y-1.5 pl-1">
+                              {tripStops.map((st, idx) => {
+                                const isStart = idx === 0;
+                                const isEnd = idx === tripStops.length - 1;
+                                return (
+                                  <div key={st.id || idx} className="flex items-center gap-2 text-[11px]">
+                                    <div
+                                      className={`size-2 rounded-full shrink-0 ${
+                                        isStart
+                                          ? 'bg-emerald-600 ring-2 ring-emerald-500/30'
+                                          : isEnd
+                                          ? 'bg-rose-600 ring-2 ring-rose-500/30'
+                                          : 'bg-muted-foreground/50'
+                                      }`}
+                                    />
+                                    <span
+                                      className={`truncate ${
+                                        isStart || isEnd
+                                          ? 'font-bold text-foreground'
+                                          : 'text-muted-foreground'
+                                      }`}
+                                    >
+                                      {st.name} {isStart ? '(Boarding)' : isEnd ? '(Destination)' : ''}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Action Buttons: View Details Toggle & Book Ticket */}
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setExpandedBusId(isExpanded ? null : bus.id)}
+                        className="flex-1 h-9 rounded-xl text-xs font-bold border-border/80 text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
+                      >
+                        <span>{isExpanded ? 'Hide Details' : 'View Stop Details'}</span>
+                        {isExpanded ? (
+                          <ChevronUp className="size-3.5" />
+                        ) : (
+                          <ChevronDown className="size-3.5" />
+                        )}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        onClick={() => handleSelectBusToBook(bus)}
+                        className="flex-1 h-9 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-2xs flex items-center justify-center gap-1.5"
+                      >
+                        <span>Book Ticket (₹{bus.fare})</span>
+                        <ArrowRight className="size-3.5" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -1127,44 +1292,24 @@ export default function PassengerHomePage() {
               </button>
             </div>
 
-            {/* EXACT STOP & WALKING DISTANCE ADVISORY CARD */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-500/30 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="size-4 text-emerald-600 shrink-0" />
-                  <span className="text-xs font-black text-foreground">
-                    Bus Departure Stop: {selectedBus.fromStop}
-                  </span>
+            {/* COMPACT JOURNEY ROUTE HEADER */}
+            <div className="p-3 rounded-2xl bg-muted/60 border border-border/80 flex items-center justify-between text-xs">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 font-black text-foreground">
+                  <span>{selectedBus.fromStop}</span>
+                  <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                  <span>{selectedBus.toStop}</span>
                 </div>
-                <Badge className="bg-emerald-700 text-white font-black text-[10px] px-2 py-0.5">
-                  {selectedBus.distanceFromUserFormatted} away
-                </Badge>
+                <span className="text-[10px] text-muted-foreground block">
+                  Board at <strong className="text-foreground">{selectedBus.fromStop}</strong> ({selectedBus.distanceFromUserFormatted} away)
+                </span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-card/80 border border-border/60 text-xs space-y-1">
-                <p className="leading-snug text-muted-foreground">
-                  To board this bus, please proceed to{' '}
-                  <strong className="text-foreground">{selectedBus.fromStop}</strong> stop.
-                  This stop is approx.{' '}
-                  <strong className="text-emerald-700 dark:text-emerald-400">
-                    {selectedBus.distanceFromUserFormatted}
-                  </strong>{' '}
-                  from your current location (~
-                  <strong className="text-foreground">
-                    {selectedBus.walkingMinutesFromUser} min
-                  </strong>{' '}
-                  walk).
-                </p>
-                {selectedBus.stopLandmark && (
-                  <span className="text-[10px] text-muted-foreground block pt-0.5">
-                    📍 Landmark: {selectedBus.stopLandmark}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-border/60">
-                <span className="text-muted-foreground">Destination:</span>
-                <span className="font-black text-foreground">{selectedBus.toStop}</span>
+              <div className="text-right">
+                <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">
+                  ₹{selectedBus.fare}
+                </span>
+                <span className="text-[9px] text-muted-foreground block">per commuter</span>
               </div>
             </div>
 

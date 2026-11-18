@@ -499,11 +499,11 @@ export default function PassengerHomePage() {
       )}
 
       {/* 2. UNIFIED STREAMLINED ROUTE SEARCH CARD */}
-      <div id="route-discovery-card" className="border border-slate-200/90 dark:border-border shadow-xs rounded-2xl p-3.5 space-y-2.5 bg-white dark:bg-card">
+      <div id="route-discovery-card" className="border border-border/80 shadow-xs rounded-2xl p-4 space-y-3 bg-card">
         {/* Connected Inputs Row */}
         <div className="relative space-y-2.5">
           {/* Vertical connecting line */}
-          <div className="absolute left-[19px] top-[22px] bottom-[22px] w-0.5 bg-slate-200 dark:bg-border pointer-events-none" />
+          <div className="absolute left-[19px] top-[22px] bottom-[22px] w-0.5 bg-border pointer-events-none" />
 
           {/* From Input */}
           <div ref={fromRef} className="relative">
@@ -521,7 +521,7 @@ export default function PassengerHomePage() {
                   setIsToFocused(false);
                 }}
                 placeholder="From: Boarding stop (e.g. Saket, INA)..."
-                className="w-full h-12 pl-10 pr-10 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-background text-sm font-bold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-emerald-600 transition-all"
+                className="w-full h-12 pl-10 pr-10 rounded-xl border border-input bg-background text-sm font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-emerald-600 transition-all"
               />
               {fromSearchQuery && (
                 <button
@@ -531,7 +531,7 @@ export default function PassengerHomePage() {
                     setOriginStop('');
                     setIsFromFocused(true);
                   }}
-                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-700"
+                  className="absolute right-3 p-1 text-muted-foreground hover:text-foreground"
                 >
                   <X className="size-4" />
                 </button>
@@ -540,12 +540,12 @@ export default function PassengerHomePage() {
 
             {/* From Dropdown */}
             {isFromFocused && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl shadow-xl p-1.5 space-y-1">
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-xl p-1.5 space-y-1">
                 <button
                   type="button"
                   onClick={() => handleSelectOriginStop('ALL_NEARBY')}
                   className={`w-full p-2.5 rounded-lg text-left text-xs font-bold transition-colors flex items-center justify-between ${
-                    originStop === 'ALL_NEARBY' ? 'bg-emerald-700 text-white' : 'hover:bg-slate-100 text-slate-900'
+                    originStop === 'ALL_NEARBY' ? 'bg-emerald-700 text-white' : 'hover:bg-muted text-foreground'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -563,12 +563,12 @@ export default function PassengerHomePage() {
                       type="button"
                       onClick={() => handleSelectOriginStop(stop)}
                       className={`w-full p-2.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
-                        isSelected ? 'bg-emerald-700 text-white font-bold' : 'hover:bg-slate-100 text-slate-900'
+                        isSelected ? 'bg-emerald-700 text-white font-bold' : 'hover:bg-muted text-foreground'
                       }`}
                     >
                       <span className="font-bold">{stop}</span>
                       {isNearby && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'}`}>
                           📍 {isNearby.distanceFormatted}
                         </span>
                       )}
@@ -584,10 +584,10 @@ export default function PassengerHomePage() {
             <button
               type="button"
               onClick={handleSwapStops}
-              className="size-8 rounded-full bg-white dark:bg-muted border border-slate-300 dark:border-border flex items-center justify-center text-slate-700 dark:text-foreground shadow-xs hover:scale-105 transition-all"
+              className="size-8 rounded-full bg-muted border border-border flex items-center justify-center text-foreground shadow-2xs hover:scale-105 transition-all"
               title="Swap From and To"
             >
-              <ArrowUpDown className="size-4 text-slate-700 dark:text-foreground" />
+              <ArrowUpDown className="size-4 text-foreground" />
             </button>
           </div>
 
@@ -607,7 +607,7 @@ export default function PassengerHomePage() {
                   setIsFromFocused(false);
                 }}
                 placeholder="To: Where are you heading?"
-                className="w-full h-12 pl-10 pr-10 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-background text-sm font-bold text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-rose-600 transition-all"
+                className="w-full h-12 pl-10 pr-10 rounded-xl border border-input bg-background text-sm font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-rose-600 transition-all"
               />
               {toSearchQuery && (
                 <button
@@ -617,7 +617,7 @@ export default function PassengerHomePage() {
                     setDestinationStop('');
                     setIsToFocused(true);
                   }}
-                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-700"
+                  className="absolute right-3 p-1 text-muted-foreground hover:text-foreground"
                 >
                   <X className="size-4" />
                 </button>
@@ -626,7 +626,7 @@ export default function PassengerHomePage() {
 
             {/* To Dropdown */}
             {isToFocused && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl shadow-xl p-1.5 space-y-1">
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-card border border-border rounded-xl shadow-xl p-1.5 space-y-1">
                 {filteredToStops.map((stop) => {
                   const isSelected = destinationStop === stop;
                   return (
@@ -635,7 +635,7 @@ export default function PassengerHomePage() {
                       type="button"
                       onClick={() => handleSelectDestinationStop(stop)}
                       className={`w-full p-2.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
-                        isSelected ? 'bg-rose-600 text-white font-bold' : 'hover:bg-slate-100 text-slate-900'
+                        isSelected ? 'bg-rose-600 text-white font-bold' : 'hover:bg-muted text-foreground'
                       }`}
                     >
                       <span className="font-bold">{stop}</span>
@@ -648,25 +648,33 @@ export default function PassengerHomePage() {
         </div>
       </div>
 
-      {/* AVAILABLE CONNECTING BUSES LIST (EXPLICIT STOP & DISTANCE BREAKDOWN) */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Bus className="size-4 text-emerald-700 dark:text-emerald-400" />
-            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-              Available Connecting Buses ({connectingBuses.length})
-            </h3>
+      {/* 3. AVAILABLE BUSES SECTION (CLEARLY SEPARATED) */}
+      <div className="pt-3 mt-1 border-t border-border/80 space-y-3">
+        {/* Section Header */}
+        <div className="flex items-center justify-between px-0.5">
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <Bus className="size-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
+                Available Buses
+              </h3>
+              <span className="text-[10px] text-muted-foreground font-semibold">
+                {connectingBuses.length} {connectingBuses.length === 1 ? 'bus found' : 'buses found'}
+              </span>
+            </div>
           </div>
 
           {/* AC / Non-AC Category Filters */}
-          <div className="flex items-center gap-1 bg-muted/70 p-0.5 rounded-xl border border-border">
+          <div className="flex items-center gap-1 bg-muted/80 p-0.5 rounded-xl border border-border">
             <button
               type="button"
               onClick={() => setBusClassFilter('all')}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-colors ${
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
                 busClassFilter === 'all'
-                  ? 'bg-card text-foreground shadow-2xs'
-                  : 'text-muted-foreground'
+                  ? 'bg-card text-foreground shadow-2xs font-black'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               All
@@ -674,21 +682,21 @@ export default function PassengerHomePage() {
             <button
               type="button"
               onClick={() => setBusClassFilter('ac')}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-colors ${
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
                 busClassFilter === 'ac'
-                  ? 'bg-card text-emerald-700 dark:text-emerald-400 shadow-2xs'
-                  : 'text-muted-foreground'
+                  ? 'bg-card text-emerald-700 dark:text-emerald-400 shadow-2xs font-black'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              AC Only
+              AC
             </button>
             <button
               type="button"
               onClick={() => setBusClassFilter('non-ac')}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-colors ${
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
                 busClassFilter === 'non-ac'
-                  ? 'bg-card text-foreground shadow-2xs'
-                  : 'text-muted-foreground'
+                  ? 'bg-card text-foreground shadow-2xs font-black'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Non-AC
@@ -740,7 +748,7 @@ export default function PassengerHomePage() {
               return (
                 <div
                   key={bus.id}
-                  className="p-4 rounded-2xl bg-white dark:bg-card border border-slate-200/90 dark:border-border shadow-xs space-y-3"
+                  className="p-4 rounded-2xl bg-card border border-border shadow-xs hover:border-emerald-500/40 hover:shadow-sm transition-all space-y-3"
                 >
                   {/* Row 1: Bus Route Number, AC badge, Live Arrival & Fare */}
                   <div className="flex items-center justify-between">
@@ -753,7 +761,7 @@ export default function PassengerHomePage() {
                         {bus.routeNumber}
                       </span>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-900 dark:text-foreground">
+                        <span className="text-xs font-bold text-foreground">
                           {bus.busType}
                         </span>
                         {busEta !== undefined && (
@@ -765,18 +773,18 @@ export default function PassengerHomePage() {
                     </div>
 
                     <div className="text-right">
-                      <span className="text-lg font-black text-slate-900 dark:text-foreground">₹{bus.fare}</span>
-                      <span className="text-[10px] text-slate-500 block">per ticket</span>
+                      <span className="text-lg font-black text-foreground">₹{bus.fare}</span>
+                      <span className="text-[10px] text-muted-foreground block">per ticket</span>
                     </div>
                   </div>
 
                   {/* Row 2: Boarding Stop & Destination Details */}
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-muted/30 border border-slate-100 dark:border-border flex items-center justify-between text-xs">
+                  <div className="p-3 rounded-xl bg-muted/30 border border-border/70 flex items-center justify-between text-xs">
                     <div className="space-y-0.5 min-w-0 pr-2">
-                      <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                      <span className="text-[10px] font-bold uppercase text-muted-foreground block tracking-wider">
                         Boarding Stop
                       </span>
-                      <span className="font-bold text-slate-900 dark:text-foreground text-sm truncate block">
+                      <span className="font-bold text-foreground text-sm truncate block">
                         {bus.fromStop}
                       </span>
                       <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold block">
@@ -784,16 +792,16 @@ export default function PassengerHomePage() {
                       </span>
                     </div>
 
-                    <ArrowRight className="size-4 text-slate-400 shrink-0 mx-1" />
+                    <ArrowRight className="size-4 text-muted-foreground shrink-0 mx-1" />
 
                     <div className="space-y-0.5 text-right min-w-0 pl-2">
-                      <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                      <span className="text-[10px] font-bold uppercase text-muted-foreground block tracking-wider">
                         Destination
                       </span>
-                      <span className="font-bold text-slate-900 dark:text-foreground text-sm truncate block">
+                      <span className="font-bold text-foreground text-sm truncate block">
                         {bus.toStop}
                       </span>
-                      <span className="text-[11px] text-slate-500 font-medium block">
+                      <span className="text-[11px] text-muted-foreground font-medium block">
                         ~{Math.round(bus.distanceKm * 2.2)} mins trip
                       </span>
                     </div>
@@ -804,7 +812,7 @@ export default function PassengerHomePage() {
                     <button
                       type="button"
                       onClick={() => setExpandedBusId(isExpanded ? null : bus.id)}
-                      className="h-11 px-3 text-xs font-bold text-slate-600 dark:text-muted-foreground hover:text-slate-900 rounded-xl border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/40 flex items-center gap-1 shrink-0"
+                      className="h-11 px-3 text-xs font-bold text-muted-foreground hover:text-foreground rounded-xl border border-border bg-muted/30 flex items-center gap-1 shrink-0 transition-colors"
                     >
                       <span>{isExpanded ? 'Hide' : 'Stops'}</span>
                       {isExpanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
@@ -822,17 +830,17 @@ export default function PassengerHomePage() {
 
                   {/* Simple clean stops list if expanded */}
                   {isExpanded && tripStops.length > 0 && (
-                    <div className="pt-2 border-t border-slate-200/80 dark:border-border space-y-2 text-xs">
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    <div className="pt-2 border-t border-border space-y-2 text-xs">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
                         Route Stops ({tripStops.length} Total)
                       </span>
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-foreground">
                         {tripStops.map((st, sIdx) => (
                           <React.Fragment key={st.id || sIdx}>
-                            <span className={sIdx === 0 || sIdx === tripStops.length - 1 ? 'font-black text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md' : 'bg-slate-100 dark:bg-muted px-2 py-0.5 rounded-md'}>
+                            <span className={sIdx === 0 || sIdx === tripStops.length - 1 ? 'font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-md' : 'bg-muted px-2 py-0.5 rounded-md text-muted-foreground'}>
                               {st.name}
                             </span>
-                            {sIdx < tripStops.length - 1 && <span className="text-slate-400">➔</span>}
+                            {sIdx < tripStops.length - 1 && <span className="text-muted-foreground/60">➔</span>}
                           </React.Fragment>
                         ))}
                       </div>

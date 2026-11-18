@@ -62,29 +62,29 @@ export default function ConductorAppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex justify-center selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-slate-900/5 dark:bg-black text-foreground flex justify-center selection:bg-emerald-500 selection:text-white">
       {/* Mobile ETIM Handheld Terminal Viewport */}
-      <div className="w-full max-w-md min-h-screen bg-slate-900 text-slate-100 flex flex-col relative shadow-2xl border-x border-slate-800 pb-20">
+      <div className="w-full max-w-md min-h-screen bg-background flex flex-col relative shadow-2xl border-x border-border/40 pb-20">
         {/* Hardware Status Header Bar */}
-        <header className="sticky top-0 z-40 bg-slate-950 border-b border-slate-800 px-3.5 py-2 shadow-md">
+        <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/80 px-3.5 py-2 shadow-2xs">
           {/* Top Hardware Telemetry Line */}
-          <div className="flex items-center justify-between text-[10px] text-slate-400 pb-1.5 border-b border-slate-800/80 font-mono">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground pb-1.5 border-b border-border/60 font-mono">
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                <Wifi className="size-3 text-emerald-400 animate-pulse" />
+              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                <Wifi className="size-3 text-emerald-600 dark:text-emerald-400 animate-pulse" />
                 <span>4G CONNECTED</span>
               </span>
               <span>•</span>
-              <span className="text-slate-300 font-semibold">{activeDuty.etimMachineId}</span>
+              <span className="text-foreground font-semibold">{activeDuty.etimMachineId}</span>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <span className="flex items-center gap-1 text-slate-300">
-                <Receipt className="size-3 text-emerald-400" />
+              <span className="flex items-center gap-1 text-foreground">
+                <Receipt className="size-3 text-emerald-600" />
                 <span>ROLL: 84%</span>
               </span>
-              <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                <BatteryCharging className="size-3 text-emerald-400" />
+              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                <BatteryCharging className="size-3 text-emerald-600" />
                 <span>92%</span>
               </span>
             </div>
@@ -96,16 +96,16 @@ export default function ConductorAppLayout({
               <DtcLogo size={28} />
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-white tracking-wide">
+                  <span className="text-xs font-black text-foreground tracking-wide">
                     {activeDuty.conductorName}
                   </span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
                     {activeDuty.badgeNumber}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                  <Bus className="size-3 text-amber-400" />
-                  <span className="text-amber-300 font-bold">Route {activeDuty.routeNumber}</span>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                  <Bus className="size-3 text-emerald-600" />
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold">Route {activeDuty.routeNumber}</span>
                   <span>•</span>
                   <span>{activeDuty.busNumber}</span>
                 </div>
@@ -113,10 +113,10 @@ export default function ConductorAppLayout({
             </div>
 
             <div className="text-right">
-              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold block">
                 Cash in Bag
               </span>
-              <span className="text-sm font-black text-emerald-400 font-mono">
+              <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 font-mono">
                 ₹{activeDuty.totalCashCollected}
               </span>
             </div>
@@ -131,7 +131,7 @@ export default function ConductorAppLayout({
         {/* Fixed Conductor Bottom Navigation Bar */}
         <nav
           aria-label="Conductor Terminal Navigation"
-          className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-50 h-16 bg-slate-950 border-t border-slate-800 flex items-center justify-around px-1 shadow-2xl"
+          className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-50 h-16 bg-card/95 backdrop-blur-lg border-t border-border flex items-center justify-around px-1 shadow-lg"
         >
           {navItems.map((item) => {
             const active = isNavActive(item.href, item.exact);
@@ -143,12 +143,12 @@ export default function ConductorAppLayout({
                 href={item.href}
                 className={`relative flex flex-col items-center justify-center flex-1 h-full py-1 transition-all duration-150 ${
                   active
-                    ? 'text-emerald-400 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 font-medium'
+                    ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                    : 'text-muted-foreground hover:text-foreground font-medium'
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-emerald-600 dark:bg-emerald-400" />
                 )}
 
                 <Icon className={`size-5 transition-transform ${active ? 'scale-110' : ''}`} />

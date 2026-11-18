@@ -90,46 +90,46 @@ export default function ConductorIssueTicketPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-white flex items-center gap-1.5">
-            <Printer className="size-4.5 text-blue-400" />
+          <h2 className="text-base font-black text-foreground flex items-center gap-1.5">
+            <Printer className="size-4.5 text-emerald-600" />
             <span>ETIM Ticket Keypad</span>
           </h2>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-[10px] text-muted-foreground">
             Route {activeDuty.routeNumber} • Machine {activeDuty.etimMachineId}
           </span>
         </div>
 
-        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px] font-mono">
+        <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-[10px] font-mono">
           CASH & PINK
         </Badge>
       </div>
 
       {/* 1. TICKET ISSUING FORM */}
-      <Card className="bg-slate-900 border-slate-800 rounded-2xl p-4 space-y-3.5">
+      <Card className="bg-card border-border shadow-xs rounded-2xl p-4 space-y-3.5">
         {/* Origin / Destination Stepper Row */}
-        <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+        <div className="p-3.5 rounded-xl bg-muted/40 border border-border space-y-2">
           {/* Origin Stop */}
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+            <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
               From (Current Stop)
             </span>
-            <Badge className="bg-emerald-950 text-emerald-400 border-emerald-800 text-[9px]">
+            <Badge variant="outline" className="text-[9px]">
               Stage {currentStop.stage}
             </Badge>
           </div>
-          <div className="flex items-center gap-2 text-white font-black text-sm">
-            <MapPin className="size-4 text-emerald-400 shrink-0" />
+          <div className="flex items-center gap-2 text-foreground font-black text-sm">
+            <MapPin className="size-4 text-emerald-600 shrink-0" />
             <span>{currentStop.name}</span>
           </div>
 
-          <div className="border-t border-slate-800/80 pt-2">
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
+          <div className="border-t border-border pt-2.5">
+            <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider block mb-1">
               Destination (To)
             </span>
             <select
               value={selectedDestStop}
               onChange={(e) => setSelectedDestStop(e.target.value)}
-              className="w-full h-10 px-3 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:outline-hidden focus:border-blue-500"
+              className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs font-bold text-foreground focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
             >
               {destinationStops.length === 0 ? (
                 <option value={assignedRoute.destination}>{assignedRoute.destination} (Terminal)</option>
@@ -146,17 +146,17 @@ export default function ConductorIssueTicketPage() {
 
         {/* Passenger Category Selector */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             Passenger Category
           </label>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => setPassengerType('Adult')}
               className={`p-2.5 rounded-xl border text-center transition-all ${
                 passengerType === 'Adult'
-                  ? 'bg-blue-600 text-white font-bold border-blue-500 shadow-sm'
-                  : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800'
+                  ? 'bg-emerald-600 text-white font-bold border-emerald-600 shadow-xs'
+                  : 'bg-background text-foreground border-border hover:bg-muted'
               }`}
             >
               <User className="size-4 mx-auto mb-1" />
@@ -169,8 +169,8 @@ export default function ConductorIssueTicketPage() {
               onClick={() => setPassengerType('Child')}
               className={`p-2.5 rounded-xl border text-center transition-all ${
                 passengerType === 'Child'
-                  ? 'bg-blue-600 text-white font-bold border-blue-500 shadow-sm'
-                  : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800'
+                  ? 'bg-emerald-600 text-white font-bold border-emerald-600 shadow-xs'
+                  : 'bg-background text-foreground border-border hover:bg-muted'
               }`}
             >
               <Users className="size-4 mx-auto mb-1" />
@@ -183,11 +183,11 @@ export default function ConductorIssueTicketPage() {
               onClick={() => setPassengerType('Pink Pass (Free)')}
               className={`p-2.5 rounded-xl border text-center transition-all ${
                 passengerType === 'Pink Pass (Free)'
-                  ? 'bg-pink-600 text-white font-bold border-pink-500 shadow-sm'
-                  : 'bg-slate-950 text-pink-300 border-slate-800 hover:bg-slate-800'
+                  ? 'bg-pink-600 text-white font-bold border-pink-600 shadow-xs'
+                  : 'bg-pink-50/70 text-pink-700 border-pink-200 dark:bg-pink-950/30 dark:border-pink-900 dark:text-pink-300 hover:bg-pink-100/50'
               }`}
             >
-              <Sparkles className="size-4 mx-auto mb-1 text-pink-400" />
+              <Sparkles className="size-4 mx-auto mb-1 text-pink-500" />
               <span className="text-xs font-bold block">Pink Pass</span>
               <span className="text-[9px] opacity-80 block">Free (₹0)</span>
             </button>
@@ -195,27 +195,27 @@ export default function ConductorIssueTicketPage() {
         </div>
 
         {/* Passenger Quantity Stepper */}
-        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 border border-border">
           <div>
-            <span className="text-xs font-bold text-white block">Quantity</span>
-            <span className="text-[10px] text-slate-400 block">Number of tickets</span>
+            <span className="text-xs font-bold text-foreground block">Quantity</span>
+            <span className="text-[10px] text-muted-foreground block">Number of tickets</span>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
-              className="size-8 rounded-lg bg-slate-800 text-white flex items-center justify-center font-bold hover:bg-slate-700"
+              className="size-8 rounded-lg bg-background border border-border text-foreground flex items-center justify-center font-bold hover:bg-muted"
             >
               <Minus className="size-3.5" />
             </button>
-            <span className="text-sm font-black text-white font-mono min-w-5 text-center">
+            <span className="text-sm font-black text-foreground font-mono min-w-5 text-center">
               {passengerCount}
             </span>
             <button
               type="button"
               onClick={() => setPassengerCount(Math.min(6, passengerCount + 1))}
-              className="size-8 rounded-lg bg-slate-800 text-white flex items-center justify-center font-bold hover:bg-slate-700"
+              className="size-8 rounded-lg bg-background border border-border text-foreground flex items-center justify-center font-bold hover:bg-muted"
             >
               <Plus className="size-3.5" />
             </button>
@@ -223,17 +223,17 @@ export default function ConductorIssueTicketPage() {
         </div>
 
         {/* Total Calculation & Print Button */}
-        <div className="pt-2 border-t border-slate-800 space-y-3">
+        <div className="pt-2 border-t border-border space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground block">
                 Total Cash Due
               </span>
-              <span className="text-2xl font-black text-emerald-400 font-mono">
+              <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 font-mono">
                 {passengerType === 'Pink Pass (Free)' ? 'FREE (₹0.00)' : `₹${totalAmount.toFixed(2)}`}
               </span>
             </div>
-            <span className="text-[11px] text-slate-400 font-mono">
+            <span className="text-[11px] text-muted-foreground font-mono">
               ₹{farePerPerson} × {passengerCount}
             </span>
           </div>
@@ -241,7 +241,7 @@ export default function ConductorIssueTicketPage() {
           <Button
             type="button"
             onClick={handlePrintTicket}
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2"
+            className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md flex items-center justify-center gap-2"
           >
             <Printer className="size-4" />
             <span>
@@ -257,36 +257,36 @@ export default function ConductorIssueTicketPage() {
       {printedReceipt && (
         <div className="space-y-2 animate-in slide-in-from-bottom-3 duration-200">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 font-mono">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-mono">
               <CheckCircle2 className="size-4" />
               PRINTED THERMAL RECEIPT
             </span>
             <button
               onClick={() => setPrintedReceipt(null)}
-              className="text-[10px] text-slate-400 hover:text-white"
+              className="text-[10px] text-muted-foreground hover:text-foreground font-medium"
             >
               Dismiss
             </button>
           </div>
 
           {/* Paper Receipt Simulation */}
-          <div className="p-4 rounded-xl bg-white text-slate-900 font-mono text-xs shadow-xl space-y-2 border-t-8 border-dashed border-slate-400">
+          <div className="p-4 rounded-xl bg-white text-slate-900 font-mono text-xs shadow-md border border-slate-200 space-y-2 border-t-8 border-dashed border-emerald-600">
             {/* Header */}
             <div className="text-center space-y-0.5 border-b border-dashed border-slate-300 pb-2">
               <h3 className="font-black text-sm tracking-tight text-slate-900">
                 DELHI TRANSPORT CORP.
               </h3>
               <span className="text-[10px] text-slate-600 block">GOVT. OF NCT DELHI</span>
-              <span className="text-[10px] font-bold block pt-1">
+              <span className="text-[10px] font-bold block pt-1 text-emerald-800">
                 {printedReceipt.fare === 0 ? '🌸 ZERO-FARE PINK PASS' : 'PASSENGER TICKET (CASH)'}
               </span>
             </div>
 
             {/* Receipt Details */}
-            <div className="text-[10px] space-y-1 py-1">
+            <div className="text-[10px] space-y-1 py-1 text-slate-700">
               <div className="flex justify-between">
                 <span>TICKET #:</span>
-                <span className="font-bold">{printedReceipt.ticketNumber}</span>
+                <span className="font-bold text-slate-900">{printedReceipt.ticketNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span>MACHINE:</span>
@@ -298,7 +298,7 @@ export default function ConductorIssueTicketPage() {
               </div>
               <div className="flex justify-between">
                 <span>ROUTE / BUS:</span>
-                <span className="font-bold">RT {printedReceipt.routeNumber} • {activeDuty.busNumber}</span>
+                <span className="font-bold text-slate-900">RT {printedReceipt.routeNumber} • {activeDuty.busNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span>DATE/TIME:</span>
@@ -307,20 +307,20 @@ export default function ConductorIssueTicketPage() {
             </div>
 
             {/* Stops */}
-            <div className="p-1.5 rounded bg-slate-100 border border-slate-300 text-[11px] font-bold">
+            <div className="p-2 rounded bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-900">
               <div>FROM: {printedReceipt.sourceStop}</div>
               <div>TO: {printedReceipt.destinationStop}</div>
             </div>
 
             {/* Fare Summary */}
-            <div className="border-t border-dashed border-slate-300 pt-1.5 flex justify-between font-black text-sm">
+            <div className="border-t border-dashed border-slate-300 pt-1.5 flex justify-between font-black text-sm text-slate-900">
               <span>TOTAL FARE:</span>
-              <span>{printedReceipt.totalAmount === 0 ? 'FREE (₹0)' : `₹${printedReceipt.totalAmount}.00`}</span>
+              <span className="text-emerald-700">{printedReceipt.totalAmount === 0 ? 'FREE (₹0)' : `₹${printedReceipt.totalAmount}.00`}</span>
             </div>
 
             {/* Barcode Strip */}
             <div className="text-center pt-2 space-y-1">
-              <div className="h-6 bg-slate-800 rounded-sm flex items-center justify-center text-white tracking-widest text-[9px]">
+              <div className="h-6 bg-slate-900 rounded-xs flex items-center justify-center text-white tracking-widest text-[9px]">
                 ||| | |||| | ||||| ||| ||| |
               </div>
               <span className="text-[8px] text-slate-500 block">

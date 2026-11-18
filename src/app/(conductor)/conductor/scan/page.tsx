@@ -75,38 +75,38 @@ export default function ConductorScanPage() {
       {/* Header Bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-white flex items-center gap-1.5">
-            <QrCode className="size-4.5 text-emerald-400" />
+          <h2 className="text-base font-black text-foreground flex items-center gap-1.5">
+            <QrCode className="size-4.5 text-emerald-600" />
             <span>ETIM Ticket Validator</span>
           </h2>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-[10px] text-muted-foreground">
             Validating on Route {activeDuty.routeNumber} ({activeDuty.busNumber})
           </span>
         </div>
 
-        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px] font-mono">
+        <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-[10px] font-mono">
           SCANNER ACTIVE
         </Badge>
       </div>
 
       {/* 1. CAMERA VIEWFINDER SIMULATOR */}
-      <Card className="bg-slate-950 border-slate-800 shadow-xl rounded-2xl overflow-hidden relative">
-        <div className="relative aspect-4/3 flex flex-col items-center justify-center p-4 bg-gradient-to-b from-slate-900 to-black">
+      <Card className="bg-card border-border shadow-xs rounded-2xl overflow-hidden relative p-2">
+        <div className="relative aspect-4/3 rounded-xl overflow-hidden flex flex-col items-center justify-center p-4 bg-gradient-to-b from-slate-900 to-slate-950 text-white">
           {/* Animated Laser Scanning Line */}
           <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-400 shadow-[0_0_12px_#10b981] animate-pulse" />
 
           {/* Viewfinder Target Corners */}
-          <div className="size-48 border-2 border-emerald-500/50 rounded-2xl relative flex flex-col items-center justify-center p-3">
+          <div className="size-44 border-2 border-emerald-500/40 rounded-2xl relative flex flex-col items-center justify-center p-3">
             <div className="absolute -top-1 -left-1 size-5 border-t-3 border-l-3 border-emerald-400 rounded-tl-lg" />
             <div className="absolute -top-1 -right-1 size-5 border-t-3 border-r-3 border-emerald-400 rounded-tr-lg" />
             <div className="absolute -bottom-1 -left-1 size-5 border-b-3 border-l-3 border-emerald-400 rounded-bl-lg" />
             <div className="absolute -bottom-1 -right-1 size-5 border-b-3 border-r-3 border-emerald-400 rounded-br-lg" />
 
-            <Camera className="size-10 text-emerald-400/40 mb-2 animate-bounce" />
-            <span className="text-[11px] font-bold text-slate-300 text-center">
+            <Camera className="size-9 text-emerald-400/50 mb-2 animate-bounce" />
+            <span className="text-[11px] font-bold text-slate-200 text-center">
               Align Passenger QR inside frame
             </span>
-            <span className="text-[9px] text-slate-500 text-center font-mono mt-0.5">
+            <span className="text-[9px] text-slate-400 text-center font-mono mt-0.5">
               Multi-QR Auto-Detection
             </span>
           </div>
@@ -120,13 +120,13 @@ export default function ConductorScanPage() {
       </Card>
 
       {/* 2. INSTANT SCAN SIMULATOR BAR (Commuters presenting QR in bus) */}
-      <Card className="bg-slate-900 border-slate-800 rounded-2xl p-3 space-y-2.5">
+      <Card className="bg-card border-border shadow-xs rounded-2xl p-3.5 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1">
-            <Zap className="size-3 text-amber-400" />
+          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Zap className="size-3.5 text-amber-500" />
             Commuters Boarding Now (Simulate QR Scan)
           </span>
-          <span className="text-[9px] text-slate-500">Tap to Scan</span>
+          <span className="text-[9px] text-muted-foreground font-medium">Tap to Scan</span>
         </div>
 
         {/* Quick Commuter Ticket Selection Chips */}
@@ -140,19 +140,19 @@ export default function ConductorScanPage() {
                 key={t.id}
                 type="button"
                 onClick={() => handleSelectPresetQr(qrSerial)}
-                className={`px-2.5 py-1.5 rounded-xl text-left border shrink-0 transition-all text-xs ${
+                className={`px-3 py-2 rounded-xl text-left border shrink-0 transition-all text-xs ${
                   isScanned
-                    ? 'bg-slate-800/60 border-slate-700 text-slate-400'
-                    : 'bg-emerald-950/40 hover:bg-emerald-950 border-emerald-500/40 text-emerald-300'
+                    ? 'bg-muted/40 border-border text-muted-foreground'
+                    : 'bg-emerald-50 hover:bg-emerald-100/80 border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300'
                 }`}
               >
                 <div className="flex items-center gap-1.5 font-bold">
                   <span>{t.passengerName?.split(' ')[0] || 'Commuter'}</span>
-                  <Badge className="text-[8px] px-1 py-0 bg-slate-800 text-slate-300">
+                  <Badge variant="outline" className="text-[8px] px-1 py-0">
                     Rt {t.routeNumber}
                   </Badge>
                 </div>
-                <span className="text-[9px] text-slate-400 block font-mono">
+                <span className="text-[9px] opacity-75 block font-mono mt-0.5">
                   {qrSerial.slice(-8)} {isScanned ? '(Used)' : '(New)'}
                 </span>
               </button>
@@ -163,30 +163,30 @@ export default function ConductorScanPage() {
           <button
             type="button"
             onClick={() => handleSelectPresetQr('DTC-QR-2026-90812-P1')}
-            className="px-2.5 py-1.5 rounded-xl text-left border shrink-0 transition-all text-xs bg-rose-950/40 hover:bg-rose-950 border-rose-500/40 text-rose-300"
+            className="px-3 py-2 rounded-xl text-left border shrink-0 transition-all text-xs bg-rose-50 hover:bg-rose-100/80 border-rose-200 text-rose-900 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300"
           >
             <div className="flex items-center gap-1 font-bold">
               <span>⚠️ Test Duplicate QR</span>
             </div>
-            <span className="text-[9px] text-rose-400/80 block">Simulate Fraud Reuse</span>
+            <span className="text-[9px] opacity-75 block mt-0.5">Simulate Fraud Reuse</span>
           </button>
         </div>
 
         {/* Manual Barcode / Serial Input */}
-        <div className="flex items-center gap-1.5 pt-1">
+        <div className="flex items-center gap-2 pt-1">
           <input
             type="text"
             value={scanInput}
             onChange={(e) => setScanInput(e.target.value)}
             placeholder="Or type/paste QR barcode data..."
-            className="flex-1 h-9 px-3 rounded-xl bg-slate-950 border border-slate-700 text-xs font-mono text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500"
+            className="flex-1 h-10 px-3 rounded-xl bg-background border border-border text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
           />
           <Button
             type="button"
             size="sm"
             onClick={() => handlePerformVerification(scanInput)}
             disabled={isScanning}
-            className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl"
+            className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs"
           >
             <span>{isScanning ? 'Verifying...' : 'Validate'}</span>
           </Button>
@@ -196,33 +196,33 @@ export default function ConductorScanPage() {
       {/* 3. VERIFICATION RESULT DISPLAY */}
       {lastResult && (
         <Card
-          className={`rounded-2xl border p-4 space-y-3 animate-in zoom-in-95 duration-150 ${
+          className={`rounded-2xl border p-4 space-y-3.5 animate-in zoom-in-95 duration-150 shadow-xs ${
             lastResult.status === 'VALID'
-              ? 'bg-gradient-to-b from-emerald-950/80 to-slate-900 border-emerald-500/60 shadow-lg shadow-emerald-950'
+              ? 'bg-emerald-50/70 border-emerald-300 dark:bg-emerald-950/30 dark:border-emerald-800'
               : lastResult.status === 'ALREADY_USED'
-              ? 'bg-gradient-to-b from-rose-950/80 to-slate-900 border-rose-500/60 shadow-lg shadow-rose-950'
-              : 'bg-gradient-to-b from-amber-950/80 to-slate-900 border-amber-500/60 shadow-lg shadow-amber-950'
+              ? 'bg-rose-50/70 border-rose-300 dark:bg-rose-950/30 dark:border-rose-800'
+              : 'bg-amber-50/70 border-amber-300 dark:bg-amber-950/30 dark:border-amber-800'
           }`}
         >
           {/* Header Badge */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {lastResult.status === 'VALID' ? (
-                <CheckCircle2 className="size-6 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="size-6 text-emerald-600 shrink-0" />
               ) : lastResult.status === 'ALREADY_USED' ? (
-                <XCircle className="size-6 text-rose-400 shrink-0 animate-pulse" />
+                <XCircle className="size-6 text-rose-600 shrink-0 animate-pulse" />
               ) : (
-                <AlertTriangle className="size-6 text-amber-400 shrink-0" />
+                <AlertTriangle className="size-6 text-amber-600 shrink-0" />
               )}
               <div>
-                <h3 className="text-sm font-black text-white">
+                <h3 className="text-sm font-black text-foreground">
                   {lastResult.status === 'VALID'
                     ? 'TICKET VERIFIED • AUTHORIZED'
                     : lastResult.status === 'ALREADY_USED'
                     ? 'FRAUD ALERT: TICKET ALREADY USED'
                     : 'INVALID TICKET / MISMATCH'}
                 </h3>
-                <span className="text-[10px] text-slate-300 font-mono">
+                <span className="text-[10px] text-muted-foreground font-mono">
                   Scanned At: {lastResult.timestamp}
                 </span>
               </div>
@@ -231,7 +231,7 @@ export default function ConductorScanPage() {
             <Badge
               className={`text-[10px] font-mono font-bold ${
                 lastResult.status === 'VALID'
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-emerald-600 text-white'
                   : lastResult.status === 'ALREADY_USED'
                   ? 'bg-rose-600 text-white'
                   : 'bg-amber-600 text-white'
@@ -243,33 +243,33 @@ export default function ConductorScanPage() {
 
           {/* Ticket Information */}
           {lastResult.ticket && (
-            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <div className="p-3.5 rounded-xl bg-card border border-border space-y-2.5 text-xs shadow-2xs">
+              <div className="flex items-center justify-between border-b border-border/80 pb-2">
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-medium">Passenger</span>
-                  <strong className="text-white font-bold">{lastResult.ticket.passengerName}</strong>
+                  <span className="text-[10px] text-muted-foreground block font-medium">Passenger</span>
+                  <strong className="text-foreground font-bold">{lastResult.ticket.passengerName}</strong>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block font-medium">Fare Paid</span>
-                  <strong className="text-emerald-400 font-mono font-black">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Fare Paid</span>
+                  <strong className="text-emerald-700 dark:text-emerald-400 font-mono font-black">
                     {lastResult.ticket.fare === 0 ? 'FREE PINK PASS' : `₹${lastResult.ticket.fare}`}
                   </strong>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-[11px]">
-                <div className="text-slate-300">
-                  <span>From: </span>
-                  <strong className="text-white">{lastResult.ticket.sourceStop || lastResult.ticket.boardingStop}</strong>
+                <div className="text-foreground">
+                  <span className="text-muted-foreground">From: </span>
+                  <strong>{lastResult.ticket.sourceStop || lastResult.ticket.boardingStop}</strong>
                 </div>
-                <ArrowRight className="size-3 text-slate-500" />
-                <div className="text-slate-300">
-                  <span>To: </span>
-                  <strong className="text-white">{lastResult.ticket.destinationStop}</strong>
+                <ArrowRight className="size-3 text-muted-foreground" />
+                <div className="text-foreground">
+                  <span className="text-muted-foreground">To: </span>
+                  <strong>{lastResult.ticket.destinationStop}</strong>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 font-mono border-t border-slate-800/80">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1.5 font-mono border-t border-border/80">
                 <span>QR Serial: {lastResult.qrItem?.qrSerial || lastResult.ticket.ticketNumber}</span>
                 <span>Route: {lastResult.ticket.routeNumber}</span>
               </div>
@@ -277,7 +277,7 @@ export default function ConductorScanPage() {
           )}
 
           {/* Advisory message */}
-          <p className="text-[11px] text-slate-300 font-medium leading-snug">
+          <p className="text-[11px] text-foreground font-medium leading-snug">
             {lastResult.message}
           </p>
 
@@ -285,7 +285,7 @@ export default function ConductorScanPage() {
           {lastResult.status === 'ALREADY_USED' && (
             <div className="pt-1">
               <Link href="/conductor/challan" className="block">
-                <Button className="w-full bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl h-9 flex items-center justify-center gap-1.5">
+                <Button className="w-full bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl h-10 flex items-center justify-center gap-1.5 shadow-xs">
                   <ShieldAlert className="size-4" />
                   <span>Issue ₹200 Penalty Challan</span>
                 </Button>

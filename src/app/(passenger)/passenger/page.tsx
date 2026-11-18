@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDtcStore } from '@/store/useDtcStore';
@@ -42,7 +42,7 @@ import {
   Filter,
   Navigation2,
   Crosshair,
-  Footprints,
+  Search,
 } from 'lucide-react';
 
 interface ConnectingBusItem {
@@ -103,10 +103,48 @@ export default function PassengerHomePage() {
     return findNearestStops(userLocation.lat, userLocation.lng, 4);
   }, [userLocation]);
 
-  // Stop-to-Stop Inputs
-  // Special value 'ALL_NEARBY' allows searching across all nearest stops simultaneously
+  // Search & Select State for Boarding Stop (From)
   const [originStop, setOriginStop] = useState<string>('ALL_NEARBY');
+  const [fromSearchQuery, setFromSearchQuery] = useState<string>('✨ All Nearest Stops');
+  const [isFromFocused, setIsFromFocused] = useState<boolean>(false);
+
+  // Search & Select State for Destination Stop (To)
   const [destinationStop, setDestinationStop] = useState<string>('Janpath / CP');
+  const [toSearchQuery, setToSearchQuery] = useState<string>('Janpath / CP');
+  const [isToFocused, setIsToFocused] = useState<boolean>(false);
+
+  // Refs for click outside handling
+  const fromRef = useRef<HTMLDivElement>(null);
+  const toRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (fromRef.current && !fromRef.current.contains(e.target as Node)) {
+        setIsFromFocused(false);
+      }
+      if (toRef.current && !toRef.current.contains(e.target as Node)) {
+        setIsToFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filtered stops for From (Boarding Stop) field
+  const filteredFromStops = useMemo(() => {
+    const q = fromSearchQuery.toLowerCase().trim();
+    if (!q || q === '✨ all nearest stops' || q === 'all') {
+      return allStops;
+    }
+    return allStops.filter((s) => s.toLowerCase().includes(q));
+  }, [allStops, fromSearchQuery]);
+
+  // Filtered stops for To (Destination Stop) field
+  const filteredToStops = useMemo(() => {
+    const q = toSearchQuery.toLowerCase().trim();
+    if (!q) return allStops;
+    return allStops.filter((s) => s.toLowerCase().includes(q));
+  }, [allStops, toSearchQuery]);
 
   // Bus Filter: All | AC Only | Non-AC Only
   const [busClassFilter, setBusClassFilter] = useState<'all' | 'ac' | 'non-ac'>('all');
@@ -121,14 +159,39 @@ export default function PassengerHomePage() {
   // Swap From and To Stops
   const handleSwapStops = () => {
     if (originStop === 'ALL_NEARBY') {
-      const firstStop = nearestStops[0]?.name || 'Saket Crossing';
-      setOriginStop(destinationStop);
-      setDestinationStop(firstStop);
+      const firstNearby = nearestStops[0]?.name || 'Saket Crossing';
+      const prevDest = destinationStop;
+      setOriginStop(prevDest);
+      setFromSearchQuery(prevDest);
+      setDestinationStop(firstNearby);
+      setToSearchQuery(firstNearby);
     } else {
-      const temp = originStop;
-      setOriginStop(destinationStop);
-      setDestinationStop(temp);
+      const prevOrigin = originStop;
+      const prevDest = destinationStop;
+      setOriginStop(prevDest);
+      setFromSearchQuery(prevDest);
+      setDestinationStop(prevOrigin);
+      setToSearchQuery(prevOrigin);
     }
+  };
+
+  // Select a boarding stop from search/list
+  const handleSelectOriginStop = (stopName: string) => {
+    if (stopName === 'ALL_NEARBY') {
+      setOriginStop('ALL_NEARBY');
+      setFromSearchQuery('✨ All Nearest Stops');
+    } else {
+      setOriginStop(stopName);
+      setFromSearchQuery(stopName);
+    }
+    setIsFromFocused(false);
+  };
+
+  // Select a destination stop from search/list
+  const handleSelectDestinationStop = (stopName: string) => {
+    setDestinationStop(stopName);
+    setToSearchQuery(stopName);
+    setIsToFocused(false);
   };
 
   // Auto-Detect Current GPS Location & Auto-Select Nearest Bus Stop
@@ -141,12 +204,13 @@ export default function PassengerHomePage() {
           setUserLocation({
             lat: latitude,
             lng: longitude,
-            label: 'Your Current Live Location (GPS)',
+            label: 'Your Live Device Location (GPS)',
             isCustomGps: true,
           });
           const computed = findNearestStops(latitude, longitude, 4);
           if (computed.length > 0) {
             setOriginStop('ALL_NEARBY');
+            setFromSearchQuery('✨ All Nearest Stops');
             toast.success(`Nearest stops located around you: ${computed[0].name} (${computed[0].distanceFormatted} away)`);
           }
           setIsLocating(false);
@@ -159,6 +223,7 @@ export default function PassengerHomePage() {
             label: fallback.label,
           });
           setOriginStop('ALL_NEARBY');
+          setFromSearchQuery('✨ All Nearest Stops');
           toast.info(`Current Location: ${fallback.label}. Nearest stop: ${nearestStops[0]?.name} (${nearestStops[0]?.distanceFormatted})`);
           setIsLocating(false);
         },
@@ -172,6 +237,7 @@ export default function PassengerHomePage() {
         label: fallback.label,
       });
       setOriginStop('ALL_NEARBY');
+      setFromSearchQuery('✨ All Nearest Stops');
       setIsLocating(false);
     }
   };
@@ -184,7 +250,7 @@ export default function PassengerHomePage() {
       label: preset.label,
     });
     setOriginStop('ALL_NEARBY');
-    const computed = findNearestStops(preset.lat, preset.lng, 4);
+    setFromSearchQuery('✨ All Nearest Stops');
     toast.success(`Location set to ${preset.label}. Nearest stops updated!`);
     setShowLocationPicker(false);
   };
@@ -442,14 +508,14 @@ export default function PassengerHomePage() {
         </Link>
       </div>
 
-      {/* STOP-TO-STOP AUTO ROUTE DISCOVERY CARD */}
-      <Card id="route-discovery-card" className="border-border/90 shadow-sm rounded-2xl overflow-hidden">
-        <CardHeader className="p-3.5 pb-2.5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-b border-border/60">
+      {/* STOP-TO-STOP AUTO ROUTE DISCOVERY CARD WITH SEARCHABLE FIELDS */}
+      <Card id="route-discovery-card" className="border-border/90 shadow-sm rounded-2xl overflow-visible">
+        <CardHeader className="p-3.5 pb-2.5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-b border-border/60 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Compass className="size-4 text-emerald-600" />
               <CardTitle className="text-xs font-bold text-foreground">
-                Stop-to-Stop Bus Search
+                Search & Select Bus Stops
               </CardTitle>
             </div>
             <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
@@ -457,21 +523,21 @@ export default function PassengerHomePage() {
             </span>
           </div>
           <CardDescription className="text-[11px] text-muted-foreground pt-0.5">
-            Boarding aur Destination chuniye — is route ki sari AC & Non-AC buses live milengi
+            Boarding (From) aur Destination (To) type karke search karein ya paas wale stop se select karein
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="p-3.5 space-y-3">
-          {/* Boarding Stop Field with Nearest Stops Displayed Right Nearby */}
-          <div className="space-y-2">
-            <div className="space-y-1">
-              {/* Header Label with GPS Button */}
+        <CardContent className="p-3.5 space-y-3 overflow-visible">
+          <div className="space-y-3">
+            {/* 1. SEARCHABLE FROM (BOARDING STOP) FIELD */}
+            <div ref={fromRef} className="space-y-1 relative">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                   <span className="size-2 rounded-full bg-emerald-600 animate-pulse" />
-                  Boarding Stop (From)
+                  Boarding Stop (From) — Type to Search
                 </label>
 
+                {/* 1-Tap "Near Me" GPS Button */}
                 <button
                   type="button"
                   onClick={handleUseCurrentLocation}
@@ -484,15 +550,119 @@ export default function PassengerHomePage() {
                 </button>
               </div>
 
+              {/* Searchable Input with Icons */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-600">
+                  <MapPin className="size-4" />
+                </div>
+                <input
+                  type="text"
+                  value={fromSearchQuery}
+                  onChange={(e) => {
+                    setFromSearchQuery(e.target.value);
+                    setIsFromFocused(true);
+                  }}
+                  onFocus={() => {
+                    setIsFromFocused(true);
+                    setIsToFocused(false);
+                  }}
+                  placeholder="Type to search boarding stop (e.g. Saket, INA, Hauz Khas)..."
+                  className="w-full h-11 pl-9 pr-9 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 transition-all shadow-2xs"
+                />
+                {fromSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFromSearchQuery('');
+                      setOriginStop('');
+                      setIsFromFocused(true);
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Autocomplete Dropdown for From Field */}
+              {isFromFocused && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-2 py-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60">
+                    Select Boarding Bus Stop
+                  </div>
+
+                  {/* All Nearest Stops Quick Option */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectOriginStop('ALL_NEARBY')}
+                    className={`w-full p-2 rounded-xl text-left text-xs font-bold transition-colors flex items-center justify-between ${
+                      originStop === 'ALL_NEARBY'
+                        ? 'bg-emerald-700 text-white'
+                        : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="size-3.5 text-amber-400 shrink-0" />
+                      <div>
+                        <span>✨ All Nearest Stops (Auto-Discover)</span>
+                        <span className="text-[10px] opacity-80 block font-normal">
+                          Searches across all {nearestStops.length} stops nearest to you
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* List matching stops */}
+                  {filteredFromStops.length === 0 ? (
+                    <div className="p-3 text-center text-xs text-muted-foreground">
+                      No matching bus stops found for &quot;{fromSearchQuery}&quot;
+                    </div>
+                  ) : (
+                    filteredFromStops.map((stop) => {
+                      const isNearby = nearestStops.find((n) => n.name === stop);
+                      const isSelected = originStop === stop;
+
+                      return (
+                        <button
+                          key={`from-opt-${stop}`}
+                          type="button"
+                          onClick={() => handleSelectOriginStop(stop)}
+                          className={`w-full p-2 rounded-xl text-left text-xs transition-colors flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-emerald-700 text-white font-bold'
+                              : 'hover:bg-muted text-foreground'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <MapPin className={`size-3.5 ${isSelected ? 'text-white' : 'text-emerald-600'}`} />
+                            <span className="font-bold">{stop}</span>
+                          </div>
+
+                          {isNearby && (
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300'
+                              }`}
+                            >
+                              📍 {isNearby.distanceFormatted} doori
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
               {/* NEAREST STOPS DIRECTLY DISPLAYED NEXT TO BOARDING STOP FIELD */}
-              <div className="space-y-1.5 p-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-500/25">
+              <div className="space-y-1.5 p-2 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-500/25 mt-1.5">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1">
                     <Navigation2 className="size-3 text-emerald-600 rotate-45" />
-                    Nearest Bus Stops To You:
+                    Paas Ke Bus Stops (Nearest Stops):
                   </span>
                   <span className="text-[9px] text-muted-foreground">
-                    from {userLocation.label.split('/')[0]}
+                    near {userLocation.label.split('/')[0]}
                   </span>
                 </div>
 
@@ -500,21 +670,21 @@ export default function PassengerHomePage() {
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                   <button
                     type="button"
-                    onClick={() => setOriginStop('ALL_NEARBY')}
+                    onClick={() => handleSelectOriginStop('ALL_NEARBY')}
                     className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border shrink-0 transition-all ${
                       originStop === 'ALL_NEARBY'
                         ? 'bg-emerald-700 text-white border-emerald-600 shadow-xs'
                         : 'bg-card text-foreground border-border hover:bg-muted'
                     }`}
                   >
-                    ✨ All Nearest Stops ({nearestStops.length})
+                    ✨ All Nearest ({nearestStops.length})
                   </button>
 
                   {nearestStops.map((stop) => (
                     <button
                       key={stop.name}
                       type="button"
-                      onClick={() => setOriginStop(stop.name)}
+                      onClick={() => handleSelectOriginStop(stop.name)}
                       className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border shrink-0 transition-all flex items-center gap-1 ${
                         originStop === stop.name
                           ? 'bg-emerald-700 text-white border-emerald-600 shadow-xs'
@@ -529,26 +699,10 @@ export default function PassengerHomePage() {
                   ))}
                 </div>
               </div>
-
-              {/* Main Boarding Stop Select Dropdown */}
-              <select
-                value={originStop}
-                onChange={(e) => setOriginStop(e.target.value)}
-                className="w-full h-10 px-3 pr-10 rounded-xl border border-input bg-background text-xs font-bold text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring"
-              >
-                <option value="ALL_NEARBY">
-                  ✨ All Nearest Stops (Auto-discover buses across nearest stops)
-                </option>
-                {allStops.map((stop) => (
-                  <option key={`from-${stop}`} value={stop}>
-                    {stop}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Quick Swap Stops Button */}
-            <div className="flex justify-end pr-3 -my-1 z-10 relative">
+            <div className="flex justify-end pr-3 -my-0.5 z-10 relative">
               <button
                 type="button"
                 onClick={handleSwapStops}
@@ -559,23 +713,82 @@ export default function PassengerHomePage() {
               </button>
             </div>
 
-            {/* Destination Stop (To) */}
-            <div className="space-y-1">
+            {/* 2. SEARCHABLE TO (DESTINATION STOP) FIELD */}
+            <div ref={toRef} className="space-y-1 relative">
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                 <span className="size-2 rounded-full bg-rose-600" />
-                Destination Stop (To)
+                Destination Stop (To) — Type to Search
               </label>
-              <select
-                value={destinationStop}
-                onChange={(e) => setDestinationStop(e.target.value)}
-                className="w-full h-10 px-3 pr-10 rounded-xl border border-input bg-background text-xs font-bold text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring"
-              >
-                {allStops.map((stop) => (
-                  <option key={`to-${stop}`} value={stop}>
-                    {stop}
-                  </option>
-                ))}
-              </select>
+
+              {/* Searchable Input with Icons */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-rose-600">
+                  <MapPin className="size-4" />
+                </div>
+                <input
+                  type="text"
+                  value={toSearchQuery}
+                  onChange={(e) => {
+                    setToSearchQuery(e.target.value);
+                    setIsToFocused(true);
+                  }}
+                  onFocus={() => {
+                    setIsToFocused(true);
+                    setIsFromFocused(false);
+                  }}
+                  placeholder="Type to search destination stop (e.g. Janpath, Kashmere Gate)..."
+                  className="w-full h-11 pl-9 pr-9 rounded-xl border border-input bg-background text-xs font-bold text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-rose-600/30 focus:border-rose-600 transition-all shadow-2xs"
+                />
+                {toSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setToSearchQuery('');
+                      setDestinationStop('');
+                      setIsToFocused(true);
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Autocomplete Dropdown for To Field */}
+              {isToFocused && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-card border border-border rounded-2xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-2 py-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60">
+                    Select Destination Bus Stop
+                  </div>
+
+                  {filteredToStops.length === 0 ? (
+                    <div className="p-3 text-center text-xs text-muted-foreground">
+                      No matching bus stops found for &quot;{toSearchQuery}&quot;
+                    </div>
+                  ) : (
+                    filteredToStops.map((stop) => {
+                      const isSelected = destinationStop === stop;
+                      return (
+                        <button
+                          key={`to-opt-${stop}`}
+                          type="button"
+                          onClick={() => handleSelectDestinationStop(stop)}
+                          className={`w-full p-2 rounded-xl text-left text-xs transition-colors flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-rose-600 text-white font-bold'
+                              : 'hover:bg-muted text-foreground'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <MapPin className={`size-3.5 ${isSelected ? 'text-white' : 'text-rose-600'}`} />
+                            <span className="font-bold">{stop}</span>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -593,10 +806,10 @@ export default function PassengerHomePage() {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setDestinationStop(dest)}
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 border transition-colors ${
+                  onClick={() => handleSelectDestinationStop(dest)}
+                  className={`px-2.5 py-1 rounded-xl text-[10px] font-bold shrink-0 border transition-colors ${
                     destinationStop === dest
-                      ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30'
+                      ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 shadow-2xs'
                       : 'bg-muted/60 text-muted-foreground hover:text-foreground border-border/60'
                   }`}
                 >
@@ -662,8 +875,8 @@ export default function PassengerHomePage() {
             <div className="space-y-0.5">
               <h4 className="text-xs font-bold text-foreground">No Direct Bus Found</h4>
               <p className="text-[11px] text-muted-foreground max-w-xs mx-auto">
-                No direct bus found to <strong className="text-foreground">{destinationStop}</strong> from selected stops.
-                Try choosing another nearby stop or an interchange hub like <strong>AIIMS</strong>, <strong>Saket</strong>, or <strong>Dhaula Kuan</strong>.
+                No direct bus found to <strong className="text-foreground">{destinationStop || 'destination'}</strong> from selected stops.
+                Try searching for another stop or choosing major hubs like <strong>AIIMS</strong>, <strong>Saket</strong>, or <strong>Dhaula Kuan</strong>.
               </p>
             </div>
             <div className="flex justify-center gap-2 pt-1">
@@ -671,8 +884,8 @@ export default function PassengerHomePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setOriginStop('ALL_NEARBY');
-                  setDestinationStop('Janpath / CP');
+                  handleSelectOriginStop('ALL_NEARBY');
+                  handleSelectDestinationStop('Janpath / CP');
                 }}
                 className="text-xs rounded-xl"
               >

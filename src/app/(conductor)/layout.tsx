@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   ArrowLeftRight,
   Bus,
+  Bell,
 } from 'lucide-react';
 
 export default function ConductorAppLayout({
@@ -21,7 +22,12 @@ export default function ConductorAppLayout({
   const pathname = usePathname();
   const activeDutyId = useDtcStore((state) => state.activeDutyId);
   const conductorDuties = useDtcStore((state) => state.conductorDuties);
+  const notices = useDtcStore((state) => state.notices);
   const activeDuty = conductorDuties.find((d) => d.id === activeDutyId) || conductorDuties[0];
+
+  const activeNoticesCount = notices.filter(
+    (n) => n.isActive && (n.targetAudience === 'Conductors & Drivers' || n.targetAudience === 'All')
+  ).length;
 
   const navItems = [
     {
@@ -80,13 +86,28 @@ export default function ConductorAppLayout({
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold block">
-                Cash in Bag
-              </span>
-              <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 font-mono">
-                ₹{activeDuty.totalCashCollected}
-              </span>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/conductor/notices"
+                className="relative p-1.5 rounded-xl bg-muted/60 hover:bg-muted border border-border flex items-center gap-1 text-foreground transition-all"
+                title="DTC Official Notice Board"
+              >
+                <Bell className="size-4 text-amber-600" />
+                {activeNoticesCount > 0 && (
+                  <span className="size-4 rounded-full bg-rose-600 text-white font-mono text-[9px] font-black flex items-center justify-center">
+                    {activeNoticesCount}
+                  </span>
+                )}
+              </Link>
+
+              <div className="text-right">
+                <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold block">
+                  Cash in Bag
+                </span>
+                <span className="text-sm font-black text-emerald-700 dark:text-emerald-400 font-mono">
+                  ₹{activeDuty.totalCashCollected}
+                </span>
+              </div>
             </div>
           </div>
         </header>

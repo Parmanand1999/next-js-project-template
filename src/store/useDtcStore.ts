@@ -683,9 +683,9 @@ const initialAttendances: ConductorAttendance[] = [
     date: '19 Nov 2026',
     punchInTime: '05:45 AM',
     status: 'Present',
-    depotLocation: 'Sarojini Nagar Depot (Gate 2 Biometric)',
+    depotLocation: 'Sarojini Nagar Depot',
     gpsLocation: '28.5708° N, 77.1974° E',
-    verifiedBy: 'DTC Biometric & GPS Punch',
+    verifiedBy: 'Conductor Mobile App Login',
   },
   {
     id: 'att-2',
@@ -700,7 +700,7 @@ const initialAttendances: ConductorAttendance[] = [
     status: 'Present',
     depotLocation: 'BBM Depot Kingsway Camp',
     gpsLocation: '28.7041° N, 77.2025° E',
-    verifiedBy: 'DTC Biometric & GPS Punch',
+    verifiedBy: 'Conductor Mobile App Login',
   },
   {
     id: 'att-3',
@@ -716,7 +716,7 @@ const initialAttendances: ConductorAttendance[] = [
     status: 'Shift Completed',
     depotLocation: 'Sukhdev Vihar Depot',
     gpsLocation: '28.5583° N, 77.2797° E',
-    verifiedBy: 'DTC Biometric & GPS Punch',
+    verifiedBy: 'Conductor Mobile App Login',
   },
 ];
 
@@ -1392,9 +1392,9 @@ export const useDtcStore = create<DtcState>()(
           date: dateStr,
           punchInTime: timeStr,
           status: 'Present',
-          depotLocation: data.location || `${targetDuty.depot} (Main Gate Biometric)`,
+          depotLocation: data.location || targetDuty.depot,
           gpsLocation: '28.5708° N, 77.1974° E',
-          verifiedBy: 'DTC Biometric & GPS Punch',
+          verifiedBy: 'Conductor Mobile App Login',
         };
 
         set((s) => ({

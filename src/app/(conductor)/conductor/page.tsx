@@ -15,17 +15,14 @@ import {
   Users,
   Clock,
   ArrowLeft,
-  BellRing,
   CalendarCheck,
   CheckCircle2,
-  AlertTriangle,
-  FileText,
   X,
-  ChevronRight,
-  Info,
-  Building2,
   Calendar,
   Smartphone,
+  Play,
+  Bus,
+  Building2,
 } from 'lucide-react';
 
 export default function ConductorDashboardPage() {
@@ -33,7 +30,6 @@ export default function ConductorDashboardPage() {
   const conductorDuties = useDtcStore((state) => state.conductorDuties);
   const conductorAttendances = useDtcStore((state) => state.conductorAttendances);
   const punchInAttendance = useDtcStore((state) => state.punchInAttendance);
-  const notices = useDtcStore((state) => state.notices);
   const routes = useDtcStore((state) => state.routes);
   const passengerTickets = useDtcStore((state) => state.passengerTickets);
   const noTicketChallans = useDtcStore((state) => state.noTicketChallans);
@@ -50,15 +46,6 @@ export default function ConductorDashboardPage() {
 
   const totalPassengers = activeDuty.ticketsSoldDigital + activeDuty.pinkTicketsIssued;
 
-  // Active Notices for Conductors
-  const conductorNotices = notices.filter(
-    (n) => n.isActive && (n.targetAudience === 'Conductors & Drivers' || n.targetAudience === 'All')
-  );
-
-  // Notice Modal State
-  const [selectedNotice, setSelectedNotice] = useState<any | null>(null);
-  const [acknowledgedNotices, setAcknowledgedNotices] = useState<string[]>([]);
-
   // Attendance Modal & Punch-In State
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState<boolean>(false);
   const [isPunchInSubmitting, setIsPunchInSubmitting] = useState<boolean>(false);
@@ -67,162 +54,121 @@ export default function ConductorDashboardPage() {
   const currentAttendance = conductorAttendances.find(
     (a) => a.badgeNumber === activeDuty.badgeNumber && a.status === 'Present'
   );
-  const isOnDuty = activeDuty.status === 'On Duty' && currentAttendance;
+  const isOnDuty = activeDuty.status === 'On Duty' && !!currentAttendance;
 
-  // Handle Conductor Punch-In / Start Duty
+  // Handle Conductor Punch-In / Start Duty via Mobile App
   const handlePunchIn = () => {
     setIsPunchInSubmitting(true);
     setTimeout(() => {
       punchInAttendance({
         dutyId: activeDuty.id,
-        location: `${activeDuty.depot} (Gate 2 Biometric & GPS)`,
+        location: `${activeDuty.depot} (Conductor Mobile App)`,
         shift: activeDuty.shift,
       });
       setIsPunchInSubmitting(false);
       toast.success(
         `Duty Started! Attendance marked as PRESENT for ${activeDuty.conductorName} (${activeDuty.badgeNumber})`
       );
-    }, 700);
+    }, 500);
   };
 
   return (
     <div className="p-3.5 space-y-3 animate-in fade-in duration-200">
-      {/* 1. OFFICIAL DTC NOTICE FOR CONDUCTORS (From Admin Panel) */}
-      {conductorNotices.length > 0 && (
-        <div className="space-y-1.5">
-          {conductorNotices.map((notice) => {
-            const isAcknowledged = acknowledgedNotices.includes(notice.id);
-            if (isAcknowledged) return null;
-
-            const isUrgent = notice.priority === 'Urgent';
-            const isHigh = notice.priority === 'High';
-
-            return (
-              <div
-                key={notice.id}
-                className={`p-3 rounded-2xl border shadow-xs transition-all ${
-                  isUrgent
-                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-100'
-                    : isHigh
-                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-100'
-                    : 'bg-blue-500/10 border-blue-500/30 text-blue-950 dark:text-blue-100'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`size-7 rounded-lg flex items-center justify-center shrink-0 ${
-                        isUrgent
-                          ? 'bg-rose-600 text-white animate-pulse'
-                          : isHigh
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-blue-600 text-white'
-                      }`}
-                    >
-                      <BellRing className="size-4" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge
-                          className={`text-[8px] font-black uppercase tracking-wider py-0 px-1.5 ${
-                            isUrgent
-                              ? 'bg-rose-600 text-white'
-                              : isHigh
-                              ? 'bg-amber-600 text-white'
-                              : 'bg-blue-600 text-white'
-                          }`}
-                        >
-                          {notice.priority} NOTICE
-                        </Badge>
-                        <span className="text-[10px] font-mono text-muted-foreground">
-                          {notice.noticeNumber}
-                        </span>
-                      </div>
-                      <h3 className="text-xs font-bold leading-tight mt-0.5 text-foreground line-clamp-1">
-                        {notice.title}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedNotice(notice)}
-                    className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0 flex items-center gap-0.5 pt-0.5"
-                  >
-                    <span>View</span>
-                    <ChevronRight className="size-3" />
-                  </button>
-                </div>
-
-                <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 pl-9">
-                  {notice.content}
-                </p>
+      {/* 1. CONDUCTOR DUTY STATUS & ATTENDANCE CARD (DIRECT MOBILE PHONE START) */}
+      {!isOnDuty ? (
+        <Card className="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white rounded-2xl p-4 shadow-md space-y-3 border-none">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="size-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                <Smartphone className="size-5 text-white" />
               </div>
-            );
-          })}
-        </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-white/80 block">
+                  Shift Duty Check-In
+                </span>
+                <h2 className="text-base font-black tracking-tight">
+                  Start Today&apos;s Duty
+                </h2>
+              </div>
+            </div>
+            <Badge className="bg-amber-400 text-amber-950 font-black text-[9px] uppercase tracking-wider">
+              Check-In Pending
+            </Badge>
+          </div>
+
+          {/* Assigned Duty Details */}
+          <div className="p-3 rounded-xl bg-black/20 border border-white/10 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Conductor:</span>
+              <span className="font-bold">{activeDuty.conductorName} ({activeDuty.badgeNumber})</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Assigned Route:</span>
+              <span className="font-bold font-mono">Route {activeDuty.routeNumber}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Bus Number:</span>
+              <span className="font-bold font-mono">{activeDuty.busNumber}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Depot & Shift:</span>
+              <span>{activeDuty.depot} • {activeDuty.shift.split(' ')[0]}</span>
+            </div>
+            <div className="flex items-center justify-between text-[10px] pt-1 border-t border-white/10 text-white/80">
+              <span>Authentication:</span>
+              <span className="text-emerald-200 font-semibold">✓ Mobile Phone Session Verified</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            disabled={isPunchInSubmitting}
+            onClick={handlePunchIn}
+            className="w-full h-11 rounded-xl bg-white hover:bg-white/90 text-emerald-800 font-black text-xs shadow-md flex items-center justify-center gap-2"
+          >
+            <Play className="size-4 fill-emerald-800" />
+            <span>{isPunchInSubmitting ? 'Starting Shift Duty...' : 'Start Shift Duty (Phone Login)'}</span>
+          </Button>
+        </Card>
+      ) : (
+        <Card className="bg-card border-border shadow-xs rounded-2xl p-3.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="size-9 rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                <CalendarCheck className="size-4.5" />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-black text-foreground">
+                    Shift Duty: Active
+                  </span>
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <Badge className="bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20 text-[9px] font-bold py-0">
+                    Present
+                  </Badge>
+                </div>
+                <span className="text-[10px] text-muted-foreground block font-mono">
+                  Started: {currentAttendance?.punchInTime || activeDuty.dutyStartTime} • {activeDuty.depot} (Mobile App)
+                </span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAttendanceModalOpen(true)}
+              className="h-8 px-2.5 rounded-xl border-border bg-muted/40 hover:bg-muted text-foreground font-bold text-[10px] flex items-center gap-1 shrink-0"
+            >
+              <Calendar className="size-3 text-emerald-600" />
+              <span>Log ({conductorAttendances.length})</span>
+            </Button>
+          </div>
+        </Card>
       )}
 
-      {/* 2. CONDUCTOR DUTY STATUS & ATTENDANCE RECORD BAR */}
-      <Card className="bg-card border-border shadow-xs rounded-2xl p-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`size-9 rounded-xl flex items-center justify-center ${
-                isOnDuty
-                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                  : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-              }`}
-            >
-              <CalendarCheck className="size-4.5" />
-            </div>
-
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-foreground">
-                  {isOnDuty ? 'Attendance: Present' : 'Shift Check-In Pending'}
-                </span>
-                <span
-                  className={`size-2 rounded-full ${
-                    isOnDuty ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                  }`}
-                />
-              </div>
-              <span className="text-[10px] text-muted-foreground block font-mono">
-                {isOnDuty
-                  ? `Punched in: ${currentAttendance?.punchInTime || activeDuty.dutyStartTime} • ${activeDuty.depot}`
-                  : `${activeDuty.shift.split(' ')[0]} Shift • Reporting: ${activeDuty.depot}`}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {!isOnDuty ? (
-              <Button
-                type="button"
-                size="sm"
-                disabled={isPunchInSubmitting}
-                onClick={handlePunchIn}
-                className="h-8 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] shadow-xs"
-              >
-                <span>{isPunchInSubmitting ? 'Punching...' : 'Punch In'}</span>
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsAttendanceModalOpen(true)}
-                className="h-7 px-2.5 rounded-xl border-border bg-muted/40 hover:bg-muted text-foreground font-bold text-[10px]"
-              >
-                <span>Log ({conductorAttendances.length})</span>
-              </Button>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* 3. CURRENT BUS STOP STAGE & HALTING STEPPER */}
+      {/* 2. CURRENT BUS STOP STAGE & HALTING STEPPER */}
       <Card className="bg-card border-border/80 shadow-xs rounded-2xl overflow-hidden">
         <div className="p-3.5 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-b border-border/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -291,7 +237,7 @@ export default function ConductorDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* 4. SHIFT PASSENGER & DUTY METRICS */}
+      {/* 3. SHIFT PASSENGER & DUTY METRICS */}
       <div className="grid grid-cols-2 gap-2">
         {/* Digital QR Scans */}
         <div className="p-3 rounded-2xl bg-card border border-border shadow-2xs space-y-1">
@@ -342,7 +288,7 @@ export default function ConductorDashboardPage() {
         </div>
       </div>
 
-      {/* 5. RECENT ACTIVITY LOGS */}
+      {/* 4. RECENT ACTIVITY LOGS */}
       <div className="space-y-2 pt-1">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -393,89 +339,7 @@ export default function ConductorDashboardPage() {
         </div>
       </div>
 
-      {/* 6. MODAL: DETAILED OFFICIAL NOTICE DIALOG */}
-      {selectedNotice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh]">
-            <div className="p-3.5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="size-5" />
-                <div>
-                  <h3 className="text-xs font-black tracking-tight">DTC Operational Notice</h3>
-                  <span className="text-[10px] opacity-90 font-mono">
-                    {selectedNotice.noticeNumber}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedNotice(null)}
-                className="size-7 rounded-full bg-black/20 hover:bg-black/30 flex items-center justify-center text-white"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <div className="p-4 space-y-3 overflow-y-auto">
-              <div className="flex items-center gap-2">
-                <Badge
-                  className={`text-[9px] font-bold ${
-                    selectedNotice.priority === 'Urgent'
-                      ? 'bg-rose-600 text-white'
-                      : selectedNotice.priority === 'High'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-blue-600 text-white'
-                  }`}
-                >
-                  {selectedNotice.priority} PRIORITY
-                </Badge>
-                <Badge variant="outline" className="text-[9px] font-mono">
-                  {selectedNotice.category}
-                </Badge>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-black text-foreground">
-                  {selectedNotice.title}
-                </h4>
-                <span className="text-[10px] text-muted-foreground block mt-0.5">
-                  Published: {selectedNotice.publishedAt} • Valid Until: {selectedNotice.validUntil || 'Current Shift'}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-muted/40 border border-border text-xs text-foreground leading-relaxed">
-                {selectedNotice.content}
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-900 dark:text-emerald-200 space-y-1">
-                <div className="flex justify-between">
-                  <span>Issued Authority:</span>
-                  <strong className="text-foreground">{selectedNotice.issuedBy || 'Traffic Operations Headquarters'}</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Target Crew:</span>
-                  <span>{selectedNotice.targetAudience}</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                onClick={() => {
-                  setAcknowledgedNotices((prev) => [...prev, selectedNotice.id]);
-                  setSelectedNotice(null);
-                  toast.success('Notice Acknowledged & Signed');
-                }}
-                className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5"
-              >
-                <CheckCircle2 className="size-4" />
-                <span>Acknowledge Notice</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 7. MODAL: CONDUCTOR ATTENDANCE RECORD LOG */}
+      {/* 5. MODAL: CONDUCTOR ATTENDANCE RECORD LOG */}
       {isAttendanceModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="w-full max-w-sm bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[85vh]">
@@ -542,6 +406,11 @@ export default function ConductorDashboardPage() {
                       <span className="font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
                         Route {att.routeNumber}
                       </span>
+                    </div>
+
+                    <div className="text-[9px] text-muted-foreground flex items-center gap-1">
+                      <Smartphone className="size-2.5 text-muted-foreground" />
+                      <span>{att.verifiedBy || 'Conductor Mobile App Login'}</span>
                     </div>
                   </div>
                 ))}

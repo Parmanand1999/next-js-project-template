@@ -170,6 +170,8 @@ export interface PassengerTicket {
   totalAmount: number;
   bookedAt: string;
   validUntil: string;
+  bookedTimestamp?: number;
+  expiryTimestamp?: number;
   qrCodeData: string;
   paymentMode?: 'Wallet' | 'UPI' | 'Card' | 'Free Pink Pass' | 'Cash' | string;
   individualQrs?: IndividualQrItem[];

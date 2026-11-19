@@ -138,7 +138,9 @@ export interface ConductorAttendance {
   date: string;
   punchInTime: string;
   punchOutTime?: string;
-  status: 'Present' | 'Shift Completed' | 'Handed Over';
+  hoursWorked?: string;
+  status: 'Present' | 'Shift Completed' | 'Handed Over' | 'Absent' | 'Weekly Off' | 'Leave';
+  remarks?: string;
   depotLocation: string;
   gpsLocation?: string;
   verifiedBy: string;

@@ -1,51 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useDtcStore } from '@/store/useDtcStore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import {
   User,
-  Wallet,
   CreditCard,
-  Plus,
   ShieldCheck,
   CheckCircle2,
   Sparkles,
-  Settings,
-  Moon,
-  Sun,
-  LogOut,
-  ExternalLink,
-  ChevronRight,
+  Zap,
   Phone,
   Mail,
+  QrCode,
 } from 'lucide-react';
 
 export default function PassengerProfilePage() {
   const passengerProfile = useDtcStore((state) => state.passengerProfile);
-  const topUpWallet = useDtcStore((state) => state.topUpWallet);
-
-  const [topUpAmount, setTopUpAmount] = useState<number>(100);
-
-  const handleTopUp = (amount: number) => {
-    topUpWallet(amount);
-    toast.success(`Wallet recharged with ₹${amount}! New balance: ₹${passengerProfile.walletBalance + amount}`);
-  };
 
   return (
     <div className="p-4 space-y-4 animate-in fade-in duration-200">
       {/* Title */}
       <div>
         <h2 className="text-lg font-black text-foreground tracking-tight">
-          Commuter Profile & Transit Wallet
+          Commuter Profile & Passes
         </h2>
         <p className="text-[11px] text-muted-foreground">
-          DTC One Card, wallet balance, and commuter preferences
+          DTC Smart Card, registered commuter details & UPI payments
         </p>
       </div>
 
@@ -84,44 +68,50 @@ export default function PassengerProfilePage() {
               DTC ONE
             </span>
             <span className="text-[10px] text-emerald-300 font-semibold">
-              Metro & Bus Smart Pass
+              Delhi Smart Mobility
             </span>
           </div>
           <CreditCard className="size-5 text-emerald-300" />
         </div>
 
-        <div className="relative z-10 pt-2">
+        <div className="relative z-10 pt-2 space-y-1">
           <span className="text-[10px] text-emerald-200/80 font-semibold block uppercase tracking-wider">
-            Available Wallet Balance
+            Linked Commuter ID
           </span>
-          <div className="text-2xl font-black text-white tracking-tight">
-            ₹{passengerProfile.walletBalance.toFixed(2)}
+          <div className="text-lg font-mono font-bold text-white tracking-wider">
+            {passengerProfile.dtcCardNumber}
           </div>
         </div>
 
         <div className="flex items-center justify-between text-[10px] text-emerald-200/70 font-mono pt-1 border-t border-white/15 relative z-10">
-          <span>{passengerProfile.dtcCardNumber}</span>
-          <span className="text-white font-bold">NCMC ENABLED</span>
+          <span>ALL DTC & CLUSTER BUSES</span>
+          <span className="text-emerald-300 font-bold">VERIFIED COMMUTER</span>
         </div>
       </div>
 
-      {/* Quick Wallet Recharge Pills */}
-      <div className="space-y-1.5">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          Quick Recharge DTC Wallet
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {[100, 200, 500].map((amt) => (
-            <button
-              key={amt}
-              onClick={() => handleTopUp(amt)}
-              className="py-2.5 rounded-xl border border-border/80 bg-card hover:border-emerald-500/60 shadow-2xs font-bold text-xs text-foreground flex items-center justify-center gap-1 transition-all active:scale-95"
-            >
-              <Plus className="size-3 text-emerald-600" />
-              <span>₹{amt}</span>
-            </button>
-          ))}
+      {/* Direct UPI Payment Integration Banner */}
+      <div className="p-3.5 rounded-2xl bg-card border border-border/80 shadow-2xs space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+              <Zap className="size-4" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-foreground block">
+                Direct UPI Instant Payments
+              </span>
+              <span className="text-[10px] text-muted-foreground block">
+                Google Pay, Paytm, PhonePe, BHIM
+              </span>
+            </div>
+          </div>
+          <Badge className="bg-emerald-700 text-white text-[9px] font-bold">
+            Zero Fees
+          </Badge>
         </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          All ticket payments are processed instantly via direct UPI without any wallet lock-in. Book seamlessly using your preferred UPI app.
+        </p>
       </div>
 
       {/* Commuter Pass Schemes */}

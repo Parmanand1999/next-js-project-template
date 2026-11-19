@@ -45,7 +45,51 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
+  Lock,
+  Smartphone,
+  Building2,
 } from 'lucide-react';
+
+const UPI_APP_OPTIONS = [
+  {
+    id: 'gpay',
+    name: 'Google Pay',
+    shortName: 'GPay',
+    iconBg: 'bg-emerald-600',
+    tag: 'Popular',
+    upiVpa: 'priya.sharma@okaxis',
+    bank: 'State Bank of India •••• 4820',
+  },
+  {
+    id: 'paytm',
+    name: 'Paytm UPI',
+    shortName: 'Paytm',
+    iconBg: 'bg-sky-600',
+    tag: 'Instant',
+    upiVpa: '9811234567@paytm',
+    bank: 'Paytm Payments Bank •••• 9102',
+  },
+  {
+    id: 'phonepe',
+    name: 'PhonePe',
+    shortName: 'PhonePe',
+    iconBg: 'bg-purple-600',
+    tag: 'Fast',
+    upiVpa: '9811234567@ybl',
+    bank: 'HDFC Bank •••• 3314',
+  },
+  {
+    id: 'bhim',
+    name: 'BHIM UPI',
+    shortName: 'BHIM',
+    iconBg: 'bg-amber-600',
+    tag: 'Govt NPCI',
+    upiVpa: 'priya@upi',
+    bank: 'Punjab National Bank •••• 8841',
+  },
+] as const;
+
+type UpiAppId = (typeof UPI_APP_OPTIONS)[number]['id'];
 
 interface ConnectingBusItem {
   id: string;
@@ -196,7 +240,10 @@ export default function PassengerHomePage() {
   const [childCount, setChildCount] = useState<number>(0);
   const [isPinkTicket, setIsPinkTicket] = useState<boolean>(false);
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
-  const [paymentMethod, setPaymentMethod] = useState<'Wallet' | 'UPI' | 'Card'>('Wallet');
+  const [selectedUpiApp, setSelectedUpiApp] = useState<UpiAppId>('gpay');
+  const [showUpiModal, setShowUpiModal] = useState<boolean>(false);
+  const [upiStep, setUpiStep] = useState<'PIN' | 'PROCESSING' | 'SUCCESS'>('PIN');
+  const [upiPin, setUpiPin] = useState<string>('');
 
   // Swap From and To Stops
   const handleSwapStops = () => {
@@ -568,8 +615,8 @@ export default function PassengerHomePage() {
     };
   }, [selectedBus, selectedTransitRoute, adultCount, childCount, isPinkTicket]);
 
-  // Confirm and generate individual QR tickets
-  const handleConfirmBooking = () => {
+  // Initiate booking: if Pink Pass -> instant, if UPI -> open UPI payment flow
+  const handleInitiateBooking = () => {
     if (!selectedBus && !selectedTransitRoute) return;
 
     if (isPinkTicket) {
@@ -588,10 +635,36 @@ export default function PassengerHomePage() {
       return;
     }
 
-    if (paymentMethod === 'Wallet' && passengerProfile.walletBalance < totalFare) {
-      toast.error(`Insufficient wallet balance (₹${passengerProfile.walletBalance}). Please top-up or choose UPI.`);
+    // Launch UPI payment checkout sheet
+    setUpiPin('');
+    setUpiStep('PIN');
+    setShowUpiModal(true);
+  };
+
+  // Execute UPI payment step with realistic authorization & feedback
+  const handleExecuteUpiPayment = (pinToUse?: string) => {
+    const finalPin = pinToUse ?? upiPin;
+    if (finalPin.length < 4) {
+      toast.error('Please enter your 4-digit UPI PIN');
       return;
     }
+
+    setUpiStep('PROCESSING');
+
+    // Simulate 1.4s authentic UPI network & NPCI processing
+    setTimeout(() => {
+      setUpiStep('SUCCESS');
+
+      setTimeout(() => {
+        executeFinalBooking();
+      }, 1000);
+    }, 1400);
+  };
+
+  // Finalize booking after verified UPI payment
+  const executeFinalBooking = () => {
+    const activeApp = UPI_APP_OPTIONS.find((a) => a.id === selectedUpiApp);
+    const appLabel = activeApp ? activeApp.name : 'UPI';
 
     if (selectedTransitRoute) {
       const ticket = bookPassengerTicket({
@@ -606,7 +679,7 @@ export default function PassengerHomePage() {
         childFare,
         fare: adultFare,
         totalAmount: totalFare,
-        paymentMode: paymentMethod,
+        paymentMode: `UPI (${appLabel})`,
         isConnecting: true,
         transferStop: selectedTransitRoute.interchangeStop,
         connectingLegs: {
@@ -620,8 +693,9 @@ export default function PassengerHomePage() {
       });
 
       toast.success(
-        `Connecting 2-Bus Ticket booked! ${ticket.individualQrs?.length || totalPassengers} QR codes generated.`
+        `₹${totalFare.toFixed(2)} paid via ${appLabel}! Connecting Ticket #${ticket.ticketNumber} generated.`
       );
+      setShowUpiModal(false);
       setShowBookingModal(false);
       router.push('/passenger/tickets');
       return;
@@ -640,14 +714,15 @@ export default function PassengerHomePage() {
         childFare,
         fare: adultFare,
         totalAmount: totalFare,
-        paymentMode: paymentMethod,
+        paymentMode: `UPI (${appLabel})`,
       });
 
       toast.success(
         totalPassengers > 1
-          ? `Booked for ${totalPassengers} commuters! ${totalPassengers} individual QR codes generated.`
-          : `Ticket #${ticket.ticketNumber} generated!`
+          ? `₹${totalFare.toFixed(2)} paid via ${appLabel}! Booked for ${totalPassengers} commuters.`
+          : `₹${totalFare.toFixed(2)} paid via ${appLabel}! Ticket #${ticket.ticketNumber} generated!`
       );
+      setShowUpiModal(false);
       setShowBookingModal(false);
       router.push('/passenger/tickets');
     }
@@ -683,13 +758,13 @@ export default function PassengerHomePage() {
             <span className="truncate max-w-[100px]">{userLocation.label.split('/')[0]}</span>
           </button>
 
-          {/* Quick Wallet Balance */}
+          {/* Quick My Tickets Link */}
           <Link
-            href="/passenger/profile"
-            className="px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1"
+            href="/passenger/tickets"
+            className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1 shadow-2xs hover:bg-emerald-500/20 transition-all"
           >
-            <CreditCard className="size-3" />
-            <span>₹{passengerProfile.walletBalance}</span>
+            <QrCode className="size-3" />
+            <span>My Tickets</span>
           </Link>
         </div>
       </div>
@@ -1471,54 +1546,53 @@ export default function PassengerHomePage() {
                 </button>
               </div>
 
-              {/* Compact Payment Method Selector */}
+              {/* SELECT UPI PAYMENT APP */}
               {!isPinkTicket && (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    Payment Method
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('Wallet')}
-                      className={`flex items-center justify-between p-2 rounded-xl border text-left transition-all ${
-                        paymentMethod === 'Wallet'
-                          ? 'border-emerald-600 bg-emerald-500/10 text-foreground font-bold ring-1 ring-emerald-600'
-                          : 'border-border bg-card text-muted-foreground hover:border-emerald-600/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <CreditCard className="size-3.5 text-emerald-600 shrink-0" />
-                        <div>
-                          <span className="text-[11px] font-bold block leading-none">Fast Wallet</span>
-                          <span className="text-[9px] text-muted-foreground">1-Tap Pay</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                        ₹{passengerProfile.walletBalance}
-                      </span>
-                    </button>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      Select UPI App For Payment
+                    </label>
+                    <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400">
+                      Direct Bank Transfer
+                    </span>
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('UPI')}
-                      className={`flex items-center justify-between p-2 rounded-xl border text-left transition-all ${
-                        paymentMethod === 'UPI'
-                          ? 'border-emerald-600 bg-emerald-500/10 text-foreground font-bold ring-1 ring-emerald-600'
-                          : 'border-border bg-card text-muted-foreground hover:border-emerald-600/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Zap className="size-3.5 text-blue-600 shrink-0" />
-                        <div>
-                          <span className="text-[11px] font-bold block leading-none">UPI Apps</span>
-                          <span className="text-[9px] text-muted-foreground">GPay / PhonePe</span>
-                        </div>
-                      </div>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600">
-                        UPI
-                      </span>
-                    </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    {UPI_APP_OPTIONS.map((app) => {
+                      const isSelected = selectedUpiApp === app.id;
+                      return (
+                        <button
+                          key={app.id}
+                          type="button"
+                          onClick={() => setSelectedUpiApp(app.id)}
+                          className={`flex items-center justify-between p-2 rounded-xl border text-left transition-all ${
+                            isSelected
+                              ? 'border-emerald-600 bg-emerald-500/10 text-foreground font-bold ring-1 ring-emerald-600 shadow-2xs'
+                              : 'border-border bg-card text-muted-foreground hover:border-border/80 hover:bg-muted/30'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={`size-6 rounded-lg ${app.iconBg} text-white font-black text-[10px] flex items-center justify-center shrink-0 shadow-2xs`}>
+                              {app.shortName.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold block leading-none truncate text-foreground">
+                                {app.name}
+                              </span>
+                              <span className="text-[9px] text-muted-foreground block truncate">
+                                {app.bank.split(' ••••')[0]}
+                              </span>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="size-4 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                              <Check className="size-2.5 stroke-[3]" />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1547,21 +1621,257 @@ export default function PassengerHomePage() {
               </div>
 
               <Button
-                onClick={handleConfirmBooking}
+                onClick={handleInitiateBooking}
                 className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-xl h-10 shadow-sm flex items-center justify-center gap-2"
               >
                 <span>
                   {isPinkTicket
                     ? 'Generate Free Pink Pass'
-                    : selectedTransitRoute
-                    ? `Pay ₹${totalFare.toFixed(2)} & Book Connecting Journey`
-                    : `Pay ₹${totalFare.toFixed(2)} & Book (${totalPassengers} QR${
-                        totalPassengers > 1 ? 's' : ''
-                      })`}
+                    : `Pay ₹${totalFare.toFixed(2)} via ${
+                        UPI_APP_OPTIONS.find((a) => a.id === selectedUpiApp)?.name || 'UPI'
+                      }`}
                 </span>
                 <ArrowRight className="size-3.5" />
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AUTHENTIC UPI PAYMENT GATEWAY SHEET (GPay / Paytm / PhonePe / BHIM) */}
+      {showUpiModal && (
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-sm bg-card border-t sm:border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
+            {/* Header with Selected App */}
+            {(() => {
+              const app = UPI_APP_OPTIONS.find((a) => a.id === selectedUpiApp) || UPI_APP_OPTIONS[0];
+
+              return (
+                <div className="flex flex-col">
+                  {/* Brand Top Bar */}
+                  <div className={`p-3.5 ${app.iconBg} text-white flex items-center justify-between`}>
+                    <div className="flex items-center gap-2">
+                      <div className="size-7 rounded-lg bg-white/20 backdrop-blur-xs flex items-center justify-center font-black text-xs">
+                        {app.shortName.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black tracking-tight">{app.name}</div>
+                        <div className="text-[9px] text-white/80 font-mono">NPCI UPI Gateway</div>
+                      </div>
+                    </div>
+                    {upiStep !== 'PROCESSING' && (
+                      <button
+                        onClick={() => setShowUpiModal(false)}
+                        className="size-7 rounded-full bg-black/20 hover:bg-black/30 flex items-center justify-center text-white"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Body Content depending on step */}
+                  <div className="p-4 space-y-4">
+                    {/* STEP 1: PIN ENTRY & CONFIRMATION */}
+                    {upiStep === 'PIN' && (
+                      <div className="space-y-4">
+                        {/* Merchant Details Box */}
+                        <div className="p-3 rounded-2xl bg-muted/40 border border-border/80 space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Paying To:</span>
+                            <span className="font-bold text-foreground flex items-center gap-1">
+                              <span>Delhi Transport Corporation</span>
+                              <CheckCircle2 className="size-3.5 text-emerald-600 inline" />
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Journey:</span>
+                            <span className="font-semibold text-foreground text-[11px] truncate max-w-[190px]">
+                              {selectedTransitRoute
+                                ? `${selectedTransitRoute.leg1.fromStop} ➔ ${selectedTransitRoute.leg2.toStop}`
+                                : `${selectedBus?.fromStop} ➔ ${selectedBus?.toStop}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Commuters:</span>
+                            <span className="font-semibold text-foreground">
+                              {adultCount > 0 ? `${adultCount} Adult` : ''}
+                              {childCount > 0 ? ` + ${childCount} Child` : ''}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t border-border flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground">Amount:</span>
+                            <span className="text-xl font-black text-foreground font-mono">
+                              ₹{totalFare.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Debiting Account */}
+                        <div className="flex items-center justify-between p-2.5 rounded-xl border border-border bg-card text-xs">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="size-4 text-muted-foreground" />
+                            <div>
+                              <span className="font-bold text-foreground block text-[11px]">
+                                {app.bank}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground font-mono">
+                                UPI ID: {app.upiVpa}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                            Linked
+                          </span>
+                        </div>
+
+                        {/* Switch App quick row */}
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-muted-foreground font-semibold block">
+                            Switch App:
+                          </span>
+                          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                            {UPI_APP_OPTIONS.map((a) => (
+                              <button
+                                key={a.id}
+                                type="button"
+                                onClick={() => setSelectedUpiApp(a.id)}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all shrink-0 ${
+                                  selectedUpiApp === a.id
+                                    ? 'bg-foreground text-background border-foreground font-black'
+                                    : 'bg-muted/50 text-muted-foreground border-border hover:text-foreground'
+                                }`}
+                              >
+                                {a.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* UPI PIN entry simulation */}
+                        <div className="p-3 rounded-2xl bg-muted/20 border border-border space-y-2 text-center">
+                          <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-muted-foreground">
+                            <Lock className="size-3.5 text-emerald-600" />
+                            <span>Enter 4-Digit UPI PIN</span>
+                          </div>
+
+                          {/* 4 Dots PIN Display */}
+                          <div className="flex items-center justify-center gap-3 py-1">
+                            {[0, 1, 2, 3].map((idx) => (
+                              <div
+                                key={idx}
+                                className={`size-3.5 rounded-full border transition-all ${
+                                  upiPin.length > idx
+                                    ? 'bg-foreground border-foreground scale-110'
+                                    : 'border-muted-foreground/40 bg-muted/50'
+                                }`}
+                              />
+                            ))}
+                          </div>
+
+                          {/* Quick Keypad */}
+                          <div className="grid grid-cols-3 gap-1.5 max-w-[210px] mx-auto pt-1">
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+                              <button
+                                key={digit}
+                                type="button"
+                                onClick={() => {
+                                  if (upiPin.length < 4) {
+                                    const next = upiPin + digit;
+                                    setUpiPin(next);
+                                    if (next.length === 4) {
+                                      handleExecuteUpiPayment(next);
+                                    }
+                                  }
+                                }}
+                                className="h-9 rounded-xl bg-card hover:bg-muted border border-border text-xs font-black text-foreground shadow-2xs active:scale-95 transition-all"
+                              >
+                                {digit}
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => setUpiPin('')}
+                              className="h-9 rounded-xl bg-muted/40 hover:bg-muted border border-border text-[10px] font-bold text-muted-foreground active:scale-95"
+                            >
+                              Clear
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (upiPin.length < 4) {
+                                  const next = upiPin + '0';
+                                  setUpiPin(next);
+                                  if (next.length === 4) {
+                                    handleExecuteUpiPayment(next);
+                                  }
+                                }
+                              }}
+                              className="h-9 rounded-xl bg-card hover:bg-muted border border-border text-xs font-black text-foreground shadow-2xs active:scale-95 transition-all"
+                            >
+                              0
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setUpiPin(upiPin.slice(0, -1))}
+                              className="h-9 rounded-xl bg-muted/40 hover:bg-muted border border-border text-xs font-bold text-muted-foreground active:scale-95"
+                            >
+                              ⌫
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Direct 1-Tap Authorize Button */}
+                        <Button
+                          onClick={() => handleExecuteUpiPayment('1234')}
+                          className={`w-full ${app.iconBg} hover:opacity-90 text-white font-black text-xs rounded-xl h-11 shadow-sm flex items-center justify-center gap-2`}
+                        >
+                          <ShieldCheck className="size-4" />
+                          <span>Authorize & Pay ₹{totalFare.toFixed(2)}</span>
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* STEP 2: PROCESSING */}
+                    {upiStep === 'PROCESSING' && (
+                      <div className="py-10 text-center space-y-3">
+                        <div className="size-14 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mx-auto" />
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-black text-foreground">
+                            Processing Payment via {app.name}...
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            Connecting with NPCI and bank server. Please do not press back.
+                          </p>
+                        </div>
+                        <div className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                          ₹{totalFare.toFixed(2)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* STEP 3: SUCCESS */}
+                    {upiStep === 'SUCCESS' && (
+                      <div className="py-8 text-center space-y-3 animate-in zoom-in-95 duration-200">
+                        <div className="size-14 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-lg animate-bounce">
+                          <Check className="size-8 stroke-[3]" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-base font-black text-foreground">
+                            Payment Successful!
+                          </h4>
+                          <p className="text-xs text-emerald-700 dark:text-emerald-400 font-bold">
+                            ₹{totalFare.toFixed(2)} received via {app.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground font-mono pt-1">
+                            Ref: UPI/DTC/{Date.now().toString().slice(-8)} • Generating Ticket...
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

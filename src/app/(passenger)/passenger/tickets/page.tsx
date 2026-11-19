@@ -18,7 +18,6 @@ import {
   AlertCircle,
   Bus,
   RotateCcw,
-  Download,
   Share2,
   X,
   ChevronRight,
@@ -393,25 +392,16 @@ export default function PassengerTicketsPage() {
 
                     {/* Actions Footer */}
                     <div className="flex items-center justify-between gap-2">
-                      <Link href="/passenger/support" className="flex-1">
+                      <Link href="/passenger/support" className="w-full">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full text-xs font-semibold rounded-xl border-border h-8 gap-1"
+                          className="w-full text-xs font-semibold rounded-xl border-border h-8 gap-1 hover:bg-muted"
                         >
                           <RotateCcw className="size-3 text-muted-foreground" />
-                          <span>Need Refund?</span>
+                          <span>Need Refund or Help?</span>
                         </Button>
                       </Link>
-
-                      <Button
-                        size="sm"
-                        onClick={() => toast.success(`All ${qrs.length} ticket QRs saved offline on device!`)}
-                        className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl h-8 gap-1"
-                      >
-                        <Download className="size-3" />
-                        <span>Save Offline</span>
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>

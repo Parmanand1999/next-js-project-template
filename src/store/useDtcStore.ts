@@ -75,7 +75,7 @@ interface DtcState {
     childFare?: number;
     fare: number;
     totalAmount: number;
-    paymentMode: 'Wallet' | 'UPI' | 'Card' | 'Free Pink Pass';
+    paymentMode: 'Wallet' | 'UPI' | 'Card' | 'Free Pink Pass' | string;
     isConnecting?: boolean;
     transferStop?: string;
     connectingLegs?: {

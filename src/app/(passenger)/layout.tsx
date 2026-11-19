@@ -11,7 +11,6 @@ import {
   Bus,
   LifeBuoy,
   User,
-  Wallet,
   ShieldAlert,
   Bell,
   Sparkles,
@@ -73,14 +72,9 @@ export default function PassengerAppLayout({
           <Link href="/passenger" className="flex items-center gap-2 group">
             <DtcLogo size={30} className="group-hover:scale-105 transition-transform" />
             <div className="flex flex-col">
-              <div className="flex items-center gap-1">
-                <span className="text-xs font-black tracking-tight text-foreground leading-none">
-                  DTC SANCHALAN
-                </span>
-                <span className="text-[8px] font-black px-1 py-0.2 rounded bg-emerald-600 text-white uppercase tracking-wider">
-                  ONE
-                </span>
-              </div>
+              <span className="text-xs font-black tracking-tight text-foreground leading-none">
+                DTC SANCHALAN
+              </span>
               <span className="text-[9px] font-semibold text-muted-foreground tracking-wider uppercase mt-0.5">
                 Delhi Govt. Commuter App
               </span>
@@ -89,20 +83,10 @@ export default function PassengerAppLayout({
 
           {/* Quick Header Actions */}
           <div className="flex items-center gap-2">
-            {/* Quick Wallet Chip */}
-            <Link
-              href="/passenger/profile"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20 text-[11px] font-bold transition-colors"
-              title="Commuter Wallet Balance"
-            >
-              <Wallet className="size-3 text-emerald-600" />
-              <span>₹{passengerProfile.walletBalance}</span>
-            </Link>
-
             {/* Quick Emergency SOS Button */}
             <Link
               href="/passenger/support"
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black tracking-wider uppercase shadow-xs transition-colors animate-pulse"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black tracking-wider uppercase shadow-xs transition-colors animate-pulse"
               title="Emergency SOS Assistance"
             >
               <ShieldAlert className="size-3" />

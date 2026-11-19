@@ -28,7 +28,6 @@ import {
   CheckCircle2,
   AlertCircle,
   ShieldCheck,
-  CreditCard,
   Plus,
   Minus,
   Navigation,

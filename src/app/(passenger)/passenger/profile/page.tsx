@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   User,
-  CreditCard,
   ShieldCheck,
   CheckCircle2,
   Sparkles,
@@ -53,39 +52,6 @@ export default function PassengerProfilePage() {
           <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
             Delhi Resident Verified Commuter
           </span>
-        </div>
-      </div>
-
-      {/* Digital DTC One Transit Card */}
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-950 text-white shadow-xl relative overflow-hidden space-y-4">
-        {/* Decorative Circles */}
-        <div className="absolute top-0 right-0 -mr-10 -mt-10 size-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-10 -mb-10 size-32 rounded-full bg-emerald-400/10 blur-xl pointer-events-none" />
-
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-white/15">
-              DTC ONE
-            </span>
-            <span className="text-[10px] text-emerald-300 font-semibold">
-              Delhi Smart Mobility
-            </span>
-          </div>
-          <CreditCard className="size-5 text-emerald-300" />
-        </div>
-
-        <div className="relative z-10 pt-2 space-y-1">
-          <span className="text-[10px] text-emerald-200/80 font-semibold block uppercase tracking-wider">
-            Linked Commuter ID
-          </span>
-          <div className="text-lg font-mono font-bold text-white tracking-wider">
-            {passengerProfile.dtcCardNumber}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-[10px] text-emerald-200/70 font-mono pt-1 border-t border-white/15 relative z-10">
-          <span>ALL DTC & CLUSTER BUSES</span>
-          <span className="text-emerald-300 font-bold">VERIFIED COMMUTER</span>
         </div>
       </div>
 

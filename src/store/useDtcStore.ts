@@ -88,6 +88,14 @@ interface DtcState {
     };
   }) => PassengerTicket;
   issuePinkPass: (routeNumber: string) => PassengerTicket;
+  issueDtcPass: (data: {
+    passType: DtcPass['passType'];
+    cost: number;
+    paymentMode?: string;
+  }) => DtcPass;
+  markTicketExpired: (ticketId: string) => void;
+  markTicketUsed: (ticketId: string) => void;
+  expirePass: (passId: string) => void;
   topUpWallet: (amount: number) => void;
   submitPassengerRefund: (ticketNumber: string, amount: number, reason: RefundRequest['reason']) => void;
 
@@ -1549,6 +1557,106 @@ export const useDtcStore = create<DtcState>()(
         return newTicket;
       },
 
+      issueDtcPass: (data) => {
+        const profile = get().passengerProfile;
+        const count = get().passes.length + 80924;
+        const passNum = `DTC-PASS-${count}`;
+        const todayStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        const newPass: DtcPass = {
+          id: `pass-${Date.now()}`,
+          passNumber: passNum,
+          holderName: profile.name,
+          holderPhone: profile.phone,
+          passType: data.passType,
+          cost: data.cost,
+          issuedDate: todayStr,
+          validUntil: todayStr,
+          status: 'Active',
+        };
+
+        const pTicketNum = `DTC-PASS-TKT-${count}`;
+        const passTicket: PassengerTicket = {
+          id: `tkt-pass-${Date.now()}`,
+          ticketNumber: pTicketNum,
+          passengerName: profile.name,
+          passengerPhone: profile.phone,
+          phone: profile.phone,
+          routeNumber: 'ALL ROUTES',
+          sourceStop: 'All Delhi NCR',
+          boardingStop: 'All Delhi NCR',
+          destinationStop: `Unlimited Travel (${data.passType})`,
+          busType: data.passType.includes('AC') ? 'AC Electric' : 'Non-AC Standard',
+          fare: data.cost,
+          passengersCount: 1,
+          totalAmount: data.cost,
+          bookedAt: 'Just Now',
+          validUntil: 'Valid Until Midnight (23:59)',
+          qrCodeData: `DTC|PASS|${passNum}|${data.passType}|${profile.name}|VALID_TODAY|${Date.now()}`,
+          paymentMode: data.paymentMode || 'UPI',
+          individualQrs: [
+            {
+              passengerIndex: 1,
+              passengerLabel: `Pass: ${data.passType}`,
+              passengerType: 'Adult',
+              qrSerial: `${passNum}-QR1`,
+              qrCodeData: `DTC|PASS|${passNum}|${data.passType}|VALID_TODAY`,
+              fare: data.cost,
+              status: 'Valid',
+            },
+          ],
+          status: 'Valid',
+        };
+
+        set((state) => ({
+          passes: [newPass, ...state.passes],
+          passengerTickets: [passTicket, ...state.passengerTickets],
+        }));
+
+        return newPass;
+      },
+
+      markTicketExpired: (ticketId) => {
+        set((state) => ({
+          passengerTickets: state.passengerTickets.map((t) =>
+            t.id === ticketId || t.ticketNumber === ticketId
+              ? {
+                  ...t,
+                  status: 'Expired' as const,
+                  individualQrs: t.individualQrs?.map((q) => ({ ...q, status: 'Expired' as const })),
+                }
+              : t
+          ),
+        }));
+      },
+
+      markTicketUsed: (ticketId) => {
+        set((state) => ({
+          passengerTickets: state.passengerTickets.map((t) =>
+            t.id === ticketId || t.ticketNumber === ticketId
+              ? {
+                  ...t,
+                  status: 'Scanned & Used' as const,
+                  individualQrs: t.individualQrs?.map((q) => ({ ...q, status: 'Scanned & Used' as const })),
+                }
+              : t
+          ),
+        }));
+      },
+
+      expirePass: (passId) => {
+        set((state) => ({
+          passes: state.passes.map((p) =>
+            p.id === passId || p.passNumber === passId ? { ...p, status: 'Expired' as const } : p
+          ),
+          passengerTickets: state.passengerTickets.map((t) =>
+            t.ticketNumber.includes(passId) || t.id.includes(passId)
+              ? { ...t, status: 'Expired' as const }
+              : t
+          ),
+        }));
+      },
+
       issuePinkPass: (routeNumber) => {
         const profile = get().passengerProfile;
         const count = get().passengerTickets.length + 9422;
@@ -1684,8 +1792,14 @@ export const useDtcStore = create<DtcState>()(
           };
         }
 
-        // Validate Route
-        if (matchedTicket.routeNumber && activeDuty.routeNumber && matchedTicket.routeNumber !== activeDuty.routeNumber) {
+        // Validate Route (All-Route passes are valid on every bus route)
+        if (
+          matchedTicket.routeNumber &&
+          activeDuty.routeNumber &&
+          matchedTicket.routeNumber !== 'ALL ROUTES' &&
+          !matchedTicket.routeNumber.includes('ALL') &&
+          matchedTicket.routeNumber !== activeDuty.routeNumber
+        ) {
           return {
             success: false,
             status: 'INVALID_ROUTE',
@@ -1702,6 +1816,18 @@ export const useDtcStore = create<DtcState>()(
 
         if (!matchedQr && matchedTicket.individualQrs && matchedTicket.individualQrs.length > 0) {
           matchedQr = matchedTicket.individualQrs.find((q) => q.status === 'Valid') || matchedTicket.individualQrs[0];
+        }
+
+        // Check if expired
+        if (matchedQr?.status === 'Expired' || matchedTicket.status === 'Expired') {
+          return {
+            success: false,
+            status: 'EXPIRED',
+            ticket: matchedTicket,
+            qrItem: matchedQr,
+            message: `TICKET EXPIRED! QR code (${matchedQr?.qrSerial || matchedTicket.ticketNumber}) has expired and is INVALID. Cannot be reused.`,
+            timestamp: now,
+          };
         }
 
         // Check if already used

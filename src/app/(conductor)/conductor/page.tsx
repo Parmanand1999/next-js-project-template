@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   QrCode,
-  Activity,
   ShieldAlert,
   ArrowLeftRight,
   MapPin,
@@ -123,39 +122,27 @@ export default function ConductorDashboardPage() {
           </Button>
         </Link>
 
-        <Link href="/conductor/health" className="block">
-          <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-teal-600 to-cyan-700 hover:from-teal-700 hover:to-cyan-800 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2">
-            <Activity className="size-5" />
+        <Link href="/conductor/challan" className="block">
+          <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2">
+            <ShieldAlert className="size-5" />
             <div className="text-left">
-              <span className="block leading-none">ETIM Machine Health</span>
-              <span className="text-[9px] font-normal opacity-90">Hardware & Telemetry</span>
+              <span className="block leading-none">Section 178 Challan</span>
+              <span className="text-[9px] font-normal opacity-90">UPI QR & Fine Desk</span>
             </div>
           </Button>
         </Link>
       </div>
 
-      {/* Secondary Action Row */}
-      <div className="grid grid-cols-2 gap-2">
-        <Link href="/conductor/challan" className="block">
-          <Button
-            type="button"
-            className="w-full h-10 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-900 dark:text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs"
-          >
-            <ShieldAlert className="size-4 text-amber-600" />
-            <span>Section 178 Challan</span>
-          </Button>
-        </Link>
-
-        <Link href="/conductor/handover" className="block">
-          <Button
-            type="button"
-            className="w-full h-10 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-900 dark:text-blue-300 font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs"
-          >
-            <ArrowLeftRight className="size-4 text-blue-600" />
-            <span>Shift Handover</span>
-          </Button>
-        </Link>
-      </div>
+      {/* Secondary Action: Shift Handover */}
+      <Link href="/conductor/handover" className="block">
+        <Button
+          type="button"
+          className="w-full h-11 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-900 dark:text-blue-300 font-bold text-xs flex items-center justify-center gap-2 shadow-2xs"
+        >
+          <ArrowLeftRight className="size-4 text-blue-600" />
+          <span>Shift Handover & End Duty (Tally ₹{activeDuty.totalCashCollected} Cash)</span>
+        </Button>
+      </Link>
 
       {/* 3. SHIFT PASSENGER & CASH TELEMETRY METRICS */}
       <div className="grid grid-cols-2 gap-2">
@@ -179,7 +166,7 @@ export default function ConductorDashboardPage() {
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-xl font-black text-foreground font-mono">{activeDuty.ticketsSoldCash}</span>
-            <span className="text-[10px] text-blue-700 dark:text-blue-400 font-bold">ETIM Rolls</span>
+            <span className="text-[10px] text-blue-700 dark:text-blue-400 font-bold">Offline / Cash</span>
           </div>
         </div>
 

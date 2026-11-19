@@ -384,7 +384,7 @@ export default function ConductorChallanPage() {
               <div className="flex items-center gap-2">
                 <ShieldAlert className="size-5" />
                 <div>
-                  <h3 className="text-xs font-black tracking-tight">ETIM UPI Fine Collector</h3>
+                  <h3 className="text-xs font-black tracking-tight">DTC UPI Fine Collector</h3>
                   <span className="text-[10px] text-amber-100 font-mono">
                     Fine: ₹{totalFine}.00 • {violatorName}
                   </span>
@@ -474,7 +474,7 @@ export default function ConductorChallanPage() {
 
                     <div className="mt-2 text-center">
                       <span className="text-[10px] font-mono text-muted-foreground block">
-                        UPI ID: dtc.fine.etim9412@sbi
+                        UPI ID: dtc.fine.delhi@sbi
                       </span>
                       <span className="text-xs font-black text-amber-700 dark:text-amber-400 font-mono">
                         AMOUNT: ₹{totalFine}.00
@@ -531,10 +531,10 @@ export default function ConductorChallanPage() {
 
                   <div className="space-y-1">
                     <span className="text-[11px] font-bold text-foreground block">
-                      ETIM 2D Optical Laser Active
+                      Phone Camera Scanner Active
                     </span>
                     <span className="text-[10px] text-muted-foreground block">
-                      Align the red/green crosshairs with commuter&apos;s Google Pay or Paytm payment screen.
+                      Align the crosshairs with commuter&apos;s Google Pay or Paytm payment screen.
                     </span>
                   </div>
 

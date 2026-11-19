@@ -77,7 +77,7 @@ export default function ConductorScanPage() {
         <div>
           <h2 className="text-base font-black text-foreground flex items-center gap-1.5">
             <QrCode className="size-4.5 text-emerald-600" />
-            <span>ETIM Ticket Validator</span>
+            <span>Passenger Ticket Validator</span>
           </h2>
           <span className="text-[10px] text-muted-foreground">
             Validating on Route {activeDuty.routeNumber} ({activeDuty.busNumber})
@@ -113,7 +113,7 @@ export default function ConductorScanPage() {
 
           {/* Quick Scanner Overlay Status */}
           <div className="absolute bottom-2.5 inset-x-4 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-            <span>ETIM CAMERA 1</span>
+            <span>DEVICE CAMERA 1</span>
             <span>FPS: 30 • AUTO-FOCUS ON</span>
           </div>
         </div>

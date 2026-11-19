@@ -293,16 +293,15 @@ export default function ConductorHandoverPage() {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                ETIM Machine Health
+                Device / Phone Status
               </label>
               <select
                 value={etimStatus}
                 onChange={(e) => setEtimStatus(e.target.value as any)}
                 className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-bold focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
               >
-                <option value="Healthy">Healthy (Battery OK)</option>
-                <option value="Paper Roll Replaced">Paper Roll Replaced</option>
-                <option value="Battery Low">Battery Low (Charge Needed)</option>
+                <option value="Healthy">Healthy (Battery & App OK)</option>
+                <option value="Battery Low">Battery Low (&lt;20%)</option>
               </select>
             </div>
 

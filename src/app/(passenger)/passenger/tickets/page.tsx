@@ -374,7 +374,7 @@ export default function PassengerTicketsPage() {
                 {activeQr.qrSerial}
               </span>
               <p className="text-[8px] text-slate-500 font-medium">
-                {isInvalid ? '❌ Inactive QR' : 'Present screen to Conductor ETIM Scanner'}
+                {isInvalid ? '❌ Inactive QR' : 'Present screen to Conductor Scanner'}
               </p>
             </div>
           </div>
@@ -434,7 +434,7 @@ export default function PassengerTicketsPage() {
             My Tickets & Passes
           </h2>
           <p className="text-[11px] text-muted-foreground">
-            ETIM scanner verifiable digital tickets and all-route passes
+            Digital tickets and all-route passes with live QR verification
           </p>
         </div>
 

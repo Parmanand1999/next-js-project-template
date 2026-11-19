@@ -229,6 +229,7 @@ export interface LiveBus {
 }
 
 export type SupportCategory =
+  | 'Digital QR & Ticket Failure'
   | 'ETIM & Digital QR Failure'
   | 'Fare Dispute & Overcharging'
   | 'Bus Crew Misbehavior'

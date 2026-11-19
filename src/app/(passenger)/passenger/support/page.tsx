@@ -41,7 +41,7 @@ export default function PassengerSupportPage() {
   const [upiId, setUpiId] = useState('priya@okhdfcbank');
 
   // Complaint Form State
-  const [complaintCategory, setComplaintCategory] = useState<'ETIM & Digital QR Failure' | 'Bus Crew Misbehavior' | 'Route Delay & Missed Stop' | 'Lost & Found Property'>('ETIM & Digital QR Failure');
+  const [complaintCategory, setComplaintCategory] = useState<'Digital QR & Ticket Failure' | 'Bus Crew Misbehavior' | 'Route Delay & Missed Stop' | 'Lost & Found Property'>('Digital QR & Ticket Failure');
   const [complaintRoute, setComplaintRoute] = useState('502');
   const [complaintSubject, setComplaintSubject] = useState('');
   const [complaintDesc, setComplaintDesc] = useState('');
@@ -261,7 +261,7 @@ export default function PassengerSupportPage() {
                   onChange={(e) => setComplaintCategory(e.target.value as any)}
                   className="w-full h-9 px-2 rounded-xl border border-input bg-background text-xs"
                 >
-                  <option value="ETIM & Digital QR Failure">ETIM QR Failure</option>
+                  <option value="Digital QR & Ticket Failure">QR / Ticket Issue</option>
                   <option value="Bus Crew Misbehavior">Crew Misconduct</option>
                   <option value="Route Delay & Missed Stop">Missed Stop</option>
                   <option value="Lost & Found Property">Lost Item</option>

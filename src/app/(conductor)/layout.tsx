@@ -8,12 +8,10 @@ import { DtcLogo } from '@/components/common/DtcLogo';
 import {
   LayoutDashboard,
   QrCode,
-  Activity,
   ShieldAlert,
   ArrowLeftRight,
   BatteryCharging,
   Wifi,
-  Receipt,
   Bus,
 } from 'lucide-react';
 
@@ -40,11 +38,6 @@ export default function ConductorAppLayout({
       icon: QrCode,
     },
     {
-      label: 'Health',
-      href: '/conductor/health',
-      icon: Activity,
-    },
-    {
       label: 'Challan',
       href: '/conductor/challan',
       icon: ShieldAlert,
@@ -63,35 +56,28 @@ export default function ConductorAppLayout({
 
   return (
     <div className="min-h-screen bg-slate-900/5 dark:bg-black text-foreground flex justify-center selection:bg-emerald-500 selection:text-white">
-      {/* Mobile ETIM Handheld Terminal Viewport */}
+      {/* Mobile Conductor App Viewport */}
       <div className="w-full max-w-md min-h-screen bg-background flex flex-col relative shadow-2xl border-x border-border/40 pb-20">
-        {/* Hardware Status Header Bar */}
+        {/* Conductor App Header Bar */}
         <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/80 px-3.5 py-2 shadow-2xs">
-          {/* Top Hardware Telemetry Line */}
-          <Link
-            href="/conductor/health"
-            className="flex items-center justify-between text-[10px] text-muted-foreground pb-1.5 border-b border-border/60 font-mono hover:opacity-80 transition-opacity"
-          >
+          {/* Top Status Telemetry Line */}
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground pb-1.5 border-b border-border/60 font-mono">
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
                 <Wifi className="size-3 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-                <span>4G CONNECTED</span>
+                <span>ONLINE 4G</span>
               </span>
               <span>•</span>
-              <span className="text-foreground font-semibold">{activeDuty.etimMachineId}</span>
+              <span className="text-foreground font-semibold">GPS Active</span>
             </div>
 
-            <div className="flex items-center gap-2.5">
-              <span className="flex items-center gap-1 text-foreground">
-                <Receipt className="size-3 text-emerald-600" />
-                <span>ROLL: 84%</span>
-              </span>
+            <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
                 <BatteryCharging className="size-3 text-emerald-600" />
-                <span>92%</span>
+                <span>92% Battery</span>
               </span>
             </div>
-          </Link>
+          </div>
 
           {/* Conductor & Bus Information Row */}
           <div className="flex items-center justify-between pt-1.5">

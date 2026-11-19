@@ -172,6 +172,16 @@ export interface PassengerTicket {
   validUntil: string;
   qrCodeData: string;
   individualQrs?: IndividualQrItem[];
+  isConnecting?: boolean;
+  transferStop?: string;
+  connectingLegs?: {
+    leg1Route: string;
+    leg1From: string;
+    leg1To: string;
+    leg2Route: string;
+    leg2From: string;
+    leg2To: string;
+  };
   status: 'Valid' | 'Scanned & Used' | 'Expired' | 'Refunded';
 }
 

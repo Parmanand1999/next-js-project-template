@@ -76,6 +76,16 @@ interface DtcState {
     fare: number;
     totalAmount: number;
     paymentMode: 'Wallet' | 'UPI' | 'Card' | 'Free Pink Pass';
+    isConnecting?: boolean;
+    transferStop?: string;
+    connectingLegs?: {
+      leg1Route: string;
+      leg1From: string;
+      leg1To: string;
+      leg2Route: string;
+      leg2From: string;
+      leg2To: string;
+    };
   }) => PassengerTicket;
   issuePinkPass: (routeNumber: string) => PassengerTicket;
   topUpWallet: (amount: number) => void;
@@ -107,9 +117,10 @@ const initialRoutes: DtcRoute[] = [
       { id: 's5', name: 'AIIMS / Safdarjung', distanceKm: 13.8, stage: 4 },
       { id: 's6', name: 'INA Colony', distanceKm: 15.2, stage: 4 },
       { id: 's7', name: 'Janpath / CP', distanceKm: 21.0, stage: 5 },
-      { id: 's8', name: 'New Delhi Rly Station', distanceKm: 23.6, stage: 6 },
-      { id: 's9', name: 'Red Fort', distanceKm: 26.4, stage: 7 },
-      { id: 's10', name: 'Kashmere Gate ISBT', distanceKm: 28.5, stage: 7 },
+      { id: 's7b', name: 'Delhi Gate', distanceKm: 23.5, stage: 6 },
+      { id: 's8', name: 'New Delhi Rly Station', distanceKm: 25.2, stage: 6 },
+      { id: 's9', name: 'Red Fort', distanceKm: 27.5, stage: 7 },
+      { id: 's10', name: 'Kashmere Gate ISBT', distanceKm: 29.8, stage: 7 },
     ],
   },
   {
@@ -131,9 +142,10 @@ const initialRoutes: DtcRoute[] = [
       { id: 's1b-3', name: 'AIIMS / Safdarjung', distanceKm: 8.5, stage: 3 },
       { id: 's1b-4', name: 'INA Colony', distanceKm: 10.2, stage: 4 },
       { id: 's1b-5', name: 'Janpath / CP', distanceKm: 15.8, stage: 5 },
-      { id: 's1b-6', name: 'New Delhi Rly Station', distanceKm: 18.5, stage: 6 },
-      { id: 's1b-7', name: 'Red Fort', distanceKm: 21.4, stage: 7 },
-      { id: 's1b-8', name: 'Kashmere Gate ISBT', distanceKm: 24.0, stage: 7 },
+      { id: 's1b-5b', name: 'Delhi Gate', distanceKm: 18.2, stage: 6 },
+      { id: 's1b-6', name: 'New Delhi Rly Station', distanceKm: 20.0, stage: 6 },
+      { id: 's1b-7', name: 'Red Fort', distanceKm: 22.2, stage: 7 },
+      { id: 's1b-8', name: 'Kashmere Gate ISBT', distanceKm: 24.5, stage: 7 },
     ],
   },
   {
@@ -220,8 +232,8 @@ const initialRoutes: DtcRoute[] = [
       { id: 's41', name: 'JNU Old Campus', distanceKm: 0, stage: 1 },
       { id: 's42', name: 'Munirka', distanceKm: 3.2, stage: 1 },
       { id: 's43', name: 'RK Puram Sec 1', distanceKm: 6.0, stage: 2 },
-      { id: 's44', name: 'Safdarjung Hospital', distanceKm: 9.5, stage: 3 },
-      { id: 's45', name: 'Connaught Place Super Bazar', distanceKm: 16.5, stage: 5 },
+      { id: 's44', name: 'AIIMS / Safdarjung', distanceKm: 9.5, stage: 3 },
+      { id: 's45', name: 'Janpath / CP', distanceKm: 16.5, stage: 5 },
       { id: 's46', name: 'Minto Road Terminal', distanceKm: 18.2, stage: 5 },
     ],
   },
@@ -232,7 +244,7 @@ const initialRoutes: DtcRoute[] = [
     origin: 'Ambedkar Nagar Terminal',
     destination: 'Old Delhi Railway Station',
     busType: 'AC Low Floor CNG',
-    totalDistanceKm: 22.4,
+    totalDistanceKm: 24.5,
     stopsCount: 29,
     frequencyMinutes: 12,
     firstBus: '05:45 AM',
@@ -241,10 +253,12 @@ const initialRoutes: DtcRoute[] = [
     stops: [
       { id: 's51', name: 'Ambedkar Nagar Terminal', distanceKm: 0, stage: 1 },
       { id: 's52', name: 'Pushp Vihar', distanceKm: 2.8, stage: 1 },
-      { id: 's53', name: 'Chirag Delhi', distanceKm: 5.6, stage: 2 },
-      { id: 's54', name: 'Moolchand Hospital', distanceKm: 9.8, stage: 3 },
-      { id: 's55', name: 'Delhi Gate', distanceKm: 19.2, stage: 5 },
-      { id: 's56', name: 'Old Delhi Railway Station', distanceKm: 22.4, stage: 6 },
+      { id: 's52b', name: 'Saket Crossing', distanceKm: 5.2, stage: 2 },
+      { id: 's53', name: 'Chirag Delhi', distanceKm: 7.6, stage: 2 },
+      { id: 's54', name: 'Moolchand Hospital', distanceKm: 11.8, stage: 3 },
+      { id: 's55', name: 'Delhi Gate', distanceKm: 20.5, stage: 5 },
+      { id: 's55b', name: 'Red Fort', distanceKm: 22.8, stage: 6 },
+      { id: 's56', name: 'Old Delhi Railway Station', distanceKm: 24.5, stage: 6 },
     ],
   },
 ];
@@ -897,6 +911,21 @@ const initialLiveBuses: LiveBus[] = [
     occupancyPercent: 65,
     status: 'Delayed',
   },
+  {
+    id: 'bus-4b',
+    busNumber: 'DL 1PD 2881',
+    routeNumber: '419',
+    busType: 'AC Low Floor CNG',
+    depot: 'Sukhdev Vihar Depot',
+    driverName: 'Subhash Chand',
+    conductorName: 'Harish Chandra',
+    currentSpeedKmH: 26,
+    currentStop: 'Moolchand Hospital',
+    nextStop: 'Delhi Gate',
+    etaNextStopMins: 8,
+    occupancyPercent: 52,
+    status: 'On Route',
+  },
 ];
 
 // Initial Support Tickets
@@ -1275,32 +1304,81 @@ export const useDtcStore = create<DtcState>()(
         const individualQrs: IndividualQrItem[] = [];
         let pIndex = 1;
 
-        for (let i = 0; i < adultC; i++) {
-          const pSerial = `${ticketNum}-P${pIndex}`;
-          individualQrs.push({
-            passengerIndex: pIndex,
-            passengerLabel: `Adult (${pIndex} of ${pCount})`,
-            passengerType: data.paymentMode === 'Free Pink Pass' ? 'Pink Pass (Free)' : 'Adult',
-            qrSerial: pSerial,
-            qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${data.paymentMode === 'Free Pink Pass' ? 0 : aFare}|SEC_${Date.now()}_P${pIndex}`,
-            fare: data.paymentMode === 'Free Pink Pass' ? 0 : aFare,
-            status: 'Valid',
-          });
-          pIndex++;
-        }
+        if (data.isConnecting && data.connectingLegs) {
+          // Connecting Journey: Generate Leg 1 and Leg 2 QRs for each commuter
+          for (let i = 0; i < adultC; i++) {
+            const leg1Serial = `${ticketNum}-A${i + 1}-L1`;
+            const leg2Serial = `${ticketNum}-A${i + 1}-L2`;
+            individualQrs.push({
+              passengerIndex: pIndex++,
+              passengerLabel: `Adult ${i + 1} • Bus 1 (Rt ${data.connectingLegs.leg1Route})`,
+              passengerType: 'Adult',
+              qrSerial: leg1Serial,
+              qrCodeData: `DTC|${leg1Serial}|RT_${data.connectingLegs.leg1Route}|${data.connectingLegs.leg1From}|${data.connectingLegs.leg1To}|INR_${aFare}|VALID`,
+              fare: Math.floor(aFare / 2),
+              status: 'Valid',
+            });
+            individualQrs.push({
+              passengerIndex: pIndex++,
+              passengerLabel: `Adult ${i + 1} • Bus 2 (Rt ${data.connectingLegs.leg2Route})`,
+              passengerType: 'Adult',
+              qrSerial: leg2Serial,
+              qrCodeData: `DTC|${leg2Serial}|RT_${data.connectingLegs.leg2Route}|${data.connectingLegs.leg2From}|${data.connectingLegs.leg2To}|INR_${aFare}|VALID`,
+              fare: Math.ceil(aFare / 2),
+              status: 'Valid',
+            });
+          }
 
-        for (let i = 0; i < childC; i++) {
-          const pSerial = `${ticketNum}-P${pIndex}`;
-          individualQrs.push({
-            passengerIndex: pIndex,
-            passengerLabel: `Child (${pIndex} of ${pCount})`,
-            passengerType: 'Child',
-            qrSerial: pSerial,
-            qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${cFare}|SEC_${Date.now()}_P${pIndex}`,
-            fare: cFare,
-            status: 'Valid',
-          });
-          pIndex++;
+          for (let i = 0; i < childC; i++) {
+            const leg1Serial = `${ticketNum}-C${i + 1}-L1`;
+            const leg2Serial = `${ticketNum}-C${i + 1}-L2`;
+            individualQrs.push({
+              passengerIndex: pIndex++,
+              passengerLabel: `Child ${i + 1} • Bus 1 (Rt ${data.connectingLegs.leg1Route})`,
+              passengerType: 'Child',
+              qrSerial: leg1Serial,
+              qrCodeData: `DTC|${leg1Serial}|RT_${data.connectingLegs.leg1Route}|${data.connectingLegs.leg1From}|${data.connectingLegs.leg1To}|INR_${cFare}|VALID`,
+              fare: Math.floor(cFare / 2),
+              status: 'Valid',
+            });
+            individualQrs.push({
+              passengerIndex: pIndex++,
+              passengerLabel: `Child ${i + 1} • Bus 2 (Rt ${data.connectingLegs.leg2Route})`,
+              passengerType: 'Child',
+              qrSerial: leg2Serial,
+              qrCodeData: `DTC|${leg2Serial}|RT_${data.connectingLegs.leg2Route}|${data.connectingLegs.leg2From}|${data.connectingLegs.leg2To}|INR_${cFare}|VALID`,
+              fare: Math.ceil(cFare / 2),
+              status: 'Valid',
+            });
+          }
+        } else {
+          for (let i = 0; i < adultC; i++) {
+            const pSerial = `${ticketNum}-P${pIndex}`;
+            individualQrs.push({
+              passengerIndex: pIndex,
+              passengerLabel: `Adult (${pIndex} of ${pCount})`,
+              passengerType: data.paymentMode === 'Free Pink Pass' ? 'Pink Pass (Free)' : 'Adult',
+              qrSerial: pSerial,
+              qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${data.paymentMode === 'Free Pink Pass' ? 0 : aFare}|SEC_${Date.now()}_P${pIndex}`,
+              fare: data.paymentMode === 'Free Pink Pass' ? 0 : aFare,
+              status: 'Valid',
+            });
+            pIndex++;
+          }
+
+          for (let i = 0; i < childC; i++) {
+            const pSerial = `${ticketNum}-P${pIndex}`;
+            individualQrs.push({
+              passengerIndex: pIndex,
+              passengerLabel: `Child (${pIndex} of ${pCount})`,
+              passengerType: 'Child',
+              qrSerial: pSerial,
+              qrCodeData: `DTC|${pSerial}|RT_${data.routeNumber}|${data.origin}|${data.destination}|FARE_${cFare}|SEC_${Date.now()}_P${pIndex}`,
+              fare: cFare,
+              status: 'Valid',
+            });
+            pIndex++;
+          }
         }
 
         const newTicket: PassengerTicket = {
@@ -1321,6 +1399,9 @@ export const useDtcStore = create<DtcState>()(
           validUntil: 'Valid for 2 Hours',
           qrCodeData: `DTC|${ticketNum}|${data.routeNumber}|${data.origin}|${data.destination}|${pCount}P|INR${data.totalAmount}|SEC_${Date.now()}`,
           individualQrs,
+          isConnecting: data.isConnecting,
+          transferStop: data.transferStop,
+          connectingLegs: data.connectingLegs,
           status: 'Valid',
         };
 

@@ -65,6 +65,33 @@ interface ConnectingBusItem {
   otherNearbyStops?: { name: string; distanceFormatted: string }[];
 }
 
+interface TransitLeg {
+  route: DtcRoute;
+  routeNumber: string;
+  routeName: string;
+  busType: BusCategory;
+  fromStop: string;
+  toStop: string;
+  distanceKm: number;
+  fare: number;
+  liveBus?: LiveBus;
+  etaMins: number;
+  stopsCount: number;
+}
+
+interface ConnectingTransitRoute {
+  id: string;
+  leg1: TransitLeg;
+  leg2: TransitLeg;
+  interchangeStop: string;
+  totalDistanceKm: number;
+  totalFare: number;
+  totalEstDurationMins: number;
+  walkToOriginMeters: number;
+  walkToOriginFormatted: string;
+  walkToOriginMins: number;
+}
+
 export default function PassengerHomePage() {
   const router = useRouter();
   const routes = useDtcStore((state) => state.routes);
@@ -155,8 +182,9 @@ export default function PassengerHomePage() {
   // Expanded Bus Card for Departure/Route details
   const [expandedBusId, setExpandedBusId] = useState<string | null>(null);
 
-  // Selected Bus for Booking Modal
+  // Selected Bus or Transit Route for Booking Modal
   const [selectedBus, setSelectedBus] = useState<ConnectingBusItem | null>(null);
+  const [selectedTransitRoute, setSelectedTransitRoute] = useState<ConnectingTransitRoute | null>(null);
   const [adultCount, setAdultCount] = useState<number>(1);
   const [childCount, setChildCount] = useState<number>(0);
   const [isPinkTicket, setIsPinkTicket] = useState<boolean>(false);
@@ -401,9 +429,171 @@ export default function PassengerHomePage() {
     });
   }, [routes, originStop, destinationStop, nearestStops, userLocation, liveBuses, calculateFare, busClassFilter]);
 
+  // Discover 2-Bus Connecting Routes (1 Transfer at an interchange stop)
+  const connectingTransitRoutes = useMemo<ConnectingTransitRoute[]>(() => {
+    if (!destinationStop) return [];
+
+    const results: ConnectingTransitRoute[] = [];
+    const seenCombos = new Set<string>();
+
+    const candidateOrigins: { name: string; distMeters: number; landmark?: string }[] = [];
+    if (originStop === 'ALL_NEARBY') {
+      nearestStops.forEach((s) => {
+        candidateOrigins.push({
+          name: s.name,
+          distMeters: s.distanceMeters,
+          landmark: s.landmark,
+        });
+      });
+    } else {
+      const coords = DTC_STOP_COORDINATES[originStop];
+      const dist = coords
+        ? calculateHaversineDistanceMeters(userLocation.lat, userLocation.lng, coords.lat, coords.lng)
+        : 350;
+      candidateOrigins.push({
+        name: originStop,
+        distMeters: dist,
+        landmark: coords?.landmark,
+      });
+    }
+
+    candidateOrigins.forEach((candOrigin) => {
+      if (candOrigin.name === destinationStop) return;
+
+      routes.forEach((route1) => {
+        const fromIdx1 = route1.stops.findIndex((s) => s.name === candOrigin.name);
+        if (fromIdx1 === -1) return;
+
+        for (let i = fromIdx1 + 1; i < route1.stops.length; i++) {
+          const transferStop = route1.stops[i].name;
+          if (transferStop === destinationStop) continue;
+
+          routes.forEach((route2) => {
+            if (route1.id === route2.id || route1.routeNumber === route2.routeNumber) return;
+
+            const fromIdx2 = route2.stops.findIndex((s) => s.name === transferStop);
+            const toIdx2 = route2.stops.findIndex((s) => s.name === destinationStop);
+
+            if (fromIdx2 !== -1 && toIdx2 !== -1 && fromIdx2 < toIdx2) {
+              const comboKey = `${route1.routeNumber}-${route2.routeNumber}-${transferStop}`;
+              if (seenCombos.has(comboKey)) return;
+              seenCombos.add(comboKey);
+
+              const dist1 = Math.abs(route1.stops[i].distanceKm - route1.stops[fromIdx1].distanceKm);
+              const roundedDist1 = Math.max(1, Math.round(dist1 * 10) / 10);
+              const fare1 = calculateFare(route1.busType, roundedDist1);
+
+              const dist2 = Math.abs(route2.stops[toIdx2].distanceKm - route2.stops[fromIdx2].distanceKm);
+              const roundedDist2 = Math.max(1, Math.round(dist2 * 10) / 10);
+              const fare2 = calculateFare(route2.busType, roundedDist2);
+
+              const liveBus1 = liveBuses.find((b) => b.routeNumber === route1.routeNumber);
+              const liveBus2 = liveBuses.find((b) => b.routeNumber === route2.routeNumber);
+
+              const walkMins = calculateWalkingMinutes(candOrigin.distMeters);
+              const estDuration = Math.round(roundedDist1 * 2.2) + 4 + Math.round(roundedDist2 * 2.2);
+
+              results.push({
+                id: `transit-${comboKey}`,
+                leg1: {
+                  route: route1,
+                  routeNumber: route1.routeNumber,
+                  routeName: route1.routeName,
+                  busType: liveBus1?.busType || route1.busType,
+                  fromStop: candOrigin.name,
+                  toStop: transferStop,
+                  distanceKm: roundedDist1,
+                  fare: fare1,
+                  liveBus: liveBus1,
+                  etaMins: liveBus1?.etaNextStopMins ?? 8,
+                  stopsCount: i - fromIdx1,
+                },
+                leg2: {
+                  route: route2,
+                  routeNumber: route2.routeNumber,
+                  routeName: route2.routeName,
+                  busType: liveBus2?.busType || route2.busType,
+                  fromStop: transferStop,
+                  toStop: destinationStop,
+                  distanceKm: roundedDist2,
+                  fare: fare2,
+                  liveBus: liveBus2,
+                  etaMins: liveBus2?.etaNextStopMins ?? 12,
+                  stopsCount: toIdx2 - fromIdx2,
+                },
+                interchangeStop: transferStop,
+                totalDistanceKm: Math.round((roundedDist1 + roundedDist2) * 10) / 10,
+                totalFare: fare1 + fare2,
+                totalEstDurationMins: estDuration,
+                walkToOriginMeters: candOrigin.distMeters,
+                walkToOriginFormatted: formatDistance(candOrigin.distMeters),
+                walkToOriginMins: walkMins,
+              });
+            }
+          });
+        }
+      });
+    });
+
+    const filtered = results.filter((tr) => {
+      if (busClassFilter === 'ac') {
+        return (
+          (tr.leg1.busType === 'AC Electric' || tr.leg1.busType === 'AC Low Floor CNG') ||
+          (tr.leg2.busType === 'AC Electric' || tr.leg2.busType === 'AC Low Floor CNG')
+        );
+      }
+      if (busClassFilter === 'non-ac') {
+        return tr.leg1.busType === 'Non-AC Standard' || tr.leg2.busType === 'Non-AC Standard';
+      }
+      return true;
+    });
+
+    return filtered.sort((a, b) => {
+      const etaA = a.leg1.etaMins ?? 999;
+      const etaB = b.leg1.etaMins ?? 999;
+      if (etaA !== etaB) return etaA - etaB;
+      return a.totalEstDurationMins - b.totalEstDurationMins;
+    });
+  }, [routes, destinationStop, originStop, nearestStops, userLocation, liveBuses, calculateFare, busClassFilter]);
+
   // Handle bus selection for booking
   const handleSelectBusToBook = (busItem: ConnectingBusItem) => {
+    setSelectedTransitRoute(null);
     setSelectedBus(busItem);
+    setAdultCount(1);
+    setChildCount(0);
+    setIsPinkTicket(false);
+    setShowBookingModal(true);
+  };
+
+  // Handle 2-bus connecting transit selection for booking
+  const handleSelectTransitToBook = (transit: ConnectingTransitRoute) => {
+    setSelectedBus(null);
+    setSelectedTransitRoute(transit);
+    setAdultCount(1);
+    setChildCount(0);
+    setIsPinkTicket(false);
+    setShowBookingModal(true);
+  };
+
+  // Handle booking leg 1 only of connecting route
+  const handleSelectTransitLeg1ToBook = (transit: ConnectingTransitRoute) => {
+    setSelectedTransitRoute(null);
+    setSelectedBus({
+      id: `${transit.leg1.routeNumber}-${transit.leg1.fromStop}-${transit.interchangeStop}`,
+      route: transit.leg1.route,
+      routeNumber: transit.leg1.routeNumber,
+      routeName: transit.leg1.routeName,
+      busType: transit.leg1.busType,
+      distanceKm: transit.leg1.distanceKm,
+      fare: transit.leg1.fare,
+      fromStop: transit.leg1.fromStop,
+      toStop: transit.interchangeStop,
+      distanceFromUserMeters: transit.walkToOriginMeters,
+      distanceFromUserFormatted: transit.walkToOriginFormatted,
+      walkingMinutesFromUser: transit.walkToOriginMins,
+      liveBus: transit.leg1.liveBus,
+    });
     setAdultCount(1);
     setChildCount(0);
     setIsPinkTicket(false);
@@ -412,8 +602,10 @@ export default function PassengerHomePage() {
 
   // Compute total booking amount with Adult & Child breakdown
   const { totalFare, adultFare, childFare, totalPassengers } = useMemo(() => {
-    if (!selectedBus) return { totalFare: 0, adultFare: 0, childFare: 0, totalPassengers: 0 };
-    const aFare = selectedBus.fare;
+    if (!selectedBus && !selectedTransitRoute) {
+      return { totalFare: 0, adultFare: 0, childFare: 0, totalPassengers: 0 };
+    }
+    const aFare = selectedTransitRoute ? selectedTransitRoute.totalFare : (selectedBus?.fare ?? 0);
     const cFare = Math.max(5, Math.floor(aFare / 2));
     if (isPinkTicket) return { totalFare: 0, adultFare: 0, childFare: 0, totalPassengers: 1 };
     const total = (adultCount * aFare) + (childCount * cFare);
@@ -423,14 +615,17 @@ export default function PassengerHomePage() {
       childFare: cFare,
       totalPassengers: adultCount + childCount,
     };
-  }, [selectedBus, adultCount, childCount, isPinkTicket]);
+  }, [selectedBus, selectedTransitRoute, adultCount, childCount, isPinkTicket]);
 
   // Confirm and generate individual QR tickets
   const handleConfirmBooking = () => {
-    if (!selectedBus) return;
+    if (!selectedBus && !selectedTransitRoute) return;
 
     if (isPinkTicket) {
-      const ticket = issuePinkPass(selectedBus.routeNumber);
+      const routeNum = selectedTransitRoute
+        ? `${selectedTransitRoute.leg1.routeNumber} ➔ ${selectedTransitRoute.leg2.routeNumber}`
+        : selectedBus!.routeNumber;
+      issuePinkPass(routeNum);
       toast.success('Zero-Fare Pink Ticket generated successfully!');
       setShowBookingModal(false);
       router.push('/passenger/tickets');
@@ -447,28 +642,64 @@ export default function PassengerHomePage() {
       return;
     }
 
-    const ticket = bookPassengerTicket({
-      origin: selectedBus.fromStop,
-      destination: selectedBus.toStop,
-      routeNumber: selectedBus.routeNumber,
-      busType: selectedBus.busType,
-      passengersCount: totalPassengers,
-      adultCount: isPinkTicket ? 1 : adultCount,
-      childCount: isPinkTicket ? 0 : childCount,
-      adultFare,
-      childFare,
-      fare: adultFare,
-      totalAmount: totalFare,
-      paymentMode: paymentMethod,
-    });
+    if (selectedTransitRoute) {
+      const ticket = bookPassengerTicket({
+        origin: selectedTransitRoute.leg1.fromStop,
+        destination: selectedTransitRoute.leg2.toStop,
+        routeNumber: `${selectedTransitRoute.leg1.routeNumber} ➔ ${selectedTransitRoute.leg2.routeNumber}`,
+        busType: selectedTransitRoute.leg1.busType,
+        passengersCount: totalPassengers,
+        adultCount: isPinkTicket ? 1 : adultCount,
+        childCount: isPinkTicket ? 0 : childCount,
+        adultFare,
+        childFare,
+        fare: adultFare,
+        totalAmount: totalFare,
+        paymentMode: paymentMethod,
+        isConnecting: true,
+        transferStop: selectedTransitRoute.interchangeStop,
+        connectingLegs: {
+          leg1Route: selectedTransitRoute.leg1.routeNumber,
+          leg1From: selectedTransitRoute.leg1.fromStop,
+          leg1To: selectedTransitRoute.interchangeStop,
+          leg2Route: selectedTransitRoute.leg2.routeNumber,
+          leg2From: selectedTransitRoute.interchangeStop,
+          leg2To: selectedTransitRoute.leg2.toStop,
+        },
+      });
 
-    toast.success(
-      totalPassengers > 1
-        ? `Booked for ${totalPassengers} commuters! ${totalPassengers} individual QR codes generated.`
-        : `Ticket #${ticket.ticketNumber} generated!`
-    );
-    setShowBookingModal(false);
-    router.push('/passenger/tickets');
+      toast.success(
+        `Connecting 2-Bus Ticket booked! ${ticket.individualQrs?.length || totalPassengers} QR codes generated.`
+      );
+      setShowBookingModal(false);
+      router.push('/passenger/tickets');
+      return;
+    }
+
+    if (selectedBus) {
+      const ticket = bookPassengerTicket({
+        origin: selectedBus.fromStop,
+        destination: selectedBus.toStop,
+        routeNumber: selectedBus.routeNumber,
+        busType: selectedBus.busType,
+        passengersCount: totalPassengers,
+        adultCount: isPinkTicket ? 1 : adultCount,
+        childCount: isPinkTicket ? 0 : childCount,
+        adultFare,
+        childFare,
+        fare: adultFare,
+        totalAmount: totalFare,
+        paymentMode: paymentMethod,
+      });
+
+      toast.success(
+        totalPassengers > 1
+          ? `Booked for ${totalPassengers} commuters! ${totalPassengers} individual QR codes generated.`
+          : `Ticket #${ticket.ticketNumber} generated!`
+      );
+      setShowBookingModal(false);
+      router.push('/passenger/tickets');
+    }
   };
 
   const handleQuickPinkPass = () => {
@@ -695,7 +926,11 @@ export default function PassengerHomePage() {
                 Available Buses
               </h3>
               <span className="text-[10px] text-muted-foreground font-semibold">
-                {connectingBuses.length} {connectingBuses.length === 1 ? 'bus found' : 'buses found'}
+                {connectingBuses.length > 0
+                  ? `${connectingBuses.length} ${connectingBuses.length === 1 ? 'direct bus' : 'direct buses'}`
+                  : connectingTransitRoutes.length > 0
+                  ? `${connectingTransitRoutes.length} connecting route${connectingTransitRoutes.length > 1 ? 's' : ''} (2 buses)`
+                  : '0 buses found'}
               </span>
             </div>
           </div>
@@ -738,31 +973,159 @@ export default function PassengerHomePage() {
           </div>
         </div>
 
+        {/* CASE 1: NO DIRECT BUS FOUND */}
         {connectingBuses.length === 0 ? (
-          <div className="p-6 rounded-2xl bg-card border border-border text-center space-y-2">
-            <AlertCircle className="size-8 text-amber-500 mx-auto" />
-            <div className="space-y-0.5">
-              <h4 className="text-xs font-bold text-foreground">No Direct Bus Found</h4>
-              <p className="text-[11px] text-muted-foreground max-w-xs mx-auto">
-                No direct bus found to <strong className="text-foreground">{destinationStop || 'destination'}</strong> from selected stops.
-                Try searching for another stop or choosing major hubs like <strong>AIIMS</strong>, <strong>Saket</strong>, or <strong>Dhaula Kuan</strong>.
-              </p>
+          connectingTransitRoutes.length > 0 ? (
+            /* SHOW 2-BUS CONNECTING ROUTES WHEN NO DIRECT BUS RUNS */
+            <div className="space-y-3">
+              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5">
+                <Navigation2 className="size-4 text-amber-600 mt-0.5 shrink-0" />
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                    No Direct 1-Bus Route • 2-Bus Connecting Routes ({connectingTransitRoutes.length})
+                  </h4>
+                  <p className="text-[11px] text-amber-700/90 dark:text-amber-300/90">
+                    A direct single bus is not available, but you can easily reach <strong>{destinationStop}</strong> using 2 buses with 1 transfer:
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                {connectingTransitRoutes.map((transit) => (
+                  <div
+                    key={transit.id}
+                    className="p-4 rounded-2xl bg-card border border-border shadow-xs hover:border-emerald-500/40 hover:shadow-sm transition-all space-y-3"
+                  >
+                    {/* Row 1: Route Badges, Transfer Pill & Total Fare */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <span className="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-black text-xs shadow-2xs">
+                            {transit.leg1.routeNumber}
+                          </span>
+                          <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                          <span className="px-2.5 py-1 rounded-xl bg-blue-700 text-white font-black text-xs shadow-2xs">
+                            {transit.leg2.routeNumber}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+                          1 Transfer
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-lg font-black text-foreground">₹{transit.totalFare}</span>
+                        <span className="text-[10px] text-muted-foreground block">total fare</span>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Connecting Journey Stepper */}
+                    <div className="p-3 rounded-xl bg-muted/30 border border-border/70 space-y-2 text-xs">
+                      {/* Leg 1 */}
+                      <div className="flex items-start gap-2.5">
+                        <div className="size-5 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                          1
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-foreground text-xs truncate">
+                              {transit.leg1.fromStop}
+                            </span>
+                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                              ₹{transit.leg1.fare}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <span>Bus <strong>{transit.leg1.routeNumber}</strong> ({transit.leg1.busType})</span>
+                            <span>•</span>
+                            <span className="text-emerald-700 dark:text-emerald-400 font-semibold">● In {transit.leg1.etaMins}m</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Interchange Point */}
+                      <div className="flex items-center gap-2 pl-1.5 py-0.5">
+                        <div className="w-0.5 h-3 bg-muted-foreground/30 -mt-1 ml-1" />
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">
+                          <ArrowUpDown className="size-3 text-amber-600" />
+                          <span>Change Bus at {transit.interchangeStop}</span>
+                        </div>
+                      </div>
+
+                      {/* Leg 2 */}
+                      <div className="flex items-start gap-2.5">
+                        <div className="size-5 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                          2
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-foreground text-xs truncate">
+                              {transit.leg2.toStop}
+                            </span>
+                            <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+                              ₹{transit.leg2.fare}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <span>Bus <strong>{transit.leg2.routeNumber}</strong> ({transit.leg2.busType})</span>
+                            <span>•</span>
+                            <span>~{Math.round(transit.leg2.distanceKm * 2.2)}m trip</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Action Buttons */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleSelectTransitLeg1ToBook(transit)}
+                        className="h-11 px-3 text-xs font-bold rounded-xl border-border"
+                      >
+                        <span>Leg 1 (₹{transit.leg1.fare})</span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        onClick={() => handleSelectTransitToBook(transit)}
+                        className="flex-1 h-11 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-2"
+                      >
+                        <span>Book Connecting Journey (₹{transit.totalFare})</span>
+                        <ArrowRight className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex justify-center gap-2 pt-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  handleSelectOriginStop('ALL_NEARBY');
-                  handleSelectDestinationStop('Janpath / CP');
-                }}
-                className="text-xs rounded-xl"
-              >
-                Reset to All Nearest Stops ➔ Janpath
-              </Button>
+          ) : (
+            <div className="p-6 rounded-2xl bg-card border border-border text-center space-y-2">
+              <AlertCircle className="size-8 text-amber-500 mx-auto" />
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-bold text-foreground">No Direct or Connecting Bus Found</h4>
+                <p className="text-[11px] text-muted-foreground max-w-xs mx-auto">
+                  No direct or connecting route found to <strong className="text-foreground">{destinationStop || 'destination'}</strong> from selected stops.
+                  Try searching for another stop or choosing major hubs like <strong>AIIMS</strong>, <strong>Saket</strong>, or <strong>Dhaula Kuan</strong>.
+                </p>
+              </div>
+              <div className="flex justify-center gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    handleSelectOriginStop('ALL_NEARBY');
+                    handleSelectDestinationStop('Janpath / CP');
+                  }}
+                  className="text-xs rounded-xl"
+                >
+                  Reset to All Nearest Stops ➔ Janpath
+                </Button>
+              </div>
             </div>
-          </div>
+          )
         ) : (
+          /* CASE 2: DIRECT BUSES FOUND */
           <div className="space-y-2">
             {connectingBuses.map((bus) => {
               const isAC = bus.busType === 'AC Electric' || bus.busType === 'AC Low Floor CNG';
@@ -969,27 +1332,45 @@ export default function PassengerHomePage() {
       )}
 
       {/* BOOKING MODAL WITH DOCKED FOOTER & HIGH Z-INDEX */}
-      {showBookingModal && selectedBus && (
+      {showBookingModal && (selectedBus || selectedTransitRoute) && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-card border-t sm:border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden">
             {/* Sticky Modal Header */}
             <div className="p-4 border-b border-border flex items-center justify-between bg-card shrink-0">
               <div className="flex items-center gap-2">
-                <div className="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-black text-xs shadow-2xs">
-                  {selectedBus.routeNumber}
-                </div>
+                {selectedTransitRoute ? (
+                  <div className="flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-lg bg-emerald-700 text-white font-black text-xs shadow-2xs">
+                      {selectedTransitRoute.leg1.routeNumber}
+                    </span>
+                    <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                    <span className="px-2 py-0.5 rounded-lg bg-blue-700 text-white font-black text-xs shadow-2xs">
+                      {selectedTransitRoute.leg2.routeNumber}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-black text-xs shadow-2xs">
+                    {selectedBus?.routeNumber}
+                  </div>
+                )}
                 <div>
                   <h3 className="text-sm font-black text-foreground">
-                    Confirm Bus Booking
+                    {selectedTransitRoute ? 'Confirm 2-Bus Booking' : 'Confirm Bus Booking'}
                   </h3>
                   <span className="text-[10px] text-muted-foreground block">
-                    {selectedBus.busType} • {selectedBus.distanceKm} KM Journey
+                    {selectedTransitRoute
+                      ? `Via ${selectedTransitRoute.interchangeStop} • ${selectedTransitRoute.totalDistanceKm} KM Total`
+                      : `${selectedBus?.busType} • ${selectedBus?.distanceKm} KM Journey`}
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setShowBookingModal(false)}
+                onClick={() => {
+                  setShowBookingModal(false);
+                  setSelectedBus(null);
+                  setSelectedTransitRoute(null);
+                }}
                 className="size-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="size-4" />
@@ -999,15 +1380,27 @@ export default function PassengerHomePage() {
             {/* Scrollable Modal Content */}
             <div className="p-3.5 space-y-3 overflow-y-auto flex-1">
               {/* COMPACT JOURNEY ROUTE HEADER */}
-              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/70 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-foreground truncate">
-                  <span className="truncate">{selectedBus.fromStop}</span>
-                  <ArrowRight className="size-3 text-muted-foreground shrink-0" />
-                  <span className="truncate">{selectedBus.toStop}</span>
+              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/70 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-foreground truncate">
+                    <span className="truncate">
+                      {selectedTransitRoute ? selectedTransitRoute.leg1.fromStop : selectedBus?.fromStop}
+                    </span>
+                    <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                    <span className="truncate">
+                      {selectedTransitRoute ? selectedTransitRoute.leg2.toStop : selectedBus?.toStop}
+                    </span>
+                  </div>
+                  <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 shrink-0">
+                    ₹{adultFare}/adult
+                  </span>
                 </div>
-                <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 shrink-0">
-                  ₹{selectedBus.fare}/adult
-                </span>
+                {selectedTransitRoute && (
+                  <div className="flex items-center gap-1 text-[10px] text-amber-800 dark:text-amber-300 font-semibold">
+                    <ArrowUpDown className="size-2.5" />
+                    <span>Transfer at {selectedTransitRoute.interchangeStop} (Bus 1: ₹{selectedTransitRoute.leg1.fare} + Bus 2: ₹{selectedTransitRoute.leg2.fare})</span>
+                  </div>
+                )}
               </div>
 
               {/* Passenger Selectors: Adult & Child */}
@@ -1177,7 +1570,7 @@ export default function PassengerHomePage() {
 
                 <div className="text-right">
                   <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block">
-                    {totalPassengers} QR Ticket{totalPassengers > 1 ? 's' : ''}
+                    {selectedTransitRoute ? totalPassengers * 2 : totalPassengers} QR Ticket{totalPassengers > 1 || selectedTransitRoute ? 's' : ''}
                   </span>
                   <span className="text-[9px] text-muted-foreground font-medium">Valid for 2 Hours</span>
                 </div>
@@ -1190,6 +1583,8 @@ export default function PassengerHomePage() {
                 <span>
                   {isPinkTicket
                     ? 'Generate Free Pink Pass'
+                    : selectedTransitRoute
+                    ? `Pay ₹${totalFare.toFixed(2)} & Book Connecting Journey`
                     : `Pay ₹${totalFare.toFixed(2)} & Book (${totalPassengers} QR${
                         totalPassengers > 1 ? 's' : ''
                       })`}

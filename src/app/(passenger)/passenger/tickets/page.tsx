@@ -202,11 +202,21 @@ export default function PassengerTicketsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-                          DTC Transit Pass
+                          {ticket.isConnecting ? 'DTC 2-Bus Transit Pass' : 'DTC Transit Pass'}
                         </span>
                         <h3 className="text-base font-black text-foreground">
-                          Route {ticket.routeNumber} • {ticket.busType}
+                          Route {ticket.routeNumber}
                         </h3>
+                        {ticket.transferStop && (
+                          <span className="text-[10px] text-amber-800 dark:text-amber-300 font-bold block">
+                            🔄 Transfer at {ticket.transferStop}
+                          </span>
+                        )}
+                        {!ticket.isConnecting && (
+                          <span className="text-[10px] text-muted-foreground block">
+                            {ticket.busType}
+                          </span>
+                        )}
                       </div>
                       <Badge className="bg-emerald-600 text-white font-bold text-[10px] px-2 py-0.5">
                         Valid for 2h

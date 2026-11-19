@@ -42,6 +42,8 @@ export const DTC_STOP_COORDINATES: Record<string, StopCoordinates> = {
   'Pushp Vihar': { lat: 28.5280, lng: 77.2240, landmark: 'Sector 4 Pushp Vihar Bus Shelter' },
   'Chirag Delhi': { lat: 28.5400, lng: 77.2260, landmark: 'Chirag Delhi Flyover Crossing' },
   'Moolchand Hospital': { lat: 28.5670, lng: 77.2360, landmark: 'Ring Road Moolchand Flyover' },
+  'Lajpat Nagar': { lat: 28.5695, lng: 77.2435, landmark: 'Lajpat Nagar Metro Station / Central Market' },
+  'Ashram Chowk': { lat: 28.5820, lng: 77.2510, landmark: 'Ring Road Ashram Crossing' },
   'Delhi Gate': { lat: 28.6400, lng: 77.2410, landmark: 'Near Feroz Shah Kotla Stadium' },
   'Old Delhi Railway Station': { lat: 28.6580, lng: 77.2300, landmark: 'Chandni Chowk / Dufferin Bridge' },
 };

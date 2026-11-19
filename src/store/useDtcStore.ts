@@ -1598,6 +1598,36 @@ export const useDtcStore = create<DtcState>()(
     }),
     {
       name: 'dtc-sanchalan-storage',
+      version: 3,
+      migrate: (persistedState, fromVersion) => {
+        // Always reset to fresh initialRoutes and initialLiveBuses on version change
+        const old = (persistedState ?? {}) as Record<string, unknown>;
+        return {
+          noTicketChallans: (old.noTicketChallans as NoTicketChallan[]) ?? initialNoTicketChallans,
+          invalidTicketViolations: (old.invalidTicketViolations as InvalidTicketViolation[]) ?? initialInvalidTickets,
+          notices: (old.notices as DtcNotice[]) ?? initialNotices,
+          conductorDuties: (old.conductorDuties as ConductorDuty[]) ?? initialDuties,
+          shiftHandovers: (old.shiftHandovers as ShiftHandover[]) ?? initialHandovers,
+          passengerTickets: (old.passengerTickets as PassengerTicket[]) ?? initialTickets,
+          passes: (old.passes as DtcPass[]) ?? initialPasses,
+          refundRequests: (old.refundRequests as RefundRequest[]) ?? initialRefunds,
+          supportTickets: (old.supportTickets as SupportTicket[]) ?? initialSupportTickets,
+          passengerProfile: (old.passengerProfile as PassengerProfile) ?? initialPassengerProfile,
+        };
+      },
+      partialize: (state) => ({
+        // Only persist user-generated data — NOT static route/bus/fare data
+        noTicketChallans: state.noTicketChallans,
+        invalidTicketViolations: state.invalidTicketViolations,
+        notices: state.notices,
+        conductorDuties: state.conductorDuties,
+        shiftHandovers: state.shiftHandovers,
+        passengerTickets: state.passengerTickets,
+        passes: state.passes,
+        refundRequests: state.refundRequests,
+        supportTickets: state.supportTickets,
+        passengerProfile: state.passengerProfile,
+      }),
     }
   )
 );

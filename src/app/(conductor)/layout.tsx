@@ -8,7 +8,7 @@ import { DtcLogo } from '@/components/common/DtcLogo';
 import {
   LayoutDashboard,
   QrCode,
-  Printer,
+  Activity,
   ShieldAlert,
   ArrowLeftRight,
   BatteryCharging,
@@ -40,9 +40,9 @@ export default function ConductorAppLayout({
       icon: QrCode,
     },
     {
-      label: 'Issue Ticket',
-      href: '/conductor/issue',
-      icon: Printer,
+      label: 'Health',
+      href: '/conductor/health',
+      icon: Activity,
     },
     {
       label: 'Challan',
@@ -68,7 +68,10 @@ export default function ConductorAppLayout({
         {/* Hardware Status Header Bar */}
         <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/80 px-3.5 py-2 shadow-2xs">
           {/* Top Hardware Telemetry Line */}
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground pb-1.5 border-b border-border/60 font-mono">
+          <Link
+            href="/conductor/health"
+            className="flex items-center justify-between text-[10px] text-muted-foreground pb-1.5 border-b border-border/60 font-mono hover:opacity-80 transition-opacity"
+          >
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
                 <Wifi className="size-3 text-emerald-600 dark:text-emerald-400 animate-pulse" />
@@ -88,7 +91,7 @@ export default function ConductorAppLayout({
                 <span>92%</span>
               </span>
             </div>
-          </div>
+          </Link>
 
           {/* Conductor & Bus Information Row */}
           <div className="flex items-center justify-between pt-1.5">

@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   QrCode,
-  Printer,
+  Activity,
   ShieldAlert,
+  ArrowLeftRight,
   MapPin,
   ArrowRight,
   Sparkles,
@@ -28,7 +29,6 @@ export default function ConductorDashboardPage() {
   const currentStopIndex = useDtcStore((state) => state.currentStopIndex);
   const advanceBusStop = useDtcStore((state) => state.advanceBusStop);
   const reverseBusStop = useDtcStore((state) => state.reverseBusStop);
-  const issueEtimTicket = useDtcStore((state) => state.issueEtimTicket);
 
   const activeDuty = conductorDuties.find((d) => d.id === activeDutyId) || conductorDuties[0];
   const assignedRoute = routes.find((r) => r.routeNumber === activeDuty.routeNumber) || routes[0];
@@ -39,22 +39,6 @@ export default function ConductorDashboardPage() {
 
   const totalPassengers =
     activeDuty.ticketsSoldDigital + activeDuty.ticketsSoldCash + activeDuty.pinkTicketsIssued;
-
-  // 1-Tap Quick Pink Ticket Handler
-  const handleQuickPinkTicket = () => {
-    const dest = nextStop ? nextStop.name : assignedRoute.destination;
-    const ticket = issueEtimTicket({
-      origin: currentStop.name,
-      destination: dest,
-      routeNumber: activeDuty.routeNumber,
-      busType: assignedRoute.busType,
-      passengerType: 'Pink Pass (Free)',
-      count: 1,
-      fare: 0,
-    });
-
-    toast.success(`Zero-Fare Pink Ticket #${ticket.ticketNumber} issued for female commuter!`);
-  };
 
   return (
     <div className="p-3.5 space-y-3.5 animate-in fade-in duration-200">
@@ -139,28 +123,19 @@ export default function ConductorDashboardPage() {
           </Button>
         </Link>
 
-        <Link href="/conductor/issue" className="block">
-          <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2">
-            <Printer className="size-5" />
+        <Link href="/conductor/health" className="block">
+          <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-teal-600 to-cyan-700 hover:from-teal-700 hover:to-cyan-800 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2">
+            <Activity className="size-5" />
             <div className="text-left">
-              <span className="block leading-none">Issue Cash Ticket</span>
-              <span className="text-[9px] font-normal opacity-90">ETIM Print Keypad</span>
+              <span className="block leading-none">ETIM Machine Health</span>
+              <span className="text-[9px] font-normal opacity-90">Hardware & Telemetry</span>
             </div>
           </Button>
         </Link>
       </div>
 
-      {/* Secondary Fast Action Row */}
+      {/* Secondary Action Row */}
       <div className="grid grid-cols-2 gap-2">
-        <Button
-          type="button"
-          onClick={handleQuickPinkTicket}
-          className="h-10 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-800 dark:text-pink-300 font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs"
-        >
-          <Sparkles className="size-4 text-pink-600" />
-          <span>1-Tap Free Pink Ticket</span>
-        </Button>
-
         <Link href="/conductor/challan" className="block">
           <Button
             type="button"
@@ -168,6 +143,16 @@ export default function ConductorDashboardPage() {
           >
             <ShieldAlert className="size-4 text-amber-600" />
             <span>Section 178 Challan</span>
+          </Button>
+        </Link>
+
+        <Link href="/conductor/handover" className="block">
+          <Button
+            type="button"
+            className="w-full h-10 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-900 dark:text-blue-300 font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs"
+          >
+            <ArrowLeftRight className="size-4 text-blue-600" />
+            <span>Shift Handover</span>
           </Button>
         </Link>
       </div>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useDtcStore } from '@/store/useDtcStore';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -10,14 +10,73 @@ import {
   ArrowLeftRight,
   Coins,
   QrCode,
-  Printer,
-  Sparkles,
-  Users,
   CheckCircle2,
   Clock,
   MapPin,
   FileCheck,
+  UserCheck,
+  Search,
+  Building2,
+  Calendar,
+  Users,
 } from 'lucide-react';
+
+const RELIEVING_CONDUCTORS = [
+  {
+    id: 'c1',
+    name: 'Jagdish Chandra Meena',
+    badge: 'DTC-C-3389',
+    depot: 'Sarojini Nagar Depot',
+    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
+    phone: '+91 98112 45890',
+    status: 'Ready / Standby',
+  },
+  {
+    id: 'c2',
+    name: 'Rajesh Kumar Verma',
+    badge: 'DTC-C-4102',
+    depot: 'Sarojini Nagar Depot',
+    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
+    phone: '+91 98731 23410',
+    status: 'Ready / Standby',
+  },
+  {
+    id: 'c3',
+    name: 'Suresh Kumar Sharma',
+    badge: 'DTC-C-5120',
+    depot: 'Sarojini Nagar Depot',
+    shift: 'Night Shift (09:30 PM - 05:30 AM)',
+    phone: '+91 99104 88721',
+    status: 'Reporting Soon',
+  },
+  {
+    id: 'c4',
+    name: 'Manoj Kumar Tiwari',
+    badge: 'DTC-C-2980',
+    depot: 'Sarojini Nagar Depot',
+    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
+    phone: '+91 97188 64209',
+    status: 'Ready / Standby',
+  },
+  {
+    id: 'c5',
+    name: 'Sunil Dutt Pandey',
+    badge: 'DTC-C-6741',
+    depot: 'Sarojini Nagar Depot',
+    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
+    phone: '+91 98109 11342',
+    status: 'Ready / Standby',
+  },
+  {
+    id: 'c6',
+    name: 'Vikram Singh Negi',
+    badge: 'DTC-C-1944',
+    depot: 'Sarojini Nagar Depot',
+    shift: 'Night Shift (09:30 PM - 05:30 AM)',
+    phone: '+91 98682 99015',
+    status: 'Reporting Soon',
+  },
+];
 
 export default function ConductorHandoverPage() {
   const activeDutyId = useDtcStore((state) => state.activeDutyId);
@@ -32,22 +91,36 @@ export default function ConductorHandoverPage() {
   const assignedRoute = routes.find((r) => r.routeNumber === activeDuty.routeNumber) || routes[0];
   const currentStop = assignedRoute.stops[currentStopIndex] || assignedRoute.stops[0];
 
-  const [toConductor, setToConductor] = useState<string>('Jagdish Chandra');
-  const [toBadge, setToBadge] = useState<string>('DTC-C-3389');
+  // Selected Relieving Conductor State
+  const [selectedConductorId, setSelectedConductorId] = useState<string>('c1');
+  const [isManualEntry, setIsManualEntry] = useState<boolean>(false);
+  const [manualName, setManualName] = useState<string>('');
+  const [manualBadge, setManualBadge] = useState<string>('');
+
   const [etimStatus, setEtimStatus] = useState<'Healthy' | 'Battery Low' | 'Paper Roll Replaced'>('Healthy');
   const [handoverNotes, setHandoverNotes] = useState<string>('');
   const [lastHandoverCode, setLastHandoverCode] = useState<string | null>(null);
 
+  const selectedConductor = RELIEVING_CONDUCTORS.find((c) => c.id === selectedConductorId) || RELIEVING_CONDUCTORS[0];
+
+  const finalToConductor = isManualEntry ? manualName : selectedConductor.name;
+  const finalToBadge = isManualEntry ? manualBadge : selectedConductor.badge;
+
   const handleCompleteHandover = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!finalToConductor.trim() || !finalToBadge.trim()) {
+      toast.error('Please select or specify relieving conductor name and badge number');
+      return;
+    }
 
     const handoverCode = `HND-2026-${Math.floor(100 + Math.random() * 900)}`;
 
     recordShiftHandover({
       fromConductor: activeDuty.conductorName,
       fromBadge: activeDuty.badgeNumber,
-      toConductor,
-      toBadge,
+      toConductor: finalToConductor,
+      toBadge: finalToBadge,
       busNumber: activeDuty.busNumber,
       routeNumber: activeDuty.routeNumber,
       handoverStop: currentStop.name,
@@ -72,7 +145,7 @@ export default function ConductorHandoverPage() {
             <span>Shift Handover & End Duty</span>
           </h2>
           <span className="text-[10px] text-muted-foreground">
-            Cash Tally & Next Conductor Transition
+            Cash Tally & Relieving Conductor Transition
           </span>
         </div>
 
@@ -97,7 +170,7 @@ export default function ConductorHandoverPage() {
               ₹{activeDuty.totalCashCollected}.00
             </span>
             <span className="text-[10px] text-muted-foreground block mt-0.5">
-              Verified in physical leather pouch
+              Verified in physical leather cash pouch
             </span>
           </div>
 
@@ -117,7 +190,7 @@ export default function ConductorHandoverPage() {
             <span className="text-sm font-black text-foreground font-mono">{activeDuty.ticketsSoldCash}</span>
           </div>
           <div className="p-2.5 rounded-xl bg-muted/40 border border-border">
-            <span className="text-[10px] text-muted-foreground block">Pink Free</span>
+            <span className="text-[10px] text-muted-foreground block">Pink Passes</span>
             <span className="text-sm font-black text-foreground font-mono">{activeDuty.pinkTicketsIssued}</span>
           </div>
         </div>
@@ -126,74 +199,136 @@ export default function ConductorHandoverPage() {
       {/* 2. HANDOVER SUBMISSION FORM */}
       <Card className="bg-card border-border shadow-xs rounded-2xl p-4 space-y-3.5">
         <form onSubmit={handleCompleteHandover} className="space-y-3.5">
-          <div className="space-y-2.5">
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                Relieving / Next Conductor Name *
+          {/* Relieving Conductor Selection */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Users className="size-3.5 text-emerald-600" />
+                <span>Select Relieving Conductor *</span>
               </label>
-              <input
-                type="text"
-                required
-                value={toConductor}
-                onChange={(e) => setToConductor(e.target.value)}
-                placeholder="e.g. Jagdish Chandra"
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-              />
+
+              <button
+                type="button"
+                onClick={() => setIsManualEntry(!isManualEntry)}
+                className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold hover:underline"
+              >
+                {isManualEntry ? '← Choose from Roster List' : '+ Other Conductor'}
+              </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                  Next Conductor Badge *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={toBadge}
-                  onChange={(e) => setToBadge(e.target.value)}
-                  placeholder="DTC-C-3389"
-                  className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                  ETIM Machine Health
-                </label>
+            {!isManualEntry ? (
+              <div className="space-y-2">
+                {/* Official Conductor Dropdown */}
                 <select
-                  value={etimStatus}
-                  onChange={(e) => setEtimStatus(e.target.value as any)}
-                  className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-bold focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                  value={selectedConductorId}
+                  onChange={(e) => setSelectedConductorId(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-bold focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                 >
-                  <option value="Healthy">Healthy (Battery OK)</option>
-                  <option value="Paper Roll Replaced">Paper Roll Replaced</option>
-                  <option value="Battery Low">Battery Low (Charge Needed)</option>
+                  {RELIEVING_CONDUCTORS.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.badge}) • {c.shift.split(' ')[0]}
+                    </option>
+                  ))}
                 </select>
+
+                {/* Selected Conductor Detailed Card */}
+                <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-black text-xs">
+                        {selectedConductor.name.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="font-bold text-foreground block">{selectedConductor.name}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          Badge: <strong className="text-foreground">{selectedConductor.badge}</strong>
+                        </span>
+                      </div>
+                    </div>
+                    <Badge className="bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20 text-[9px] font-bold">
+                      {selectedConductor.status}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/60">
+                    <span className="flex items-center gap-1">
+                      <Building2 className="size-3 text-muted-foreground" />
+                      {selectedConductor.depot}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="size-3 text-muted-foreground" />
+                      {selectedConductor.shift}
+                    </span>
+                  </div>
+                </div>
               </div>
+            ) : (
+              /* Fallback Manual Entry */
+              <div className="space-y-2">
+                <div>
+                  <input
+                    type="text"
+                    required
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    placeholder="Enter Conductor Full Name"
+                    className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    required
+                    value={manualBadge}
+                    onChange={(e) => setManualBadge(e.target.value)}
+                    placeholder="Enter Badge Number (e.g. DTC-C-8921)"
+                    className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Machine Health & Stop */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                ETIM Machine Health
+              </label>
+              <select
+                value={etimStatus}
+                onChange={(e) => setEtimStatus(e.target.value as any)}
+                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground font-bold focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="Healthy">Healthy (Battery OK)</option>
+                <option value="Paper Roll Replaced">Paper Roll Replaced</option>
+                <option value="Battery Low">Battery Low (Charge Needed)</option>
+              </select>
             </div>
 
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                Handover Halting Stop
+                Handover Stop
               </label>
-              <div className="p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-bold flex items-center gap-1.5">
-                <MapPin className="size-3.5 text-emerald-600" />
-                <span>{currentStop.name} (Stop {currentStopIndex + 1})</span>
+              <div className="h-10 px-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-bold flex items-center gap-1 truncate">
+                <MapPin className="size-3.5 text-emerald-600 shrink-0" />
+                <span className="truncate">{currentStop.name}</span>
               </div>
             </div>
+          </div>
 
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                Conductor Shift Notes (Optional)
-              </label>
-              <input
-                type="text"
-                value={handoverNotes}
-                onChange={(e) => setHandoverNotes(e.target.value)}
-                placeholder="e.g. All 184 digital QRs verified. No discrepancies."
-                className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
+          {/* Handover Notes */}
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+              Conductor Shift Notes (Optional)
+            </label>
+            <input
+              type="text"
+              value={handoverNotes}
+              onChange={(e) => setHandoverNotes(e.target.value)}
+              placeholder="e.g. All passenger digital QRs verified. No discrepancies."
+              className="w-full h-10 px-3 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+            />
           </div>
 
           <Button
@@ -219,7 +354,7 @@ export default function ConductorHandoverPage() {
             </Badge>
           </div>
           <p className="text-[11px] text-foreground">
-            Duty successfully handed over to <strong>{toConductor}</strong> ({toBadge}) at {currentStop.name}.
+            Duty successfully handed over to <strong>{finalToConductor}</strong> ({finalToBadge}) at {currentStop.name}.
             Total cash in pouch: ₹{activeDuty.totalCashCollected}.
           </p>
         </div>

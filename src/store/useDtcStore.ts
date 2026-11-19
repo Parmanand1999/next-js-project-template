@@ -7,6 +7,7 @@ import {
   InvalidTicketViolation,
   DtcNotice,
   ConductorDuty,
+  ConductorAttendance,
   ShiftHandover,
   PassengerTicket,
   IndividualQrItem,
@@ -29,6 +30,7 @@ interface DtcState {
   invalidTicketViolations: InvalidTicketViolation[];
   notices: DtcNotice[];
   conductorDuties: ConductorDuty[];
+  conductorAttendances: ConductorAttendance[];
   shiftHandovers: ShiftHandover[];
   passengerTickets: PassengerTicket[];
   passes: DtcPass[];
@@ -52,6 +54,7 @@ interface DtcState {
   updateRouteStatus: (id: string, status: DtcRoute['status']) => void;
 
   startConductorDuty: (duty: Omit<ConductorDuty, 'id' | 'dutyStartTime' | 'ticketsSoldDigital' | 'ticketsSoldCash' | 'pinkTicketsIssued' | 'totalCashCollected' | 'status'>) => void;
+  punchInAttendance: (data: { dutyId: string; location?: string; shift?: string }) => void;
   endConductorDuty: (id: string, totalCashCollected: number) => void;
   recordShiftHandover: (handover: Omit<ShiftHandover, 'id' | 'handoverCode' | 'handoverTime'>) => void;
 
@@ -667,6 +670,56 @@ const initialDuties: ConductorDuty[] = [
   },
 ];
 
+// Initial Conductor Attendance Records
+const initialAttendances: ConductorAttendance[] = [
+  {
+    id: 'att-1',
+    conductorName: 'Rajesh Kumar',
+    badgeNumber: 'DTC-C-4581',
+    depot: 'Sarojini Nagar Depot',
+    busNumber: 'DL 1PD 8412',
+    routeNumber: '502',
+    shift: 'Morning (06:00 - 14:00)',
+    date: '19 Nov 2026',
+    punchInTime: '05:45 AM',
+    status: 'Present',
+    depotLocation: 'Sarojini Nagar Depot (Gate 2 Biometric)',
+    gpsLocation: '28.5708° N, 77.1974° E',
+    verifiedBy: 'DTC Biometric & GPS Punch',
+  },
+  {
+    id: 'att-2',
+    conductorName: 'Suresh Negi',
+    badgeNumber: 'DTC-C-6190',
+    depot: 'BBM Depot (Kingsway Camp)',
+    busNumber: 'DL 1PD 4450',
+    routeNumber: '729',
+    shift: 'Morning (06:00 - 14:00)',
+    date: '19 Nov 2026',
+    punchInTime: '05:30 AM',
+    status: 'Present',
+    depotLocation: 'BBM Depot Kingsway Camp',
+    gpsLocation: '28.7041° N, 77.2025° E',
+    verifiedBy: 'DTC Biometric & GPS Punch',
+  },
+  {
+    id: 'att-3',
+    conductorName: 'Harish Chandra',
+    badgeNumber: 'DTC-C-2210',
+    depot: 'Sukhdev Vihar Depot',
+    busNumber: 'DL 1PD 2881',
+    routeNumber: '419',
+    shift: 'Morning (06:00 - 14:00)',
+    date: '18 Nov 2026',
+    punchInTime: '06:00 AM',
+    punchOutTime: '02:00 PM',
+    status: 'Shift Completed',
+    depotLocation: 'Sukhdev Vihar Depot',
+    gpsLocation: '28.5583° N, 77.2797° E',
+    verifiedBy: 'DTC Biometric & GPS Punch',
+  },
+];
+
 // Initial Shift Handovers
 const initialHandovers: ShiftHandover[] = [
   {
@@ -1206,6 +1259,7 @@ export const useDtcStore = create<DtcState>()(
       invalidTicketViolations: initialInvalidTickets,
       notices: initialNotices,
       conductorDuties: initialDuties,
+      conductorAttendances: initialAttendances,
       shiftHandovers: initialHandovers,
       passengerTickets: initialTickets,
       passes: initialPasses,
@@ -1320,23 +1374,71 @@ export const useDtcStore = create<DtcState>()(
         }));
       },
 
+      punchInAttendance: (data) => {
+        const state = get();
+        const targetDuty = state.conductorDuties.find((d) => d.id === data.dutyId) || state.conductorDuties[0];
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        const newAttendance: ConductorAttendance = {
+          id: `att-${Date.now()}`,
+          conductorName: targetDuty.conductorName,
+          badgeNumber: targetDuty.badgeNumber,
+          depot: targetDuty.depot,
+          busNumber: targetDuty.busNumber,
+          routeNumber: targetDuty.routeNumber,
+          shift: data.shift || targetDuty.shift,
+          date: dateStr,
+          punchInTime: timeStr,
+          status: 'Present',
+          depotLocation: data.location || `${targetDuty.depot} (Main Gate Biometric)`,
+          gpsLocation: '28.5708° N, 77.1974° E',
+          verifiedBy: 'DTC Biometric & GPS Punch',
+        };
+
+        set((s) => ({
+          activeDutyId: targetDuty.id,
+          conductorDuties: s.conductorDuties.map((d) =>
+            d.id === targetDuty.id
+              ? {
+                  ...d,
+                  status: 'On Duty',
+                  dutyStartTime: timeStr,
+                  shift: (data.shift as any) || d.shift,
+                }
+              : d
+          ),
+          conductorAttendances: [newAttendance, ...s.conductorAttendances],
+        }));
+      },
+
       endConductorDuty: (id, totalCashCollected) => {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
         set((state) => ({
           conductorDuties: state.conductorDuties.map((d) =>
             d.id === id
               ? {
                   ...d,
-                  dutyEndTime: 'Just Now',
+                  dutyEndTime: timeStr,
                   totalCashCollected,
                   status: 'Shift Completed',
                 }
               : d
+          ),
+          conductorAttendances: state.conductorAttendances.map((a, idx) =>
+            idx === 0 && !a.punchOutTime
+              ? { ...a, punchOutTime: timeStr, status: 'Shift Completed' }
+              : a
           ),
         }));
       },
 
       recordShiftHandover: (handover) => {
         const count = get().shiftHandovers.length + 402;
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
         const newHandover: ShiftHandover = {
           ...handover,
           id: `sh-${Date.now()}`,
@@ -1347,8 +1449,13 @@ export const useDtcStore = create<DtcState>()(
           shiftHandovers: [newHandover, ...state.shiftHandovers],
           conductorDuties: state.conductorDuties.map((d) =>
             d.badgeNumber === handover.fromBadge
-              ? { ...d, status: 'Handed Over' }
+              ? { ...d, status: 'Handed Over', dutyEndTime: timeStr }
               : d
+          ),
+          conductorAttendances: state.conductorAttendances.map((a) =>
+            a.badgeNumber === handover.fromBadge && !a.punchOutTime
+              ? { ...a, punchOutTime: timeStr, status: 'Handed Over' }
+              : a
           ),
         }));
       },
@@ -2034,6 +2141,7 @@ export const useDtcStore = create<DtcState>()(
           invalidTicketViolations: (old.invalidTicketViolations as InvalidTicketViolation[]) ?? initialInvalidTickets,
           notices: (old.notices as DtcNotice[]) ?? initialNotices,
           conductorDuties: (old.conductorDuties as ConductorDuty[]) ?? initialDuties,
+          conductorAttendances: (old.conductorAttendances as ConductorAttendance[]) ?? initialAttendances,
           shiftHandovers: (old.shiftHandovers as ShiftHandover[]) ?? initialHandovers,
           passengerTickets: (old.passengerTickets as PassengerTicket[]) ?? initialTickets,
           passes: (old.passes as DtcPass[]) ?? initialPasses,
@@ -2048,6 +2156,7 @@ export const useDtcStore = create<DtcState>()(
         invalidTicketViolations: state.invalidTicketViolations,
         notices: state.notices,
         conductorDuties: state.conductorDuties,
+        conductorAttendances: state.conductorAttendances,
         shiftHandovers: state.shiftHandovers,
         passengerTickets: state.passengerTickets,
         passes: state.passes,

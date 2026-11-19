@@ -124,7 +124,24 @@ export interface ConductorDuty {
   ticketsSoldCash: number;
   pinkTicketsIssued: number;
   totalCashCollected: number;
-  status: 'On Duty' | 'Shift Completed' | 'Handed Over' | 'On Break';
+  status: 'On Duty' | 'Shift Completed' | 'Handed Over' | 'On Break' | 'Off Duty';
+}
+
+export interface ConductorAttendance {
+  id: string;
+  conductorName: string;
+  badgeNumber: string;
+  depot: string;
+  busNumber: string;
+  routeNumber: string;
+  shift: string;
+  date: string;
+  punchInTime: string;
+  punchOutTime?: string;
+  status: 'Present' | 'Shift Completed' | 'Handed Over';
+  depotLocation: string;
+  gpsLocation?: string;
+  verifiedBy: string;
 }
 
 export interface ShiftHandover {

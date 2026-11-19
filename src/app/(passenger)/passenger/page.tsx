@@ -102,6 +102,13 @@ export default function PassengerHomePage() {
   const issuePinkPass = useDtcStore((state) => state.issuePinkPass);
   const calculateFare = useDtcStore((state) => state.calculateFare);
 
+  // Live clock for booking modal
+  const [bookingNow, setBookingNow] = useState<Date>(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setBookingNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Active ticket check
   const activeTicket = passengerTickets.find((t) => t.status === 'Valid');
 
@@ -1401,6 +1408,25 @@ export default function PassengerHomePage() {
                     <span>Transfer at {selectedTransitRoute.interchangeStop} (Bus 1: ₹{selectedTransitRoute.leg1.fare} + Bus 2: ₹{selectedTransitRoute.leg2.fare})</span>
                   </div>
                 )}
+                {/* Live Date & Time Row */}
+                <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <svg className="size-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-[10px] font-semibold">
+                      {bookingNow.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <svg className="size-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-[10px] font-black text-foreground tabular-nums">
+                      {bookingNow.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Passenger Selectors: Adult & Child */}

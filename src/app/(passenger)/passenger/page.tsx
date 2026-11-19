@@ -297,6 +297,26 @@ export default function PassengerHomePage() {
     setShowLocationPicker(false);
   };
 
+  // Candidate Boarding Stops for originStop (shared by direct & connecting algorithms)
+  const candidateOrigins = useMemo<{ name: string; distMeters: number; landmark?: string }[]>(() => {
+    if (originStop === 'ALL_NEARBY') {
+      return nearestStops.map((s) => ({
+        name: s.name,
+        distMeters: s.distanceMeters,
+        landmark: s.landmark,
+      }));
+    }
+    const coords = DTC_STOP_COORDINATES[originStop];
+    const dist = coords
+      ? calculateHaversineDistanceMeters(userLocation.lat, userLocation.lng, coords.lat, coords.lng)
+      : 350;
+    return [{
+      name: originStop,
+      distMeters: dist,
+      landmark: coords?.landmark,
+    }];
+  }, [originStop, nearestStops, userLocation]);
+
   // Discover all unique buses connecting originStop (or all nearest stops) to destinationStop
   // Deduplicates routes so each bus only appears once, selecting the best (closest) boarding stop to commuter
   const connectingBuses = useMemo<ConnectingBusItem[]>(() => {
@@ -304,31 +324,8 @@ export default function PassengerHomePage() {
 
     const busMap = new Map<string, ConnectingBusItem>();
 
-    // Determine candidate boarding stops: either specific originStop or all nearestStops
-    const candidateStops: { name: string; distMeters: number; landmark?: string }[] = [];
-
-    if (originStop === 'ALL_NEARBY') {
-      nearestStops.forEach((s) => {
-        candidateStops.push({
-          name: s.name,
-          distMeters: s.distanceMeters,
-          landmark: s.landmark,
-        });
-      });
-    } else {
-      const coords = DTC_STOP_COORDINATES[originStop];
-      const dist = coords
-        ? calculateHaversineDistanceMeters(userLocation.lat, userLocation.lng, coords.lat, coords.lng)
-        : 350;
-      candidateStops.push({
-        name: originStop,
-        distMeters: dist,
-        landmark: coords?.landmark,
-      });
-    }
-
     // For each candidate boarding stop, find connecting routes to destinationStop
-    candidateStops.forEach((candStop) => {
+    candidateOrigins.forEach((candStop) => {
       if (candStop.name === destinationStop) return;
 
       routes.forEach((route) => {
@@ -342,44 +339,12 @@ export default function PassengerHomePage() {
           const fare = calculateFare(route.busType, roundedDist);
           const walkMins = calculateWalkingMinutes(candStop.distMeters);
 
-          // Find ALL active live buses for this route
+          // Find ALL active live buses for this route (or fallback to route-level item)
           const routeLiveBuses = liveBuses.filter((b) => b.routeNumber === route.routeNumber);
+          const busesToProcess: (LiveBus | undefined)[] = routeLiveBuses.length > 0 ? routeLiveBuses : [undefined];
 
-          if (routeLiveBuses.length > 0) {
-            routeLiveBuses.forEach((liveBus) => {
-              const busKey = `${route.routeNumber}-${liveBus.id}`;
-              const existing = busMap.get(busKey);
-
-              if (!existing) {
-                busMap.set(busKey, {
-                  id: busKey,
-                  route,
-                  routeNumber: route.routeNumber,
-                  routeName: route.routeName,
-                  busType: liveBus.busType || route.busType,
-                  distanceKm: roundedDist,
-                  fare,
-                  fromStop: candStop.name,
-                  toStop: destinationStop,
-                  distanceFromUserMeters: candStop.distMeters,
-                  distanceFromUserFormatted: formatDistance(candStop.distMeters),
-                  walkingMinutesFromUser: walkMins,
-                  stopLandmark: candStop.landmark,
-                  liveBus,
-                  otherNearbyStops: [],
-                });
-              } else if (candStop.distMeters < existing.distanceFromUserMeters) {
-                existing.fromStop = candStop.name;
-                existing.distanceKm = roundedDist;
-                existing.fare = fare;
-                existing.distanceFromUserMeters = candStop.distMeters;
-                existing.distanceFromUserFormatted = formatDistance(candStop.distMeters);
-                existing.walkingMinutesFromUser = walkMins;
-                existing.stopLandmark = candStop.landmark;
-              }
-            });
-          } else {
-            const busKey = `${route.routeNumber}-${route.busType}`;
+          busesToProcess.forEach((liveBus) => {
+            const busKey = liveBus ? `${route.routeNumber}-${liveBus.id}` : `${route.routeNumber}-${route.busType}`;
             const existing = busMap.get(busKey);
 
             if (!existing) {
@@ -388,7 +353,7 @@ export default function PassengerHomePage() {
                 route,
                 routeNumber: route.routeNumber,
                 routeName: route.routeName,
-                busType: route.busType,
+                busType: liveBus?.busType || route.busType,
                 distanceKm: roundedDist,
                 fare,
                 fromStop: candStop.name,
@@ -397,7 +362,7 @@ export default function PassengerHomePage() {
                 distanceFromUserFormatted: formatDistance(candStop.distMeters),
                 walkingMinutesFromUser: walkMins,
                 stopLandmark: candStop.landmark,
-                liveBus: undefined,
+                liveBus,
                 otherNearbyStops: [],
               });
             } else if (candStop.distMeters < existing.distanceFromUserMeters) {
@@ -409,7 +374,7 @@ export default function PassengerHomePage() {
               existing.walkingMinutesFromUser = walkMins;
               existing.stopLandmark = candStop.landmark;
             }
-          }
+          });
         }
       });
     });
@@ -434,7 +399,7 @@ export default function PassengerHomePage() {
       if (etaA !== etaB) return etaA - etaB;
       return a.distanceFromUserMeters - b.distanceFromUserMeters;
     });
-  }, [routes, originStop, destinationStop, nearestStops, userLocation, liveBuses, calculateFare, busClassFilter]);
+  }, [routes, destinationStop, candidateOrigins, liveBuses, calculateFare, busClassFilter]);
 
   // Discover 2-Bus Connecting Routes (1 Transfer at an interchange stop)
   const connectingTransitRoutes = useMemo<ConnectingTransitRoute[]>(() => {
@@ -442,27 +407,6 @@ export default function PassengerHomePage() {
 
     const results: ConnectingTransitRoute[] = [];
     const seenCombos = new Set<string>();
-
-    const candidateOrigins: { name: string; distMeters: number; landmark?: string }[] = [];
-    if (originStop === 'ALL_NEARBY') {
-      nearestStops.forEach((s) => {
-        candidateOrigins.push({
-          name: s.name,
-          distMeters: s.distanceMeters,
-          landmark: s.landmark,
-        });
-      });
-    } else {
-      const coords = DTC_STOP_COORDINATES[originStop];
-      const dist = coords
-        ? calculateHaversineDistanceMeters(userLocation.lat, userLocation.lng, coords.lat, coords.lng)
-        : 350;
-      candidateOrigins.push({
-        name: originStop,
-        distMeters: dist,
-        landmark: coords?.landmark,
-      });
-    }
 
     candidateOrigins.forEach((candOrigin) => {
       if (candOrigin.name === destinationStop) return;
@@ -561,7 +505,7 @@ export default function PassengerHomePage() {
       if (etaA !== etaB) return etaA - etaB;
       return a.totalEstDurationMins - b.totalEstDurationMins;
     });
-  }, [routes, destinationStop, originStop, nearestStops, userLocation, liveBuses, calculateFare, busClassFilter]);
+  }, [routes, destinationStop, candidateOrigins, liveBuses, calculateFare, busClassFilter]);
 
   // Handle bus selection for booking
   const handleSelectBusToBook = (busItem: ConnectingBusItem) => {

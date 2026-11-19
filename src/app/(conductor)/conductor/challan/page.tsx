@@ -25,6 +25,10 @@ import {
   Sparkles,
   Smartphone,
   RefreshCw,
+  Calculator,
+  Plus,
+  Minus,
+  ArrowRight,
 } from 'lucide-react';
 
 export default function ConductorChallanPage() {
@@ -33,6 +37,7 @@ export default function ConductorChallanPage() {
   const routes = useDtcStore((state) => state.routes);
   const currentStopIndex = useDtcStore((state) => state.currentStopIndex);
   const noTicketChallans = useDtcStore((state) => state.noTicketChallans);
+  const calculateFare = useDtcStore((state) => state.calculateFare);
   const issueConductorChallan = useDtcStore((state) => state.issueConductorChallan);
 
   const activeDuty = conductorDuties.find((d) => d.id === activeDutyId) || conductorDuties[0];
@@ -46,7 +51,16 @@ export default function ConductorChallanPage() {
   const [violationReason, setViolationReason] = useState<string>('Ticketless Travel (No Ticket Purchased)');
   const [paymentMode, setPaymentMode] = useState<'Cash' | 'Conductor UPI QR' | 'Pending'>('Cash');
   const [penaltyAmount, setPenaltyAmount] = useState<number>(200);
-  const [fareDue, setFareDue] = useState<number>(20);
+
+  // Dynamic Fare Calculation & Boarding Stop
+  const defaultBoardingStop = assignedRoute.stops[0]?.name || 'Saket Crossing';
+  const [boardingStop, setBoardingStop] = useState<string>(defaultBoardingStop);
+
+  const boardingStopObj = assignedRoute.stops.find((s) => s.name === boardingStop) || assignedRoute.stops[0];
+  const journeyDistKm = Math.max(1, Math.round(Math.abs(currentStop.distanceKm - (boardingStopObj?.distanceKm || 0)) * 10) / 10);
+  const initialSlabFare = calculateFare(assignedRoute.busType, journeyDistKm);
+
+  const [fareDue, setFareDue] = useState<number>(initialSlabFare || 15);
   const [lastChallan, setLastChallan] = useState<any | null>(null);
 
   // UPI QR & Scanner Modal State
@@ -57,6 +71,16 @@ export default function ConductorChallanPage() {
 
   const totalFine = penaltyAmount + fareDue;
 
+  // Handle Boarding Stop Selection & Auto Compute Fare
+  const handleBoardingStopChange = (stopName: string) => {
+    setBoardingStop(stopName);
+    const foundStop = assignedRoute.stops.find((s) => s.name === stopName) || assignedRoute.stops[0];
+    const dist = Math.max(1, Math.round(Math.abs(currentStop.distanceKm - (foundStop?.distanceKm || 0)) * 10) / 10);
+    const autoFare = calculateFare(assignedRoute.busType, dist);
+    setFareDue(autoFare);
+    toast.info(`Fare auto-calculated: ₹${autoFare} for ${dist} km journey`);
+  };
+
   // Handle Form Submission
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,20 +90,19 @@ export default function ConductorChallanPage() {
     }
 
     if (paymentMode === 'Conductor UPI QR') {
-      // Open UPI QR & Optical Scanner Modal
       setIsUpiModalOpen(true);
       return;
     }
 
-    // Direct Cash or Pending Court Notice Issuance
     finalizeChallan(paymentMode);
   };
 
   // Finalize Challan Execution
   const finalizeChallan = (finalMode: 'Cash' | 'Conductor UPI QR' | 'Pending', utr?: string) => {
+    const journeyDetails = `[Boarded: ${boardingStop} ➔ Caught: ${currentStop.name} (${journeyDistKm} km) | Penalty: ₹${penaltyAmount} + Fare: ₹${fareDue}]`;
     const challanNotes = utr
-      ? `${violationReason} [NPCI UPI UTR: ${utr}]`
-      : violationReason;
+      ? `${violationReason} ${journeyDetails} [NPCI UPI UTR: ${utr}]`
+      : `${violationReason} ${journeyDetails}`;
 
     const challan = issueConductorChallan({
       violatorName,
@@ -133,12 +156,12 @@ export default function ConductorChallanPage() {
             <span>Section 178 Challan Desk</span>
           </h2>
           <span className="text-[10px] text-muted-foreground">
-            Delhi Motor Vehicles Act Enforcement • Route {activeDuty.routeNumber}
+            Motor Vehicles Act Vigilance • Route {activeDuty.routeNumber} ({assignedRoute.busType})
           </span>
         </div>
 
         <Badge className="bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20 text-[10px] font-mono font-bold">
-          FINE: ₹{penaltyAmount}
+          TOTAL: ₹{totalFine}
         </Badge>
       </div>
 
@@ -220,19 +243,108 @@ export default function ConductorChallanPage() {
               <option value="Wrong Bus Route / Invalid Pass">
                 Wrong Bus Route / Invalid Pass
               </option>
-              <option value="Tampered Physical Ticket">
-                Tampered Physical Ticket
+              <option value="Tampered Digital QR Ticket">
+                Tampered Digital QR Ticket
               </option>
             </select>
           </div>
 
-          {/* Location Stop */}
-          <div className="p-2.5 rounded-xl bg-muted/40 border border-border flex items-center justify-between text-xs">
-            <span className="text-muted-foreground text-[10px]">Detected at Stop:</span>
-            <span className="font-bold text-foreground flex items-center gap-1">
-              <MapPin className="size-3.5 text-emerald-600" />
-              {currentStop.name}
-            </span>
+          {/* 2. JOURNEY STAGE & FARE DECISION SECTION */}
+          <div className="p-3 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                <Calculator className="size-3.5 text-amber-600" />
+                <span>Journey Fare Calculation</span>
+              </span>
+              <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold font-mono">
+                {assignedRoute.busType}
+              </span>
+            </div>
+
+            {/* Boarding Stop & Current Halting Stop */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label className="text-[9px] uppercase font-bold text-muted-foreground block mb-1">
+                  Commuter Boarded From
+                </label>
+                <select
+                  value={boardingStop}
+                  onChange={(e) => handleBoardingStopChange(e.target.value)}
+                  className="w-full h-9 px-2 rounded-xl bg-background border border-border text-xs text-foreground font-semibold focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+                >
+                  {assignedRoute.stops.map((s, idx) => (
+                    <option key={s.id || s.name} value={s.name}>
+                      Stop {idx + 1}: {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[9px] uppercase font-bold text-muted-foreground block mb-1">
+                  Detected / Caught At
+                </label>
+                <div className="h-9 px-2 rounded-xl bg-muted/50 border border-border flex items-center gap-1 text-xs font-bold text-foreground truncate">
+                  <MapPin className="size-3 text-emerald-600 shrink-0" />
+                  <span className="truncate">{currentStop.name}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Distance & Auto Computed Fare Status */}
+            <div className="flex items-center justify-between text-[11px] pt-1 border-t border-border/60">
+              <span className="text-muted-foreground">
+                Traveled Distance: <strong className="text-foreground">{journeyDistKm} km</strong>
+              </span>
+              <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                Auto-Slab Fare: ₹{calculateFare(assignedRoute.busType, journeyDistKm)}
+              </span>
+            </div>
+
+            {/* Quick Fare Presets & Custom Adjuster */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                  Fare Due to Charge (₹)
+                </span>
+                <span className="text-[10px] text-muted-foreground">Tap preset or adjust</span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {[5, 10, 15, 20, 25].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setFareDue(amt)}
+                    className={`flex-1 py-1 rounded-lg border text-xs font-bold transition-all ${
+                      fareDue === amt
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                        : 'bg-background text-foreground border-border hover:bg-muted'
+                    }`}
+                  >
+                    ₹{amt}
+                  </button>
+                ))}
+
+                {/* Stepper Buttons for fine-tuning */}
+                <button
+                  type="button"
+                  onClick={() => setFareDue((prev) => Math.max(0, prev - 5))}
+                  className="size-7 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center text-foreground font-bold shrink-0"
+                  title="Minus ₹5"
+                >
+                  <Minus className="size-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFareDue((prev) => prev + 5)}
+                  className="size-7 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center text-foreground font-bold shrink-0"
+                  title="Plus ₹5"
+                >
+                  <Plus className="size-3" />
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Payment Collection Mode */}
@@ -283,20 +395,27 @@ export default function ConductorChallanPage() {
             </div>
           </div>
 
-          {/* Fine Summary & Issue Button */}
+          {/* Fine Breakdown & Total Issue Button */}
           <div className="pt-2 border-t border-border space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-bold block">
-                  Total Penalty Amount
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Section 178 Fixed Penalty:</span>
+                <span className="font-mono font-bold text-foreground">₹{penaltyAmount}.00</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground truncate pr-2">
+                  Unpaid Fare ({boardingStop} ➔ {currentStop.name}):
                 </span>
-                <span className="text-xl font-black text-amber-700 dark:text-amber-400 font-mono">
+                <span className="font-mono font-bold text-amber-700 dark:text-amber-400 shrink-0">
+                  + ₹{fareDue}.00
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm font-black pt-1.5 border-t border-amber-500/30">
+                <span>Total Amount to Collect:</span>
+                <span className="text-base text-amber-700 dark:text-amber-400 font-mono">
                   ₹{totalFine}.00
                 </span>
               </div>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                ₹{penaltyAmount} fine + ₹{fareDue} fare
-              </span>
             </div>
 
             <Button
@@ -319,7 +438,7 @@ export default function ConductorChallanPage() {
         </form>
       </Card>
 
-      {/* 2. LAST ISSUED CHALLAN RECEIPT */}
+      {/* 3. LAST ISSUED CHALLAN RECEIPT */}
       {lastChallan && (
         <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-300 dark:bg-amber-950/40 dark:border-amber-800 space-y-2.5 animate-in zoom-in-95 duration-150 shadow-xs">
           <div className="flex items-center justify-between text-xs">
@@ -334,17 +453,18 @@ export default function ConductorChallanPage() {
 
           <div className="text-[11px] text-foreground space-y-1 bg-card p-3 rounded-xl border border-border shadow-2xs">
             <div>Violator: <strong className="text-foreground">{lastChallan.passengerName}</strong> ({lastChallan.passengerPhone})</div>
+            <div>Journey: <span className="font-semibold text-foreground">{boardingStop} ➔ {currentStop.name} ({journeyDistKm} km)</span></div>
             <div>Reason: <span className="text-amber-700 dark:text-amber-400 font-semibold">{lastChallan.notes}</span></div>
             <div>Bus: {lastChallan.busNumber} • Conductor: {lastChallan.conductorBadge}</div>
             <div className="flex justify-between font-mono pt-1 text-xs font-bold border-t border-border mt-1.5">
-              <span>Fine Collected: ₹{lastChallan.totalAmount}</span>
-              <span className="text-emerald-700 dark:text-emerald-400 font-bold">{lastChallan.paymentMode}</span>
+              <span>Penalty: ₹{lastChallan.penaltyAmount} + Fare: ₹{lastChallan.fareDue}</span>
+              <span className="text-emerald-700 dark:text-emerald-400 font-bold">Total: ₹{lastChallan.totalAmount} ({lastChallan.paymentMode})</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* 3. RECENT CHALLANS LOGS */}
+      {/* 4. RECENT CHALLANS LOGS */}
       <div className="space-y-2 pt-1">
         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
           Today&apos;s Issued Challans ({noTicketChallans.length})
@@ -375,7 +495,7 @@ export default function ConductorChallanPage() {
         </div>
       </div>
 
-      {/* 4. MODAL: ETIM DYNAMIC UPI QR & OPTICAL SCANNER */}
+      {/* 5. MODAL: DYNAMIC UPI QR & OPTICAL CAMERA SCANNER */}
       {isUpiModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="w-full max-w-sm bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[92vh]">
@@ -386,7 +506,7 @@ export default function ConductorChallanPage() {
                 <div>
                   <h3 className="text-xs font-black tracking-tight">DTC UPI Fine Collector</h3>
                   <span className="text-[10px] text-amber-100 font-mono">
-                    Fine: ₹{totalFine}.00 • {violatorName}
+                    Fine: ₹{penaltyAmount} + Fare: ₹{fareDue} = ₹{totalFine}.00
                   </span>
                 </div>
               </div>
@@ -423,7 +543,7 @@ export default function ConductorChallanPage() {
                 }`}
               >
                 <Camera className="size-4 text-emerald-600" />
-                <span>Optical Scanner</span>
+                <span>Camera Scanner</span>
               </button>
             </div>
 
@@ -478,6 +598,9 @@ export default function ConductorChallanPage() {
                       </span>
                       <span className="text-xs font-black text-amber-700 dark:text-amber-400 font-mono">
                         AMOUNT: ₹{totalFine}.00
+                      </span>
+                      <span className="text-[9px] text-muted-foreground block font-mono">
+                        ₹{penaltyAmount} Penalty + ₹{fareDue} Fare ({journeyDistKm} km)
                       </span>
                     </div>
                   </div>
@@ -534,7 +657,7 @@ export default function ConductorChallanPage() {
                       Phone Camera Scanner Active
                     </span>
                     <span className="text-[10px] text-muted-foreground block">
-                      Align the crosshairs with commuter&apos;s Google Pay or Paytm payment screen.
+                      Align crosshairs with commuter&apos;s Google Pay or Paytm payment screen.
                     </span>
                   </div>
 

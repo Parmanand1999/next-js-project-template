@@ -132,11 +132,10 @@ export default function ConductorDashboardPage() {
         <button
           type="button"
           onClick={() => setActiveView('duty')}
-          className={`h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-            activeView === 'duty'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-          }`}
+          className={`h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeView === 'duty'
+            ? 'bg-emerald-600 text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+            }`}
         >
           <Smartphone className="size-3.5" />
           <span>Live Shift Duty</span>
@@ -146,11 +145,10 @@ export default function ConductorDashboardPage() {
         <button
           type="button"
           onClick={() => setActiveView('attendance')}
-          className={`h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-            activeView === 'attendance'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-          }`}
+          className={`h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeView === 'attendance'
+            ? 'bg-emerald-600 text-white shadow-xs'
+            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+            }`}
         >
           <CalendarCheck className="size-3.5" />
           <span>Attendance Register</span>
@@ -435,11 +433,10 @@ export default function ConductorDashboardPage() {
 
                     <div className="text-right shrink-0">
                       <Badge
-                        className={`text-[9px] font-bold ${
-                          isPink
-                            ? 'bg-pink-500/10 text-pink-700 dark:text-pink-300 border-pink-500/20'
-                            : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20'
-                        }`}
+                        className={`text-[9px] font-bold ${isPink
+                          ? 'bg-pink-500/10 text-pink-700 dark:text-pink-300 border-pink-500/20'
+                          : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20'
+                          }`}
                       >
                         {isPink ? 'FREE PINK' : `₹${ticket.totalAmount}`}
                       </Badge>
@@ -530,11 +527,10 @@ export default function ConductorDashboardPage() {
             <button
               type="button"
               onClick={() => setAttendanceFilter('All')}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${
-                attendanceFilter === 'All'
-                  ? 'bg-foreground text-background border-foreground shadow-2xs'
-                  : 'bg-card text-foreground border-border hover:bg-muted'
-              }`}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${attendanceFilter === 'All'
+                ? 'bg-foreground text-background border-foreground shadow-2xs'
+                : 'bg-card text-foreground border-border hover:bg-muted'
+                }`}
             >
               All Days ({myAttendances.length})
             </button>
@@ -542,11 +538,10 @@ export default function ConductorDashboardPage() {
             <button
               type="button"
               onClick={() => setAttendanceFilter('Present')}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${
-                attendanceFilter === 'Present'
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                  : 'bg-card text-foreground border-border hover:bg-muted'
-              }`}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${attendanceFilter === 'Present'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                : 'bg-card text-foreground border-border hover:bg-muted'
+                }`}
             >
               Duty Done ({presentCount})
             </button>
@@ -554,11 +549,10 @@ export default function ConductorDashboardPage() {
             <button
               type="button"
               onClick={() => setAttendanceFilter('Absent')}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${
-                attendanceFilter === 'Absent'
-                  ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
-                  : 'bg-card text-foreground border-border hover:bg-muted'
-              }`}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${attendanceFilter === 'Absent'
+                ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                : 'bg-card text-foreground border-border hover:bg-muted'
+                }`}
             >
               Absent Days ({absentCount})
             </button>
@@ -566,11 +560,10 @@ export default function ConductorDashboardPage() {
             <button
               type="button"
               onClick={() => setAttendanceFilter('OffLeave')}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${
-                attendanceFilter === 'OffLeave'
-                  ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
-                  : 'bg-card text-foreground border-border hover:bg-muted'
-              }`}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${attendanceFilter === 'OffLeave'
+                ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                : 'bg-card text-foreground border-border hover:bg-muted'
+                }`}
             >
               Off & Leaves ({offCount + leaveCount})
             </button>
@@ -587,22 +580,20 @@ export default function ConductorDashboardPage() {
               return (
                 <div
                   key={att.id}
-                  className={`p-3 rounded-2xl border text-xs space-y-2 transition-all shadow-2xs ${
-                    isPresent
-                      ? 'bg-card border-border hover:border-emerald-500/40'
-                      : isAbsent
+                  className={`p-3 rounded-2xl border text-xs space-y-2 transition-all shadow-2xs ${isPresent
+                    ? 'bg-card border-border hover:border-emerald-500/40'
+                    : isAbsent
                       ? 'bg-rose-500/5 border-rose-500/30'
                       : isWeeklyOff
-                      ? 'bg-purple-500/5 border-purple-500/30'
-                      : 'bg-amber-500/5 border-amber-500/30'
-                  }`}
+                        ? 'bg-purple-500/5 border-purple-500/30'
+                        : 'bg-amber-500/5 border-amber-500/30'
+                    }`}
                 >
                   {/* Top Line: Date & Status Badge */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-black text-foreground">
-                      <Calendar className={`size-3.5 ${
-                        isPresent ? 'text-emerald-600' : isAbsent ? 'text-rose-600' : isWeeklyOff ? 'text-purple-600' : 'text-amber-600'
-                      }`} />
+                      <Calendar className={`size-3.5 ${isPresent ? 'text-emerald-600' : isAbsent ? 'text-rose-600' : isWeeklyOff ? 'text-purple-600' : 'text-amber-600'
+                        }`} />
                       <span>{att.date}</span>
                       {att.date.includes('19 Nov') && (
                         <Badge className="bg-emerald-600 text-white text-[8px] py-0 px-1 font-bold">
@@ -612,15 +603,14 @@ export default function ConductorDashboardPage() {
                     </div>
 
                     <Badge
-                      className={`text-[9px] font-black uppercase tracking-wider py-0.5 px-2 ${
-                        isPresent
-                          ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
-                          : isAbsent
+                      className={`text-[9px] font-black uppercase tracking-wider py-0.5 px-2 ${isPresent
+                        ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
+                        : isAbsent
                           ? 'bg-rose-600 text-white border-rose-600'
                           : isWeeklyOff
-                          ? 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30'
-                          : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30'
-                      }`}
+                            ? 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30'
+                            : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30'
+                        }`}
                     >
                       {isAbsent ? '✕ ABSENT' : isWeeklyOff ? 'WEEKLY OFF' : isLeave ? 'LEAVE' : att.status === 'Present' ? '● ON DUTY' : 'DUTY COMPLETED'}
                     </Badge>

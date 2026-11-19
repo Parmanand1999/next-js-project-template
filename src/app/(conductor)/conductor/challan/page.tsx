@@ -17,7 +17,6 @@ import {
   Clock,
   Coins,
   QrCode,
-  FileText,
   Scan,
   Camera,
   X,
@@ -49,7 +48,7 @@ export default function ConductorChallanPage() {
   const [violatorPhone, setViolatorPhone] = useState<string>('');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
   const [violationReason, setViolationReason] = useState<string>('Ticketless Travel (No Ticket Purchased)');
-  const [paymentMode, setPaymentMode] = useState<'Cash' | 'Conductor UPI QR' | 'Pending'>('Cash');
+  const [paymentMode, setPaymentMode] = useState<'Cash' | 'Conductor UPI QR'>('Cash');
   const [penaltyAmount, setPenaltyAmount] = useState<number>(200);
 
   // Dynamic Fare Calculation & Boarding Stop
@@ -352,45 +351,33 @@ export default function ConductorChallanPage() {
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
               Payment Collection Mode
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setPaymentMode('Cash')}
-                className={`p-2.5 rounded-xl border text-center transition-all ${
+                className={`p-3 rounded-xl border text-center transition-all ${
                   paymentMode === 'Cash'
                     ? 'bg-amber-600 text-white font-bold border-amber-600 shadow-xs'
                     : 'bg-background text-foreground border-border hover:bg-muted'
                 }`}
               >
-                <Coins className="size-4 mx-auto mb-1" />
-                <span className="text-[11px] font-bold block">Cash (On Spot)</span>
+                <Coins className="size-5 mx-auto mb-1" />
+                <span className="text-xs font-bold block">Cash (On Spot)</span>
+                <span className="text-[9px] block opacity-85">Collected by Conductor</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPaymentMode('Conductor UPI QR')}
-                className={`p-2.5 rounded-xl border text-center transition-all relative ${
+                className={`p-3 rounded-xl border text-center transition-all relative ${
                   paymentMode === 'Conductor UPI QR'
                     ? 'bg-amber-600 text-white font-bold border-amber-600 shadow-xs'
                     : 'bg-background text-foreground border-border hover:bg-muted'
                 }`}
               >
-                <QrCode className="size-4 mx-auto mb-1" />
-                <span className="text-[11px] font-bold block">UPI QR / Scanner</span>
-                <span className="text-[8px] block opacity-80 font-mono">Instant Pay</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMode('Pending')}
-                className={`p-2.5 rounded-xl border text-center transition-all ${
-                  paymentMode === 'Pending'
-                    ? 'bg-amber-600 text-white font-bold border-amber-600 shadow-xs'
-                    : 'bg-background text-foreground border-border hover:bg-muted'
-                }`}
-              >
-                <FileText className="size-4 mx-auto mb-1" />
-                <span className="text-[11px] font-bold block">Court Notice</span>
+                <QrCode className="size-5 mx-auto mb-1" />
+                <span className="text-xs font-bold block">UPI QR / Scanner</span>
+                <span className="text-[9px] block opacity-85 font-mono">Instant Pay</span>
               </button>
             </div>
           </div>

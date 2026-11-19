@@ -10,8 +10,6 @@ import {
   QrCode,
   ShieldAlert,
   ArrowLeftRight,
-  BatteryCharging,
-  Wifi,
   Bus,
 } from 'lucide-react';
 
@@ -59,28 +57,9 @@ export default function ConductorAppLayout({
       {/* Mobile Conductor App Viewport */}
       <div className="w-full max-w-md min-h-screen bg-background flex flex-col relative shadow-2xl border-x border-border/40 pb-20">
         {/* Conductor App Header Bar */}
-        <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/80 px-3.5 py-2 shadow-2xs">
-          {/* Top Status Telemetry Line */}
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground pb-1.5 border-b border-border/60 font-mono">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                <Wifi className="size-3 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-                <span>ONLINE 4G</span>
-              </span>
-              <span>•</span>
-              <span className="text-foreground font-semibold">GPS Active</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                <BatteryCharging className="size-3 text-emerald-600" />
-                <span>92% Battery</span>
-              </span>
-            </div>
-          </div>
-
+        <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/80 px-3.5 py-2.5 shadow-2xs">
           {/* Conductor & Bus Information Row */}
-          <div className="flex items-center justify-between pt-1.5">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <DtcLogo size={28} />
               <div>

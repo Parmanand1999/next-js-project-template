@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { useDtcStore } from '@/store/useDtcStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,12 +9,10 @@ import { toast } from 'sonner';
 import {
   QrCode,
   ShieldAlert,
-  ArrowLeftRight,
   MapPin,
   ArrowRight,
   Sparkles,
   Users,
-  Coins,
   Clock,
   ArrowLeft,
 } from 'lucide-react';
@@ -25,6 +22,7 @@ export default function ConductorDashboardPage() {
   const conductorDuties = useDtcStore((state) => state.conductorDuties);
   const routes = useDtcStore((state) => state.routes);
   const passengerTickets = useDtcStore((state) => state.passengerTickets);
+  const noTicketChallans = useDtcStore((state) => state.noTicketChallans);
   const currentStopIndex = useDtcStore((state) => state.currentStopIndex);
   const advanceBusStop = useDtcStore((state) => state.advanceBusStop);
   const reverseBusStop = useDtcStore((state) => state.reverseBusStop);
@@ -36,8 +34,7 @@ export default function ConductorDashboardPage() {
   const nextStop = assignedRoute.stops[currentStopIndex + 1];
   const prevStop = currentStopIndex > 0 ? assignedRoute.stops[currentStopIndex - 1] : null;
 
-  const totalPassengers =
-    activeDuty.ticketsSoldDigital + activeDuty.ticketsSoldCash + activeDuty.pinkTicketsIssued;
+  const totalPassengers = activeDuty.ticketsSoldDigital + activeDuty.pinkTicketsIssued;
 
   return (
     <div className="p-3.5 space-y-3.5 animate-in fade-in duration-200">
@@ -110,41 +107,7 @@ export default function ConductorDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* 2. PRIMARY ACTION BAR */}
-      <div className="grid grid-cols-2 gap-2">
-        <Link href="/conductor/scan" className="block">
-          <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2">
-            <QrCode className="size-5" />
-            <div className="text-left">
-              <span className="block leading-none">Scan Passenger QR</span>
-              <span className="text-[9px] font-normal opacity-90">Instant Verification</span>
-            </div>
-          </Button>
-        </Link>
-
-        <Link href="/conductor/challan" className="block">
-          <Button className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2">
-            <ShieldAlert className="size-5" />
-            <div className="text-left">
-              <span className="block leading-none">Section 178 Challan</span>
-              <span className="text-[9px] font-normal opacity-90">UPI QR & Fine Desk</span>
-            </div>
-          </Button>
-        </Link>
-      </div>
-
-      {/* Secondary Action: Shift Handover */}
-      <Link href="/conductor/handover" className="block">
-        <Button
-          type="button"
-          className="w-full h-11 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-900 dark:text-blue-300 font-bold text-xs flex items-center justify-center gap-2 shadow-2xs"
-        >
-          <ArrowLeftRight className="size-4 text-blue-600" />
-          <span>Shift Handover & End Duty (Tally ₹{activeDuty.totalCashCollected} Cash)</span>
-        </Button>
-      </Link>
-
-      {/* 3. SHIFT PASSENGER & CASH TELEMETRY METRICS */}
+      {/* 2. SHIFT PASSENGER & DUTY METRICS */}
       <div className="grid grid-cols-2 gap-2">
         {/* Digital QR Scans */}
         <div className="p-3 rounded-2xl bg-card border border-border shadow-2xs space-y-1">
@@ -154,23 +117,11 @@ export default function ConductorDashboardPage() {
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-xl font-black text-foreground font-mono">{activeDuty.ticketsSoldDigital}</span>
-            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">App QRs</span>
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">App Tickets</span>
           </div>
         </div>
 
-        {/* Cash Tickets Sold */}
-        <div className="p-3 rounded-2xl bg-card border border-border shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] uppercase font-bold tracking-wider">Cash Paper Tickets</span>
-            <Coins className="size-3.5 text-blue-600" />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xl font-black text-foreground font-mono">{activeDuty.ticketsSoldCash}</span>
-            <span className="text-[10px] text-blue-700 dark:text-blue-400 font-bold">Offline / Cash</span>
-          </div>
-        </div>
-
-        {/* Pink Passes Issued */}
+        {/* Pink Passes Validated */}
         <div className="p-3 rounded-2xl bg-card border border-border shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-[10px] uppercase font-bold tracking-wider">Free Pink Passes</span>
@@ -178,7 +129,19 @@ export default function ConductorDashboardPage() {
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-xl font-black text-foreground font-mono">{activeDuty.pinkTicketsIssued}</span>
-            <span className="text-[10px] text-pink-700 dark:text-pink-400 font-bold">₹0 Scheme</span>
+            <span className="text-[10px] text-pink-700 dark:text-pink-400 font-bold">₹0 Passes</span>
+          </div>
+        </div>
+
+        {/* Section 178 Challans Issued */}
+        <div className="p-3 rounded-2xl bg-card border border-border shadow-2xs space-y-1">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-[10px] uppercase font-bold tracking-wider">Challans Issued</span>
+            <ShieldAlert className="size-3.5 text-amber-600" />
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xl font-black text-foreground font-mono">{noTicketChallans.length}</span>
+            <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold">Violations</span>
           </div>
         </div>
 
@@ -186,11 +149,11 @@ export default function ConductorDashboardPage() {
         <div className="p-3 rounded-2xl bg-card border border-border shadow-2xs space-y-1">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-[10px] uppercase font-bold tracking-wider">Total Commuters</span>
-            <Users className="size-3.5 text-amber-600" />
+            <Users className="size-3.5 text-blue-600" />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-xl font-black text-foreground font-mono">{totalPassengers}</span>
-            <span className="text-[10px] text-muted-foreground font-bold">Total</span>
+            <span className="text-[10px] text-muted-foreground font-bold">Validated</span>
           </div>
         </div>
       </div>

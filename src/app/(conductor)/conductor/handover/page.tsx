@@ -82,6 +82,7 @@ export default function ConductorHandoverPage() {
   const activeDutyId = useDtcStore((state) => state.activeDutyId);
   const conductorDuties = useDtcStore((state) => state.conductorDuties);
   const shiftHandovers = useDtcStore((state) => state.shiftHandovers);
+  const noTicketChallans = useDtcStore((state) => state.noTicketChallans);
   const routes = useDtcStore((state) => state.routes);
   const currentStopIndex = useDtcStore((state) => state.currentStopIndex);
   const recordShiftHandover = useDtcStore((state) => state.recordShiftHandover);
@@ -186,12 +187,12 @@ export default function ConductorHandoverPage() {
             <span className="text-sm font-black text-foreground font-mono">{activeDuty.ticketsSoldDigital}</span>
           </div>
           <div className="p-2.5 rounded-xl bg-muted/40 border border-border">
-            <span className="text-[10px] text-muted-foreground block">Cash Tickets</span>
-            <span className="text-sm font-black text-foreground font-mono">{activeDuty.ticketsSoldCash}</span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-muted/40 border border-border">
             <span className="text-[10px] text-muted-foreground block">Pink Passes</span>
             <span className="text-sm font-black text-foreground font-mono">{activeDuty.pinkTicketsIssued}</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-muted/40 border border-border">
+            <span className="text-[10px] text-muted-foreground block">Challans</span>
+            <span className="text-sm font-black text-foreground font-mono">{noTicketChallans.length}</span>
           </div>
         </div>
       </Card>

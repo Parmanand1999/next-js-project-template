@@ -264,6 +264,23 @@ export default function PassengerTicketsPage() {
             )}
           </div>
 
+          {/* User-Friendly Booking Date & Time + Validity Pill Bar */}
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/60 border border-border/80 text-xs">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Clock className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="text-muted-foreground text-[11px]">Booked:</span>
+              <span className="font-bold text-foreground text-[11px] truncate font-mono">
+                {ticket.bookedAt || 'Today, 10:30 AM'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 shrink-0 pl-2">
+              <span className="text-muted-foreground text-[10px]">Valid Till:</span>
+              <span className="font-black text-emerald-700 dark:text-emerald-400 text-[11px] font-mono">
+                {ticket.validUntil || '2 Hours'}
+              </span>
+            </div>
+          </div>
+
           {/* Multi-Passenger Group Banner & Switcher */}
           {isMulti && (
             <div className="p-2.5 rounded-xl bg-muted/50 border border-border space-y-2">
@@ -445,6 +462,23 @@ export default function PassengerTicketsPage() {
 
           {/* Journey Details */}
           <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs space-y-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Booking Date & Time:</span>
+              <span className="font-bold text-foreground font-mono text-[11px] flex items-center gap-1">
+                <Clock className="size-3 text-emerald-600 inline shrink-0" />
+                <span>{ticket.bookedAt || 'Today, 10:30 AM'}</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Valid Until:</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono text-[11px]">
+                {ticket.validUntil || 'Valid for 2 Hours'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Ticket Number:</span>
+              <span className="font-bold text-foreground font-mono">{ticket.ticketNumber}</span>
+            </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">From:</span>
               <span className="font-bold text-foreground">{ticket.sourceStop || ticket.boardingStop}</span>
@@ -740,6 +774,23 @@ export default function PassengerTicketsPage() {
                           </Badge>
                         </div>
 
+                        {/* Pass Issued Timestamp & Validity Bar */}
+                        <div className="flex items-center justify-between p-2 rounded-xl bg-muted/60 border border-border/80 text-xs">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Clock className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span className="text-muted-foreground text-[11px]">Issued:</span>
+                            <span className="font-bold text-foreground text-[11px] truncate font-mono">
+                              {pass.issuedDate || 'Today, 10:00 AM'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0 pl-2">
+                            <span className="text-muted-foreground text-[10px]">Valid Till:</span>
+                            <span className="font-black text-emerald-700 dark:text-emerald-400 text-[11px] font-mono">
+                              Today, 11:59 PM
+                            </span>
+                          </div>
+                        </div>
+
                         {/* Verifiable QR Code Container with Expiry Stamp */}
                         <div className="p-4 rounded-2xl bg-white text-slate-900 border-2 border-dashed border-border flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
                           {isExpired && (
@@ -978,6 +1029,10 @@ export default function PassengerTicketsPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Holder:</span>
                       <span className="font-bold text-foreground">{passengerProfile.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Issuance Time:</span>
+                      <span className="font-bold text-foreground font-mono">Today, {currentTime}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Validity:</span>

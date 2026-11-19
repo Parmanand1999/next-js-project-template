@@ -807,6 +807,12 @@ export default function PassengerHomePage() {
               <p className="text-xs font-black truncate">
                 {activeTicket.sourceStop || activeTicket.boardingStop} ➔ {activeTicket.destinationStop}
               </p>
+              <div className="flex items-center gap-1.5 text-[9px] text-emerald-100 font-medium mt-0.5">
+                <Clock className="size-2.5 shrink-0" />
+                <span className="truncate">Booked: {activeTicket.bookedAt}</span>
+                <span>•</span>
+                <span className="shrink-0">{activeTicket.validUntil}</span>
+              </div>
             </div>
           </div>
           <Link href="/passenger/tickets">
@@ -1792,6 +1798,15 @@ export default function PassengerHomePage() {
                               {selectedPassBooking
                                 ? '1 Passenger (Unlimited Travel Today)'
                                 : `${adultCount > 0 ? `${adultCount} Adult` : ''}${childCount > 0 ? ` + ${childCount} Child` : ''}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground text-[11px]">Booking Time:</span>
+                            <span className="font-semibold text-foreground text-[11px] font-mono flex items-center gap-1">
+                              <Clock className="size-2.5 text-emerald-600 inline" />
+                              <span>
+                                {bookingNow.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                              </span>
                             </span>
                           </div>
                           <div className="pt-2 border-t border-border flex items-center justify-between">

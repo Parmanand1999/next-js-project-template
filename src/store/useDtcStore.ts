@@ -1516,6 +1516,27 @@ export const useDtcStore = create<DtcState>()(
           }
         }
 
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        const dateStr = now.toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        });
+        const bookedAtFormatted = `Today (${dateStr}), ${timeStr}`;
+
+        const expiryDate = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        const expiryTimeStr = expiryDate.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        const validUntilFormatted = `Today, ${expiryTimeStr} (2 Hours)`;
+
         const newTicket: PassengerTicket = {
           id: `tkt-${Date.now()}`,
           ticketNumber: ticketNum,
@@ -1530,13 +1551,14 @@ export const useDtcStore = create<DtcState>()(
           fare: data.fare,
           passengersCount: pCount,
           totalAmount: data.totalAmount,
-          bookedAt: 'Just Now',
-          validUntil: 'Valid for 2 Hours',
+          bookedAt: bookedAtFormatted,
+          validUntil: validUntilFormatted,
           qrCodeData: `DTC|${ticketNum}|${data.routeNumber}|${data.origin}|${data.destination}|${pCount}P|INR${data.totalAmount}|SEC_${Date.now()}`,
           individualQrs,
           isConnecting: data.isConnecting,
           transferStop: data.transferStop,
           connectingLegs: data.connectingLegs,
+          paymentMode: data.paymentMode || 'UPI',
           status: 'Valid',
         };
 
@@ -1561,7 +1583,14 @@ export const useDtcStore = create<DtcState>()(
         const profile = get().passengerProfile;
         const count = get().passes.length + 80924;
         const passNum = `DTC-PASS-${count}`;
-        const todayStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        const todayStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const bookedAtFormatted = `Today (${todayStr}), ${timeStr}`;
 
         const newPass: DtcPass = {
           id: `pass-${Date.now()}`,
@@ -1570,8 +1599,8 @@ export const useDtcStore = create<DtcState>()(
           holderPhone: profile.phone,
           passType: data.passType,
           cost: data.cost,
-          issuedDate: todayStr,
-          validUntil: todayStr,
+          issuedDate: `${todayStr}, ${timeStr}`,
+          validUntil: `${todayStr}, 11:59 PM`,
           status: 'Active',
         };
 
@@ -1590,8 +1619,8 @@ export const useDtcStore = create<DtcState>()(
           fare: data.cost,
           passengersCount: 1,
           totalAmount: data.cost,
-          bookedAt: 'Just Now',
-          validUntil: 'Valid Until Midnight (23:59)',
+          bookedAt: bookedAtFormatted,
+          validUntil: 'Today, 11:59 PM (Midnight)',
           qrCodeData: `DTC|PASS|${passNum}|${data.passType}|${profile.name}|VALID_TODAY|${Date.now()}`,
           paymentMode: data.paymentMode || 'UPI',
           individualQrs: [
@@ -1661,6 +1690,15 @@ export const useDtcStore = create<DtcState>()(
         const profile = get().passengerProfile;
         const count = get().passengerTickets.length + 9422;
         const ticketNum = `DTC-PINK-2026-${count}`;
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        const todayStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const bookedAtFormatted = `Today (${todayStr}), ${timeStr}`;
+
         const individualQrs: IndividualQrItem[] = [
           {
             passengerIndex: 1,
@@ -1687,10 +1725,11 @@ export const useDtcStore = create<DtcState>()(
           fare: 0,
           passengersCount: 1,
           totalAmount: 0,
-          bookedAt: 'Just Now',
-          validUntil: 'Valid Until Midnight (23:59)',
+          bookedAt: bookedAtFormatted,
+          validUntil: 'Today, 11:59 PM (Midnight)',
           qrCodeData: `DTC|PINK_FREE|${profile.name}|GNCTD_WOMEN_EMPOWERMENT|${Date.now()}`,
           individualQrs,
+          paymentMode: 'Free Pink Pass',
           status: 'Valid',
         };
 
@@ -1894,6 +1933,15 @@ export const useDtcStore = create<DtcState>()(
           status: 'Scanned & Used',
         }));
 
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        });
+        const todayStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const bookedAtFormatted = `Today (${todayStr}), ${timeStr}`;
+
         const newTicket: PassengerTicket = {
           id: `etim-${Date.now()}`,
           ticketNumber: ticketNum,
@@ -1908,10 +1956,11 @@ export const useDtcStore = create<DtcState>()(
           fare,
           passengersCount: data.count,
           totalAmount: total,
-          bookedAt: 'Just Now',
-          validUntil: 'Valid for Current Trip Only',
+          bookedAt: bookedAtFormatted,
+          validUntil: 'Current Trip Only',
           qrCodeData: `DTC|${ticketNum}|${data.routeNumber}|CASH|PAID`,
           individualQrs,
+          paymentMode: isPink ? 'Free Pink Pass' : 'Cash (ETIM)',
           status: 'Scanned & Used',
         };
 

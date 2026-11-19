@@ -27,7 +27,6 @@ const RELIEVING_CONDUCTORS = [
     name: 'Jagdish Chandra Meena',
     badge: 'DTC-C-3389',
     depot: 'Sarojini Nagar Depot',
-    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
     phone: '+91 98112 45890',
     status: 'Ready / Standby',
   },
@@ -36,7 +35,6 @@ const RELIEVING_CONDUCTORS = [
     name: 'Rajesh Kumar Verma',
     badge: 'DTC-C-4102',
     depot: 'Sarojini Nagar Depot',
-    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
     phone: '+91 98731 23410',
     status: 'Ready / Standby',
   },
@@ -45,7 +43,6 @@ const RELIEVING_CONDUCTORS = [
     name: 'Suresh Kumar Sharma',
     badge: 'DTC-C-5120',
     depot: 'Sarojini Nagar Depot',
-    shift: 'Night Shift (09:30 PM - 05:30 AM)',
     phone: '+91 99104 88721',
     status: 'Reporting Soon',
   },
@@ -54,7 +51,6 @@ const RELIEVING_CONDUCTORS = [
     name: 'Manoj Kumar Tiwari',
     badge: 'DTC-C-2980',
     depot: 'Sarojini Nagar Depot',
-    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
     phone: '+91 97188 64209',
     status: 'Ready / Standby',
   },
@@ -63,7 +59,6 @@ const RELIEVING_CONDUCTORS = [
     name: 'Sunil Dutt Pandey',
     badge: 'DTC-C-6741',
     depot: 'Sarojini Nagar Depot',
-    shift: 'Evening Shift (02:00 PM - 10:00 PM)',
     phone: '+91 98109 11342',
     status: 'Ready / Standby',
   },
@@ -72,7 +67,6 @@ const RELIEVING_CONDUCTORS = [
     name: 'Vikram Singh Negi',
     badge: 'DTC-C-1944',
     depot: 'Sarojini Nagar Depot',
-    shift: 'Night Shift (09:30 PM - 05:30 AM)',
     phone: '+91 98682 99015',
     status: 'Reporting Soon',
   },
@@ -227,7 +221,7 @@ export default function ConductorHandoverPage() {
                 >
                   {RELIEVING_CONDUCTORS.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} ({c.badge}) • {c.shift.split(' ')[0]}
+                      {c.name} ({c.badge})
                     </option>
                   ))}
                 </select>
@@ -256,9 +250,8 @@ export default function ConductorHandoverPage() {
                       <Building2 className="size-3 text-muted-foreground" />
                       {selectedConductor.depot}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="size-3 text-muted-foreground" />
-                      {selectedConductor.shift}
+                    <span className="flex items-center gap-1 font-mono">
+                      {selectedConductor.phone}
                     </span>
                   </div>
                 </div>
